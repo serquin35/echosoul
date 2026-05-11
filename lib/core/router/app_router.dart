@@ -11,7 +11,7 @@ import '../../features/mood/presentation/screens/mood_tracker_screen.dart';
 import '../../features/legal/presentation/screens/legal_screen.dart';
 
 // ── Feature pages (import when created) ──────────────────
-// import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/landing/presentation/screens/landing_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/companion/presentation/screens/main_layout_screen.dart';
 import '../../features/companion/presentation/screens/companion_home_screen.dart';
@@ -50,13 +50,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // If resetting password or in recovery flow, allow it and don't redirect to home
       if (isResettingPassword || isRecovery) return null;
 
-      // If user is NOT logged in and NOT on login page, redirect to login
-      if (user == null && !isLoggingIn) {
+      // If user is NOT logged in and NOT on login page and NOT on splash(landing) page, redirect to login
+      final isSplash = state.matchedLocation == RouteNames.splash;
+      if (user == null && !isLoggingIn && !isSplash) {
         return RouteNames.login;
       }
 
-      // If user IS logged in and ON login or splash page, redirect to home
-      final isSplash = state.matchedLocation == RouteNames.splash;
+      // If user IS logged in and ON login or splash(landing) page, redirect to home
       if (user != null && (isLoggingIn || isSplash)) {
         if (!user.onboardingCompleted) {
           return RouteNames.onboarding;
@@ -78,7 +78,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.splash,
         name: RouteNames.splash,
-        builder: (context, state) => const _PlaceholderPage(label: 'Splash'),
+        builder: (context, state) => const LandingScreen(),
       ),
       GoRoute(
         path: RouteNames.login,

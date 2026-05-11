@@ -7,7 +7,6 @@ import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/design_system/atoms/es_button.dart';
-import '../../../companion/presentation/screens/chat_screen.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
