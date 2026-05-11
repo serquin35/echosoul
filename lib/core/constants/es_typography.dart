@@ -60,10 +60,14 @@ abstract class EsTypography {
     color: EsColors.textPrimaryDark,
   );
 
-  static const caption = TextStyle(
+  static const bodySmall = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w400,
+    height: 1.4,
     color: EsColors.textSecondaryDark,
   );
+
+  /// Alias for [bodySmall]. Kept for legacy use.
+  static const caption = bodySmall;
 }

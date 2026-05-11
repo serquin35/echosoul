@@ -29,6 +29,7 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
           echo "AUTH_REDIRECT_URL=${{ secrets.AUTH_REDIRECT_URL }}" >> .env
+          echo "N8N_CHAT_WEBHOOK_URL=${{ secrets.N8N_CHAT_WEBHOOK_URL }}" >> .env
 
       - name: Build Web
         run: flutter build web --release
