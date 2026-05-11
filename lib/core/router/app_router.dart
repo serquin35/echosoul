@@ -43,8 +43,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // If resetting password, allow it
-      if (isResettingPassword) return null;
+      // 4. Detect recovery flow (type=recovery in hash or query)
+      final isRecovery = state.uri.fragment.contains('type=recovery') || 
+                         state.uri.queryParameters['type'] == 'recovery';
+
+      // If resetting password or in recovery flow, allow it and don't redirect to home
+      if (isResettingPassword || isRecovery) return null;
 
       // If user is NOT logged in and NOT on login page, redirect to login
       if (user == null && !isLoggingIn) {
