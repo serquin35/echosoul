@@ -33,8 +33,11 @@ jobs:
       - name: Build Web
         run: flutter build web --release
 
-      - name: Copy vercel.json to build/web
-        run: cp vercel.json build/web/
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir -p deploy_out
+          cp -r build/web/* deploy_out/
+          cp vercel.json deploy_out/
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
@@ -42,5 +45,5 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./build/web
+          working-directory: ./deploy_out
           vercel-args: '--prod' # Despliegue a producción
