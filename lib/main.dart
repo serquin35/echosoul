@@ -41,11 +41,14 @@ class EchoSoulApp extends ConsumerWidget {
 
     // Listen for auth events (like password recovery)
     ref.listen(authEventsProvider, (previous, next) {
-      if (next.value?.event == AuthChangeEvent.passwordRecovery) {
-        debugPrint('EVENTO RECUPERACION: Redirigiendo a ResetPassword');
-        router.go(RouteNames.resetPassword);
-      }
+      next.whenData((data) {
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          debugPrint('EVENTO RECUPERACION DETECTADO: Redirigiendo a ResetPassword');
+          router.go(RouteNames.resetPassword);
+        }
+      });
     });
+
 
     return MaterialApp.router(
       title: 'EchoSoul',
