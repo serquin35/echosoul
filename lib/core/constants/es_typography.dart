@@ -36,6 +36,20 @@ abstract class EsTypography {
     color: EsColors.textPrimaryDark,
   );
 
+  static const displaySmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    color: EsColors.textPrimaryDark,
+  );
+
+  static const headlineSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: EsColors.textPrimaryDark,
+  );
+
   static const bodyLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
