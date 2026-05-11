@@ -109,7 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       // On web, we redirect to the origin and let main.dart's listener handle the routing
       // once the recovery event is detected. On mobile, we use the custom scheme.
-      final String base = envRedirect ?? (kIsWeb ? Uri.base.origin : 'echosoul://');
+      final String base = Env.authRedirectUrl ?? (kIsWeb ? Uri.base.origin : 'echosoul://');
       final String redirectTo = base.endsWith('/') ? '${base}reset-password' : '$base/reset-password';
       
       await _supabaseClient.auth.resetPasswordForEmail(

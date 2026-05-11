@@ -18,7 +18,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: 'any' # Use the latest stable to avoid SDK version conflicts
           channel: 'stable'
 
       - name: Install dependencies
@@ -33,14 +33,14 @@ jobs:
       - name: Build Web
         run: flutter build web --release
 
-      - name: Debug - List build files
+      - name: Prepare Deployment
         run: |
-          echo "Contenido de build/web:"
-          ls -R build/web
+          cp vercel.json build/web/
+          ls -la build/web/
 
       - name: Deploy to Vercel
         run: |
-          npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --name echosoul --local-config vercel.json ./build/web
+          npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --name echosoul ./build/web
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} # Despliegue a producción
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
