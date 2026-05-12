@@ -24,5 +24,5 @@ abstract class EsPlatform {
   static bool get useSidebarNavigation => kIsWeb;
 
   /// Minimum width (dp) at which we force sidebar even on web.
-  static const double sidebarBreakpoint = 720.0;
+  static const double sidebarBreakpoint = 1024.0;
 }

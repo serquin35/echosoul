@@ -66,140 +66,145 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(EsSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Selection Card
-            Container(
-              padding: const EdgeInsets.all(EsSpacing.lg),
-              decoration: BoxDecoration(
-                color: EsColors.surfaceDark,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  MoodSelectionWidget(
-                    selectedScore: _selectedScore,
-                    onScoreSelected: (score) => setState(() => _selectedScore = score),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Selection Card
+                Container(
+                  padding: const EdgeInsets.all(EsSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: EsColors.surfaceDark,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  const SizedBox(height: EsSpacing.xl),
-                  TextField(
-                    controller: _notesController,
-                    maxLines: 3,
-                    style: EsTypography.bodyLarge,
-                    decoration: InputDecoration(
-                      hintText: 'Añade una nota sobre cómo te sientes (opcional)...',
-                      hintStyle: EsTypography.bodyMedium,
-                      filled: true,
-                      fillColor: EsColors.surfaceElevated,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
+                  child: Column(
+                    children: [
+                      MoodSelectionWidget(
+                        selectedScore: _selectedScore,
+                        onScoreSelected: (score) => setState(() => _selectedScore = score),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: EsSpacing.lg),
-                  EsButton(
-                    label: 'Guardar estado',
-                    onPressed: _saveMood,
-                    isLoading: moodHistory.isLoading,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: EsSpacing.xxl),
-
-            // History Section
-            moodHistory.when(
-              data: (history) {
-                if (history.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: EsSpacing.xl),
-                      child: Text(
-                        'Aún no has registrado ningún estado.',
-                        style: EsTypography.bodyMedium,
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MoodTrendChart(entries: history),
-                    const SizedBox(height: EsSpacing.xxl),
-                    const Text('Historial reciente', style: EsTypography.headlineMedium),
-                    const SizedBox(height: EsSpacing.md),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: history.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: EsSpacing.sm),
-                      itemBuilder: (context, index) {
-                        final entry = history[index];
-                        return Container(
-                          padding: const EdgeInsets.all(EsSpacing.md),
-                          decoration: BoxDecoration(
-                            color: EsColors.surfaceDark,
+                      const SizedBox(height: EsSpacing.xl),
+                      TextField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        style: EsTypography.bodyLarge,
+                        decoration: InputDecoration(
+                          hintText: 'Añade una nota sobre cómo te sientes (opcional)...',
+                          hintStyle: EsTypography.bodyMedium,
+                          filled: true,
+                          fillColor: EsColors.surfaceElevated,
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(EsSpacing.sm),
-                                decoration: BoxDecoration(
-                                  color: EsColors.surfaceElevated,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  _getEmojiForScore(entry.moodScore),
-                                  style: const TextStyle(fontSize: 24),
-                                ),
+                        ),
+                      ),
+                      const SizedBox(height: EsSpacing.lg),
+                      EsButton(
+                        label: 'Guardar estado',
+                        onPressed: _saveMood,
+                        isLoading: moodHistory.isLoading,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: EsSpacing.xxl),
+
+                // History Section
+                moodHistory.when(
+                  data: (history) {
+                    if (history.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: EsSpacing.xl),
+                          child: Text(
+                            'Aún no has registrado ningún estado.',
+                            style: EsTypography.bodyMedium,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MoodTrendChart(entries: history),
+                        const SizedBox(height: EsSpacing.xxl),
+                        const Text('Historial reciente', style: EsTypography.headlineMedium),
+                        const SizedBox(height: EsSpacing.md),
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: history.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: EsSpacing.sm),
+                          itemBuilder: (context, index) {
+                            final entry = history[index];
+                            return Container(
+                              padding: const EdgeInsets.all(EsSpacing.md),
+                              decoration: BoxDecoration(
+                                color: EsColors.surfaceDark,
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              const SizedBox(width: EsSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(EsSpacing.sm),
+                                    decoration: BoxDecoration(
+                                      color: EsColors.surfaceElevated,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      _getEmojiForScore(entry.moodScore),
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                  ),
+                                  const SizedBox(width: EsSpacing.md),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          entry.moodLabel ?? 'Sin etiqueta',
-                                          style: EsTypography.labelLarge,
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              entry.moodLabel ?? 'Sin etiqueta',
+                                              style: EsTypography.labelLarge,
+                                            ),
+                                            Text(
+                                              DateFormat('HH:mm, d MMM').format(entry.createdAt),
+                                              style: EsTypography.caption,
+                                            ),
+                                          ],
                                         ),
-                                        Text(
-                                          DateFormat('HH:mm, d MMM').format(entry.createdAt),
-                                          style: EsTypography.caption,
-                                        ),
+                                        if (entry.notes != null) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            entry.notes!,
+                                            style: EsTypography.bodyMedium,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ],
                                     ),
-                                    if (entry.notes != null) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        entry.notes!,
-                                        style: EsTypography.bodyMedium,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, __) => Text('Error: $e'),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, __) => Text('Error: $e'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

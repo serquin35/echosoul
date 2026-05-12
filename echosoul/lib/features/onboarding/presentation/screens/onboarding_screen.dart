@@ -135,73 +135,78 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           
           SafeArea(
-            child: Column(
-              children: [
-                // Custom App Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: [
-                      if (_currentPage > 0)
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back, color: EsColors.textPrimaryDark),
-                          onPressed: isLoading ? null : _previousPage,
-                        )
-                      else
-                        const SizedBox(width: 48),
-                      const Spacer(),
-                      Text(
-                        'Paso ${_currentPage + 1} de 3',
-                        style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  children: [
+                    // Custom App Bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        children: [
+                          if (_currentPage > 0)
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: EsColors.textPrimaryDark),
+                              onPressed: isLoading ? null : _previousPage,
+                            )
+                          else
+                            const SizedBox(width: 48),
+                          const Spacer(),
+                          Text(
+                            'Paso ${_currentPage + 1} de 3',
+                            style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+                          ),
+                          const Spacer(),
+                          const SizedBox(width: 48),
+                        ],
                       ),
-                      const Spacer(),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
-                
-                // Progress Indicator
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: (_currentPage + 1) / 3,
-                      minHeight: 6,
-                      backgroundColor: EsColors.surfaceElevated,
-                      valueColor: const AlwaysStoppedAnimation<Color>(EsColors.primaryBlue),
                     ),
-                  ),
-                ),
-                
-                const SizedBox(height: 32),
-                
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (index) => setState(() => _currentPage = index),
-                    children: [
-                      _buildStep1(),
-                      _buildStep2(),
-                      _buildStep3(),
-                    ],
-                  ),
-                ),
-                
-                // Bottom Button Section
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: EsInteractive(
-                    hoverScale: 1.02,
-                    child: EsButton(
-                      label: _currentPage == 2 ? 'Comenzar mi viaje' : 'Siguiente',
-                      onPressed: isLoading ? null : _nextPage,
-                      isLoading: isLoading,
+                    
+                    // Progress Indicator
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: (_currentPage + 1) / 3,
+                          minHeight: 6,
+                          backgroundColor: EsColors.surfaceElevated,
+                          valueColor: const AlwaysStoppedAnimation<Color>(EsColors.primaryBlue),
+                        ),
+                      ),
                     ),
-                  ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onPageChanged: (index) => setState(() => _currentPage = index),
+                        children: [
+                          _buildStep1(),
+                          _buildStep2(),
+                          _buildStep3(),
+                        ],
+                      ),
+                    ),
+                    
+                    // Bottom Button Section
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: EsInteractive(
+                        hoverScale: 1.02,
+                        child: EsButton(
+                          label: _currentPage == 2 ? 'Comenzar mi viaje' : 'Siguiente',
+                          onPressed: isLoading ? null : _nextPage,
+                          isLoading: isLoading,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

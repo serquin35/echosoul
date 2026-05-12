@@ -45,8 +45,15 @@ class _WebLayout extends ConsumerWidget {
           _EsSidebar(),
           // Thin separator line
           Container(width: 1, color: EsColors.divider.withOpacity(0.4)),
-          // Main content expands
-          Expanded(child: child),
+          // Main content expands with max width constraint for desktop
+          Expanded(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: child,
+              ),
+            ),
+          ),
         ],
       ),
     );

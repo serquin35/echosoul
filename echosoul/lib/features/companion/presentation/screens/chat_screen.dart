@@ -204,34 +204,39 @@ class _TypingIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isTyping = ref.watch(chatProvider).isTyping;
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      child: isTyping
-          ? Padding(
-              key: const ValueKey('typing'),
-              padding: const EdgeInsets.only(
-                  left: EsSpacing.lg, bottom: EsSpacing.xs),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: EsColors.surfaceDark,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(4),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: isTyping
+              ? Padding(
+                  key: const ValueKey('typing'),
+                  padding: const EdgeInsets.only(
+                      left: EsSpacing.lg, bottom: EsSpacing.xs),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: EsColors.surfaceDark,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(4),
+                        ),
+                        border: Border.all(
+                            color: EsColors.neonCyan.withOpacity(0.3)),
+                      ),
+                      child: const _BouncingDots(),
                     ),
-                    border: Border.all(
-                        color: EsColors.neonCyan.withOpacity(0.3)),
                   ),
-                  child: const _BouncingDots(),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(key: ValueKey('not_typing')),
+                )
+              : const SizedBox.shrink(key: ValueKey('not_typing')),
+        ),
+      ),
     );
   }
 }

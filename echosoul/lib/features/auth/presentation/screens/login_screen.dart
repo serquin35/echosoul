@@ -70,165 +70,170 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(EsSpacing.xl),
+        child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 
-                  MediaQuery.of(context).padding.top - 
-                  MediaQuery.of(context).padding.bottom - 
-                  (EsSpacing.xl * 2), // Subtracting padding
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'EchoSoul',
-                    style: EsTypography.headlineLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: EsSpacing.sm),
-                  Text(
-                    _isLoginMode ? 'Nunca más sol@.' : 'Únete a nosotros.',
-                    style: EsTypography.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: EsSpacing.xxl),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      hintText: 'Correo electrónico',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu correo';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Ingresa un correo válido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      hintText: 'Contraseña',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(EsSpacing.xl),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 
+                      MediaQuery.of(context).padding.top - 
+                      MediaQuery.of(context).padding.bottom - 
+                      (EsSpacing.xl * 2), // Subtracting padding
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'EchoSoul',
+                        style: EsTypography.headlineLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: EsSpacing.sm),
+                      Text(
+                        _isLoginMode ? 'Nunca más sol@.' : 'Únete a nosotros.',
+                        style: EsTypography.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: EsSpacing.xxl),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          hintText: 'Correo electrónico',
+                          prefixIcon: Icon(Icons.email_outlined),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa tu correo';
+                          }
+                          if (!value.contains('@') || !value.contains('.')) {
+                            return 'Ingresa un correo válido';
+                          }
+                          return null;
                         },
                       ),
-                    ),
-                    obscureText: !_isPasswordVisible,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submitForm(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu contraseña';
-                      }
-                      if (!_isLoginMode && value.length < 6) {
-                        return 'La contraseña debe tener al menos 6 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_isLoginMode) ...[
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
+                      const SizedBox(height: EsSpacing.md),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          hintText: 'Contraseña',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                        obscureText: !_isPasswordVisible,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submitForm(),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa tu contraseña';
+                          }
+                          if (!_isLoginMode && value.length < 6) {
+                            return 'La contraseña debe tener al menos 6 caracteres';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_isLoginMode) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              _showForgotPasswordDialog();
+                            },
+                            child: Text(
+                              '¿Olvidaste tu contraseña?',
+                              style: EsTypography.caption.copyWith(
+                                color: EsColors.neonCyan,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: EsSpacing.xl),
+                      ],
+                      EsButton(
+                        label: _isLoginMode ? 'Ingresar con Correo' : 'Crear Cuenta',
+                        isLoading: isLoading,
+                        onPressed: _submitForm,
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+                      TextButton(
                         onPressed: () {
-                          _showForgotPasswordDialog();
+                          setState(() {
+                            _isLoginMode = !_isLoginMode;
+                            _formKey.currentState?.reset();
+                            _emailController.clear();
+                            _passwordController.clear();
+                          });
                         },
                         child: Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: EsTypography.caption.copyWith(
-                            color: EsColors.neonCyan,
+                          _isLoginMode 
+                              ? '¿No tienes cuenta? Regístrate' 
+                              : '¿Ya tienes cuenta? Inicia sesión',
+                          style: EsTypography.bodyMedium.copyWith(
+                            color: EsColors.textSecondaryDark,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
-                    ),
-                  ] else ...[
-                    const SizedBox(height: EsSpacing.xl),
-                  ],
-                  EsButton(
-                    label: _isLoginMode ? 'Ingresar con Correo' : 'Crear Cuenta',
-                    isLoading: isLoading,
-                    onPressed: _submitForm,
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isLoginMode = !_isLoginMode;
-                        _formKey.currentState?.reset();
-                        _emailController.clear();
-                        _passwordController.clear();
-                      });
-                    },
-                    child: Text(
-                      _isLoginMode 
-                          ? '¿No tienes cuenta? Regístrate' 
-                          : '¿Ya tienes cuenta? Inicia sesión',
-                      style: EsTypography.bodyMedium.copyWith(
-                        color: EsColors.textSecondaryDark,
-                        decoration: TextDecoration.underline,
+                      const SizedBox(height: EsSpacing.lg),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: EsSpacing.md),
+                            child: Text('O', style: EsTypography.caption),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: EsSpacing.lg),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: EsSpacing.md),
-                        child: Text('O', style: EsTypography.caption),
+                      const SizedBox(height: EsSpacing.lg),
+                      EsButton(
+                        label: 'Continuar con Google',
+                        isLoading: isLoading,
+                        variant: EsButtonVariant.secondary,
+                        leadingIcon: Icons.g_mobiledata,
+                        onPressed: () {
+                          ref.read(authControllerProvider.notifier).signInWithGoogle();
+                        },
                       ),
-                      const Expanded(child: Divider()),
+                      const SizedBox(height: EsSpacing.lg),
+                      Text(
+                        'Al continuar, aceptas nuestros Términos de Servicio y Políticas de Privacidad.',
+                        style: EsTypography.caption,
+                        textAlign: TextAlign.center,
+                      ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: EsSpacing.xxl),
+                        TextButton(
+                          onPressed: () {
+                            // This simulates the navigation that should happen when Supabase detects a recovery link
+                            context.go(RouteNames.resetPassword);
+                          },
+                          child: const Text(
+                            '[DEBUG] Simular Navegación a ResetPassword',
+                            style: TextStyle(color: Colors.white24, fontSize: 10),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: EsSpacing.lg),
-                  EsButton(
-                    label: 'Continuar con Google',
-                    isLoading: isLoading,
-                    variant: EsButtonVariant.secondary,
-                    leadingIcon: Icons.g_mobiledata,
-                    onPressed: () {
-                      ref.read(authControllerProvider.notifier).signInWithGoogle();
-                    },
-                  ),
-                  const SizedBox(height: EsSpacing.lg),
-                  Text(
-                    'Al continuar, aceptas nuestros Términos de Servicio y Políticas de Privacidad.',
-                    style: EsTypography.caption,
-                    textAlign: TextAlign.center,
-                  ),
-                  if (kDebugMode) ...[
-                    const SizedBox(height: EsSpacing.xxl),
-                    TextButton(
-                      onPressed: () {
-                        // This simulates the navigation that should happen when Supabase detects a recovery link
-                        context.go(RouteNames.resetPassword);
-                      },
-                      child: const Text(
-                        '[DEBUG] Simular Navegación a ResetPassword',
-                        style: TextStyle(color: Colors.white24, fontSize: 10),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),

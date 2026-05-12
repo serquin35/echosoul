@@ -41,198 +41,203 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
-        data: (profile) => CustomScrollView(
-          slivers: [
-            // ── AppBar con avatar ────────────────────────
-            SliverAppBar(
-              expandedHeight: 220,
-              pinned: true,
-              backgroundColor: EsColors.backgroundDark,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: _AvatarHeader(
-                  displayName: profile.displayName,
-                  avatarUrl: profile.avatarUrl,
-                  email: profile.email,
-                ),
-              ),
-              title: const Text('Mi Perfil', style: EsTypography.headlineMedium),
-            ),
-
-            // ── Contenido en lista ───────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.all(EsSpacing.md),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Sección: Tu información
-                  ProfileSectionCard(
-                    title: 'Tu información',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.person_outline,
-                        label: 'Nombre',
-                        value: profile.displayName,
-                        onTap: () => showProfileEditSheet(
-                          context: context,
-                          title: 'Tu nombre',
-                          hint: 'Como quieres que te llamemos',
-                          initialValue: profile.displayName,
-                          onSave: (value) => ref
-                              .read(profileProvider.notifier)
-                              .updateField(profile.copyWith(displayName: value)),
-                        ),
-                      ),
-                      _ProfileTile(
-                        icon: Icons.email_outlined,
-                        label: 'Correo',
-                        value: profile.email,
-                        isEditable: false,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-
-                  // Sección: Tu Companion
-                  ProfileSectionCard(
-                    title: 'Tu Companion',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.graphic_eq,
-                        label: 'Nombre del Companion',
-                        value: profile.companionName,
-                        iconColor: EsColors.neonCyan,
-                        onTap: () => showProfileEditSheet(
-                          context: context,
-                          title: 'Nombre del Companion',
-                          hint: 'Ej: Echo, Luna, Kai…',
-                          initialValue: profile.companionName,
-                          onSave: (value) => ref
-                              .read(profileProvider.notifier)
-                              .updateField(profile.copyWith(companionName: value)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-
-                  // Sección: Idioma
-                  ProfileSectionCard(
-                    title: 'Idioma',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.language,
-                        label: 'Idioma de la app',
-                        value: '🇪🇸 Español',
-                        iconColor: EsColors.calm,
-                        onTap: () => showLanguageSheet(context: context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-
-                  // Sección: Contacto de emergencia
-                  ProfileSectionCard(
-                    title: 'Contacto de emergencia',
-                    subtitle: 'EchoSoul te lo recordará si lo necesitas',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.person_pin_outlined,
-                        label: 'Nombre del contacto',
-                        value: profile.crisisContactName?.isNotEmpty == true
-                            ? profile.crisisContactName!
-                            : 'No configurado',
-                        valueColor: profile.crisisContactName?.isNotEmpty == true
-                            ? null
-                            : EsColors.textSecondaryDark,
-                        iconColor: EsColors.distress,
-                        onTap: () => showProfileEditSheet(
-                          context: context,
-                          title: 'Nombre del contacto',
-                          hint: 'Nombre de alguien de confianza',
-                          initialValue: profile.crisisContactName ?? '',
-                          onSave: (value) => ref
-                              .read(profileProvider.notifier)
-                              .updateField(profile.copyWith(crisisContactName: value)),
-                        ),
-                      ),
-                      _ProfileTile(
-                        icon: Icons.phone_outlined,
-                        label: 'Teléfono',
-                        value: profile.crisisContactPhone?.isNotEmpty == true
-                            ? profile.crisisContactPhone!
-                            : 'No configurado',
-                        valueColor: profile.crisisContactPhone?.isNotEmpty == true
-                            ? null
-                            : EsColors.textSecondaryDark,
-                        iconColor: EsColors.distress,
-                        keyboardType: TextInputType.phone,
-                        onTap: () => showProfileEditSheet(
-                          context: context,
-                          title: 'Teléfono de emergencia',
-                          hint: '+34 600 000 000',
-                          initialValue: profile.crisisContactPhone ?? '',
-                          keyboardType: TextInputType.phone,
-                          onSave: (value) => ref
-                              .read(profileProvider.notifier)
-                              .updateField(profile.copyWith(crisisContactPhone: value)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-
-                  const SizedBox(height: EsSpacing.md),
-
-                  // Sección: Legal
-                  ProfileSectionCard(
-                    title: 'Información Legal',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.gavel_outlined,
-                        label: 'Avisos Legales y Ética',
-                        value: 'Términos, Privacidad y Compromiso IA',
-                        iconColor: EsColors.primaryBlue,
-                        onTap: () => context.push(RouteNames.legal),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-                  ProfileSectionCard(
-                    title: 'Cuenta',
-                    children: [
-                      _ProfileTile(
-                        icon: Icons.logout,
-                        label: 'Cerrar sesión',
-                        value: '',
-                        isEditable: false,
-                        iconColor: EsColors.warning,
-                        onTap: () => _confirmSignOut(context, ref),
-                      ),
-                      _ProfileTile(
-                        icon: Icons.delete_forever_outlined,
-                        label: 'Eliminar cuenta',
-                        value: '',
-                        isEditable: false,
-                        labelColor: EsColors.distress,
-                        iconColor: EsColors.distress,
-                        onTap: () => _confirmDeleteAccount(context, ref),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: EsSpacing.md),
-
-                  // Versión
-                  Center(
-                    child: Text(
-                      'EchoSoul v1.0.0',
-                      style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+        data: (profile) => Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: CustomScrollView(
+              slivers: [
+                // ── AppBar con avatar ────────────────────────
+                SliverAppBar(
+                  expandedHeight: 220,
+                  pinned: true,
+                  backgroundColor: EsColors.backgroundDark,
+                  elevation: 0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _AvatarHeader(
+                      displayName: profile.displayName,
+                      avatarUrl: profile.avatarUrl,
+                      email: profile.email,
                     ),
                   ),
-                  const SizedBox(height: EsSpacing.xl),
-                ]),
-              ),
+                  title: const Text('Mi Perfil', style: EsTypography.headlineMedium),
+                ),
+    
+                // ── Contenido en lista ───────────────────────
+                SliverPadding(
+                  padding: const EdgeInsets.all(EsSpacing.md),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      // Sección: Tu información
+                      ProfileSectionCard(
+                        title: 'Tu información',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.person_outline,
+                            label: 'Nombre',
+                            value: profile.displayName,
+                            onTap: () => showProfileEditSheet(
+                              context: context,
+                              title: 'Tu nombre',
+                              hint: 'Como quieres que te llamemos',
+                              initialValue: profile.displayName,
+                              onSave: (value) => ref
+                                  .read(profileProvider.notifier)
+                                  .updateField(profile.copyWith(displayName: value)),
+                            ),
+                          ),
+                          _ProfileTile(
+                            icon: Icons.email_outlined,
+                            label: 'Correo',
+                            value: profile.email,
+                            isEditable: false,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+    
+                      // Sección: Tu Companion
+                      ProfileSectionCard(
+                        title: 'Tu Companion',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.graphic_eq,
+                            label: 'Nombre del Companion',
+                            value: profile.companionName,
+                            iconColor: EsColors.neonCyan,
+                            onTap: () => showProfileEditSheet(
+                              context: context,
+                              title: 'Nombre del Companion',
+                              hint: 'Ej: Echo, Luna, Kai…',
+                              initialValue: profile.companionName,
+                              onSave: (value) => ref
+                                  .read(profileProvider.notifier)
+                                  .updateField(profile.copyWith(companionName: value)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+    
+                      // Sección: Idioma
+                      ProfileSectionCard(
+                        title: 'Idioma',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.language,
+                            label: 'Idioma de la app',
+                            value: '🇪🇸 Español',
+                            iconColor: EsColors.calm,
+                            onTap: () => showLanguageSheet(context: context),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+    
+                      // Sección: Contacto de emergencia
+                      ProfileSectionCard(
+                        title: 'Contacto de emergencia',
+                        subtitle: 'EchoSoul te lo recordará si lo necesitas',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.person_pin_outlined,
+                            label: 'Nombre del contacto',
+                            value: profile.crisisContactName?.isNotEmpty == true
+                                ? profile.crisisContactName!
+                                : 'No configurado',
+                            valueColor: profile.crisisContactName?.isNotEmpty == true
+                                ? null
+                                : EsColors.textSecondaryDark,
+                            iconColor: EsColors.distress,
+                            onTap: () => showProfileEditSheet(
+                              context: context,
+                              title: 'Nombre del contacto',
+                              hint: 'Nombre de alguien de confianza',
+                              initialValue: profile.crisisContactName ?? '',
+                              onSave: (value) => ref
+                                  .read(profileProvider.notifier)
+                                  .updateField(profile.copyWith(crisisContactName: value)),
+                            ),
+                          ),
+                          _ProfileTile(
+                            icon: Icons.phone_outlined,
+                            label: 'Teléfono',
+                            value: profile.crisisContactPhone?.isNotEmpty == true
+                                ? profile.crisisContactPhone!
+                                : 'No configurado',
+                            valueColor: profile.crisisContactPhone?.isNotEmpty == true
+                                ? null
+                                : EsColors.textSecondaryDark,
+                            iconColor: EsColors.distress,
+                            keyboardType: TextInputType.phone,
+                            onTap: () => showProfileEditSheet(
+                              context: context,
+                              title: 'Teléfono de emergencia',
+                              hint: '+34 600 000 000',
+                              initialValue: profile.crisisContactPhone ?? '',
+                              keyboardType: TextInputType.phone,
+                              onSave: (value) => ref
+                                  .read(profileProvider.notifier)
+                                  .updateField(profile.copyWith(crisisContactPhone: value)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+    
+                      const SizedBox(height: EsSpacing.md),
+    
+                      // Sección: Legal
+                      ProfileSectionCard(
+                        title: 'Información Legal',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.gavel_outlined,
+                            label: 'Avisos Legales y Ética',
+                            value: 'Términos, Privacidad y Compromiso IA',
+                            iconColor: EsColors.primaryBlue,
+                            onTap: () => context.push(RouteNames.legal),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+                      ProfileSectionCard(
+                        title: 'Cuenta',
+                        children: [
+                          _ProfileTile(
+                            icon: Icons.logout,
+                            label: 'Cerrar sesión',
+                            value: '',
+                            isEditable: false,
+                            iconColor: EsColors.warning,
+                            onTap: () => _confirmSignOut(context, ref),
+                          ),
+                          _ProfileTile(
+                            icon: Icons.delete_forever_outlined,
+                            label: 'Eliminar cuenta',
+                            value: '',
+                            isEditable: false,
+                            labelColor: EsColors.distress,
+                            iconColor: EsColors.distress,
+                            onTap: () => _confirmDeleteAccount(context, ref),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+    
+                      // Versión
+                      Center(
+                        child: Text(
+                          'EchoSoul v1.0.0',
+                          style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+                        ),
+                      ),
+                      const SizedBox(height: EsSpacing.xl),
+                    ]),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
