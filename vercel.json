@@ -1,9 +1,0 @@
-{
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "routes": [
-    { "src": "/app/index.html", "continue": true },
-    { "src": "/app/((?!.*\\.).*)", "dest": "/app/index.html" },
-    { "src": "/app/(.*)", "continue": true }
-  ]
-}

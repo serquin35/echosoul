@@ -27,8 +27,14 @@ jobs:
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
           echo "AUTH_REDIRECT_URL=${{ secrets.AUTH_REDIRECT_URL }}" >> .env
           echo "N8N_CHAT_WEBHOOK_URL=${{ secrets.N8N_CHAT_WEBHOOK_URL }}" >> .env
+          flutter clean
           flutter pub get
           flutter build web --release --base-href "/app/"
+
+      - name: Debug Flutter Build
+        run: |
+          echo "🔍 Contenido de echosoul/build/web/index.html recién generado:"
+          head -n 30 echosoul/build/web/index.html
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -69,8 +75,8 @@ jobs:
           echo "✅ Output verificado — /app/index.html presente"
           
           # 5. Inspeccionar la configuración generada para verificar rewrites
-          echo "🔍 Inspeccionando .vercel/output/config.json para verificar rewrites..."
-          cat .vercel/output/config.json | grep -A 10 "rewrites" || echo "⚠️ Advertencia: No se encontraron rewrites en el config generado."
+          echo "🔍 Inspeccionando .vercel/output/config.json final:"
+          cat .vercel/output/config.json
           
           echo "Tamaño total del output:"
           du -sh .vercel/output/static/
