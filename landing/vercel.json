@@ -1,10 +1,8 @@
 {
   "trailingSlash": false,
   "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/app/:path*",
-      "destination": "/app/index.html"
-    }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/app/.*", "dest": "/app/index.html" }
   ]
 }
