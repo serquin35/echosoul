@@ -40,6 +40,15 @@ jobs:
           mkdir -p landing/public/app
           cp -r echosoul/build/web/* landing/public/app/
 
+      - name: Verify Flutter build was copied correctly
+        run: |
+          echo "🔍 Verificando que Flutter build está en landing/public/app/..."
+          ls -la landing/public/app/index.html || (echo "❌ ERROR: Flutter index.html no encontrado en landing/public/app/" && exit 1)
+          ls -la landing/public/app/main.dart.js 2>/dev/null || ls -la landing/public/app/flutter.js 2>/dev/null || echo "⚠️  Nota: Comprobando archivos JS de Flutter..."
+          echo "✅ Flutter build verificado correctamente"
+          echo "Tamaño de landing/public/app:"
+          du -sh landing/public/app/
+
       - name: Build and Package for Vercel
         working-directory: ./landing
         run: |
@@ -47,14 +56,19 @@ jobs:
           npm install
           
           # 2. Vincular el proyecto (genera .vercel/project.json)
+          # IMPORTANTE: vercel pull descarga la config desde Vercel,
+          # pero el vercel.json de la RAÍZ del repo tiene precedencia en producción.
           npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
           
           # 3. Ejecutar el build oficial de Vercel CLI
           npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
           
-          # 4. DEBUG: Listar archivos para asegurar que /app existe en la salida
-          echo "Verificando estructura de archivos en .vercel/output/static:"
-          ls -R .vercel/output/static/app || echo "ERROR: Carpeta /app no encontrada en el build"
+          # 4. Verificar que /app/index.html existe en el output final (crítico para SPA routing)
+          echo "🔍 Verificando estructura de .vercel/output/static:"
+          ls -la .vercel/output/static/app/index.html || (echo "❌ ERROR CRÍTICO: /app/index.html no está en el output. Los links de la landing darán 404." && exit 1)
+          echo "✅ Output verificado — /app/index.html presente"
+          echo "Tamaño total del output:"
+          du -sh .vercel/output/static/
           
           # 5. Desplegar el resultado empaquetado
           npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
