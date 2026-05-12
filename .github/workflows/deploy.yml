@@ -1,10 +1,7 @@
-name: Unified Deployment (Prebuilt)
+name: Unified Deployment (Clean Structure)
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
     branches:
       - master
 
@@ -31,58 +28,35 @@ jobs:
           flutter pub get
           flutter build web --release --base-href "/app/"
 
-      - name: Debug Flutter Build
-        run: |
-          echo "🔍 Contenido de echosoul/build/web/index.html recién generado:"
-          head -n 30 echosoul/build/web/index.html
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Integrate Flutter into Landing
-        run: |
-          mkdir -p landing/public/app
-          cp -r echosoul/build/web/* landing/public/app/
-
-      - name: Verify Flutter build was copied correctly
-        run: |
-          echo "🔍 Verificando que Flutter build está en landing/public/app/..."
-          ls -la landing/public/app/index.html || (echo "❌ ERROR: Flutter index.html no encontrado en landing/public/app/" && exit 1)
-          ls -la landing/public/app/main.dart.js 2>/dev/null || ls -la landing/public/app/flutter.js 2>/dev/null || echo "⚠️  Nota: Comprobando archivos JS de Flutter..."
-          echo "✅ Flutter build verificado correctamente"
-          echo "Tamaño de landing/public/app:"
-          du -sh landing/public/app/
-
-      - name: Build and Package for Vercel
+      - name: Build Landing Page (Vite)
         working-directory: ./landing
         run: |
-          # 1. Instalar dependencias necesarias para el build de Vite
           npm install
+          npm run build
+
+      - name: Assemble Production Bundle
+        run: |
+          mkdir -p deploy/app
+          # 1. Copiar Landing Page (Vite output)
+          cp -r landing/dist/* deploy/
+          # 2. Copiar Flutter App (Flutter output)
+          cp -r echosoul/build/web/* deploy/app/
+          # 3. Copiar vercel.json a la carpeta de despliegue
+          cp vercel.json deploy/
           
-          # 2. Vincular el proyecto (genera .vercel/project.json)
-          # IMPORTANTE: vercel pull descarga la config desde Vercel,
-          # pero el vercel.json de la RAÍZ del repo tiene precedencia en producción.
-          npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
-          
-          # 3. Ejecutar el build oficial de Vercel CLI
-          npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
-          
-          # 4. Verificar que /app/index.html existe en el output final (crítico para SPA routing)
-          echo "🔍 Verificando estructura de .vercel/output/static:"
-          ls -la .vercel/output/static/app/index.html || (echo "❌ ERROR CRÍTICO: /app/index.html no está en el output. Los links de la landing darán 404." && exit 1)
-          echo "✅ Output verificado — /app/index.html presente"
-          
-          # 5. Inspeccionar la configuración generada para verificar rewrites
-          echo "🔍 Inspeccionando .vercel/output/config.json final:"
-          cat .vercel/output/config.json
-          
-          echo "Tamaño total del output:"
-          du -sh .vercel/output/static/
-          
-          # 6. Desplegar el resultado empaquetado
-          npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+          echo "🔍 Estructura de la carpeta deploy:"
+          ls -R deploy | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
+          ls -la deploy/index.html
+          ls -la deploy/app/index.html
+
+      - name: Deploy to Vercel
+        run: |
+          npx vercel deploy deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
