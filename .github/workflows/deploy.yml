@@ -45,6 +45,7 @@ jobs:
         run: |
           npm install
           npm run build
+          cp vercel.json dist/
 
       - name: Deploy to Vercel (Prebuilt)
         working-directory: ./landing
