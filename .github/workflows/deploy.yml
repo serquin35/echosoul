@@ -40,29 +40,21 @@ jobs:
           mkdir -p landing/public/app
           cp -r echosoul/build/web/* landing/public/app/
 
-      - name: Build Landing (Vite)
+      - name: Build and Package for Vercel
         working-directory: ./landing
         run: |
+          # 1. Instalar dependencias necesarias para el build de Vite
           npm install
-          npm run build
-          cp vercel.json dist/
-
-      - name: Deploy to Vercel (Prebuilt)
-        working-directory: ./landing
-        run: |
-          # 1. Vincular el proyecto local con Vercel
+          
+          # 2. Vincular el proyecto (genera .vercel/project.json)
           npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
           
-          # 2. Crear la estructura oficial de Vercel Prebuilt
-          mkdir -p .vercel/output/static
+          # 3. Ejecutar el build oficial de Vercel CLI
+          # Esto generará automáticamente la carpeta .vercel/output con el config.json correcto (v3)
+          # y ejecutará el comando de build configurado (vite build)
+          npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
           
-          # 3. Mover todos los archivos construidos a static
-          cp -r dist/* .vercel/output/static/
-          
-          # 4. Convertir vercel.json a la configuración de salida de Vercel
-          cp vercel.json .vercel/output/config.json
-          
-          # 5. Desplegar usando el modo --prebuilt
+          # 4. Desplegar el resultado empaquetado
           npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
