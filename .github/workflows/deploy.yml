@@ -1,0 +1,59 @@
+name: Unified Deployment (Landing + App)
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Flutter dependencies
+        working-directory: ./echosoul
+        run: flutter pub get
+
+      - name: Build Flutter App (Web)
+        working-directory: ./echosoul
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "AUTH_REDIRECT_URL=${{ secrets.AUTH_REDIRECT_URL }}" >> .env
+          echo "N8N_CHAT_WEBHOOK_URL=${{ secrets.N8N_CHAT_WEBHOOK_URL }}" >> .env
+          flutter build web --release
+
+      - name: Prepare Landing Directory
+        run: |
+          mkdir -p landing/public/app
+          cp -r echosoul/build/web/* landing/public/app/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Landing dependencies
+        working-directory: ./landing
+        run: npm install
+
+      - name: Build Landing
+        working-directory: ./landing
+        run: npm run build
+
+      - name: Deploy to Vercel
+        working-directory: ./landing
+        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
