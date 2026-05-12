@@ -39,37 +39,25 @@ jobs:
           npm install
           npm run build
 
-      - name: Assemble Production Bundle (Vercel Build Output API)
+      - name: Assemble Production Bundle (Pure Static)
         run: |
-          # 1. Limpiar y crear estructura de salida de Vercel
-          rm -rf .vercel/output
-          mkdir -p .vercel/output/static/app
-          
-          # 2. Copiar Landing Page (Vite output) a la raíz estática
-          cp -r landing/dist/* .vercel/output/static/
-          
-          # 3. Copiar Flutter App (Flutter output) a la subcarpeta /app/
-          cp -r echosoul/build/web/* .vercel/output/static/app/
-          
-          # 4. Configurar el archivo de configuración (Version 3 es obligatoria para --prebuilt)
-          echo '{
-            "version": 3,
-            "cleanUrls": true,
-            "trailingSlash": false,
-            "rewrites": [
-              {
-                "source": "/app/:path((?!.*\\.).*)",
-                "destination": "/app/index.html"
-              }
-            ]
-          }' > .vercel/output/config.json
+          mkdir -p deploy/app
+          # 1. Copiar solo el RESULTADO de Vite (no el código fuente ni package.json)
+          cp -r landing/dist/* deploy/
+          # 2. Copiar el RESULTADO de Flutter
+          cp -r echosoul/build/web/* deploy/app/
+          # 3. Copiar el vercel.json (Versión 2, la estándar)
+          cp vercel.json deploy/
           
           echo "🔍 Estructura de despliegue generada:"
-          ls -R .vercel/output | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
+          ls -R deploy | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
+          
+          # Verificar que NO haya package.json en deploy para evitar auto-build de Vercel
+          find deploy -name "package.json" -delete
 
       - name: Deploy to Vercel
         run: |
-          npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+          npx vercel deploy deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
