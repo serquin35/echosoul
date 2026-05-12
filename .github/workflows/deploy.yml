@@ -46,12 +46,25 @@ jobs:
           cp -r landing/dist/* .vercel/output/static/
           # 2. Copiar App (Flutter)
           cp -r echosoul/build/web/* .vercel/output/static/app/
-          # 3. Configuración para Vercel (Build Output API v3)
-          # Usamos el patrón estándar: primero intentar archivos físicos, luego reescribir a index.html
-          echo '{"version":3,"routes":[{"handle":"filesystem"},{"src":"/app/.*","dest":"/app/index.html"}]}' > .vercel/output/config.json
           
-          echo "🔍 Estructura del Build Output API:"
-          ls -R .vercel/output | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
+          # 3. Configuración para Vercel (Build Output API v3)
+          # Usamos cat para evitar problemas de escape y definimos rutas SPA robustas
+          cat <<EOF > .vercel/output/config.json
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/app/(.*)", "dest": "/app/index.html" },
+              { "src": "/((?!app/).*)", "dest": "/index.html" }
+            ]
+          }
+          EOF
+          
+          # 4. Eliminar vercel.json de la raíz en el paquete de despliegue para evitar conflictos
+          # (Solo lo borramos del entorno de ejecución, no del repo)
+          rm -f vercel.json
+          
+          echo "🔍 Estructura del Build Output API generada correctamente."
 
       - name: Deploy to Vercel
         run: |
