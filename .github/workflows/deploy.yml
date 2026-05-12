@@ -51,9 +51,18 @@ jobs:
           # 3. Copiar Flutter App (Flutter output) a la subcarpeta /app/
           cp -r echosoul/build/web/* .vercel/output/static/app/
           
-          # 4. Configurar el archivo de configuración para el despliegue pre-construido
-          # Vercel espera config.json en .vercel/output/
-          cp vercel.json .vercel/output/config.json
+          # 4. Configurar el archivo de configuración (Version 3 es obligatoria para --prebuilt)
+          echo '{
+            "version": 3,
+            "cleanUrls": true,
+            "trailingSlash": false,
+            "rewrites": [
+              {
+                "source": "/app/:path((?!.*\\.).*)",
+                "destination": "/app/index.html"
+              }
+            ]
+          }' > .vercel/output/config.json
           
           echo "🔍 Estructura de despliegue generada:"
           ls -R .vercel/output | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
