@@ -50,8 +50,20 @@ jobs:
       - name: Deploy to Vercel (Prebuilt)
         working-directory: ./landing
         run: |
-          # Usamos npx vercel para desplegar la carpeta dist directamente
-          npx vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --cwd ./dist
+          # 1. Vincular el proyecto local con Vercel
+          npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
+          
+          # 2. Crear la estructura oficial de Vercel Prebuilt
+          mkdir -p .vercel/output/static
+          
+          # 3. Mover todos los archivos construidos a static
+          cp -r dist/* .vercel/output/static/
+          
+          # 4. Convertir vercel.json a la configuración de salida de Vercel
+          cp vercel.json .vercel/output/config.json
+          
+          # 5. Desplegar usando el modo --prebuilt
+          npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
