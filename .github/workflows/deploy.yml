@@ -39,25 +39,22 @@ jobs:
           npm install
           npm run build
 
-      - name: Assemble Production Bundle (Pure Static)
+      - name: Assemble Production Bundle (Build Output API)
         run: |
-          mkdir -p deploy/app
-          # 1. Copiar solo el RESULTADO de Vite (no el código fuente ni package.json)
-          cp -r landing/dist/* deploy/
-          # 2. Copiar el RESULTADO de Flutter
-          cp -r echosoul/build/web/* deploy/app/
-          # 3. Copiar el vercel.json (Versión 2, la estándar)
-          cp vercel.json deploy/
+          mkdir -p .vercel/output/static/app
+          # 1. Copiar Landing (Vite)
+          cp -r landing/dist/* .vercel/output/static/
+          # 2. Copiar App (Flutter)
+          cp -r echosoul/build/web/* .vercel/output/static/app/
+          # 3. Configuración para Vercel (Build Output API v3)
+          echo '{"version":3,"routes":[{"src":"/app/((?!.*\\.).*)","dest":"/app/index.html"},{"handle":"filesystem"}]}' > .vercel/output/config.json
           
-          echo "🔍 Estructura de despliegue generada:"
-          ls -R deploy | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
-          
-          # Verificar que NO haya package.json en deploy para evitar auto-build de Vercel
-          find deploy -name "package.json" -delete
+          echo "🔍 Estructura del Build Output API:"
+          ls -R .vercel/output | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
 
       - name: Deploy to Vercel
         run: |
-          npx vercel deploy deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+          npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
