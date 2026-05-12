@@ -39,24 +39,28 @@ jobs:
           npm install
           npm run build
 
-      - name: Assemble Production Bundle
+      - name: Assemble Production Bundle (Vercel Build Output API)
         run: |
-          mkdir -p deploy/app
-          # 1. Copiar Landing Page (Vite output)
-          cp -r landing/dist/* deploy/
-          # 2. Copiar Flutter App (Flutter output)
-          cp -r echosoul/build/web/* deploy/app/
-          # 3. Copiar vercel.json a la carpeta de despliegue
-          cp vercel.json deploy/
+          # 1. Limpiar y crear estructura de salida de Vercel
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static/app
           
-          echo "🔍 Estructura de la carpeta deploy:"
-          ls -R deploy | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
-          ls -la deploy/index.html
-          ls -la deploy/app/index.html
+          # 2. Copiar Landing Page (Vite output) a la raíz estática
+          cp -r landing/dist/* .vercel/output/static/
+          
+          # 3. Copiar Flutter App (Flutter output) a la subcarpeta /app/
+          cp -r echosoul/build/web/* .vercel/output/static/app/
+          
+          # 4. Configurar el archivo de configuración para el despliegue pre-construido
+          # Vercel espera config.json en .vercel/output/
+          cp vercel.json .vercel/output/config.json
+          
+          echo "🔍 Estructura de despliegue generada:"
+          ls -R .vercel/output | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
 
       - name: Deploy to Vercel
         run: |
-          npx vercel deploy deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+          npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
