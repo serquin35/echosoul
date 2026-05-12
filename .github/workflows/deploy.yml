@@ -1,4 +1,4 @@
-name: Unified Deployment (Landing + App)
+name: Unified Deployment (Prebuilt)
 
 on:
   push:
@@ -20,10 +20,6 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Install Flutter dependencies
-        working-directory: ./echosoul
-        run: flutter pub get
-
       - name: Build Flutter App (Web)
         working-directory: ./echosoul
         run: |
@@ -31,29 +27,30 @@ jobs:
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
           echo "AUTH_REDIRECT_URL=${{ secrets.AUTH_REDIRECT_URL }}" >> .env
           echo "N8N_CHAT_WEBHOOK_URL=${{ secrets.N8N_CHAT_WEBHOOK_URL }}" >> .env
-          flutter build web --release
-
-      - name: Prepare Landing Directory
-        run: |
-          mkdir -p landing/public/app
-          cp -r echosoul/build/web/* landing/public/app/
+          flutter pub get
+          flutter build web --release --base-href "/app/"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Landing dependencies
-        working-directory: ./landing
-        run: npm install
+      - name: Integrate Flutter into Landing
+        run: |
+          mkdir -p landing/public/app
+          cp -r echosoul/build/web/* landing/public/app/
 
-      - name: Build Landing
+      - name: Build Landing (Vite)
         working-directory: ./landing
-        run: npm run build
+        run: |
+          npm install
+          npm run build
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (Prebuilt)
         working-directory: ./landing
-        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+        run: |
+          # Usamos npx vercel para desplegar la carpeta dist directamente
+          npx vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --cwd ./dist
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
