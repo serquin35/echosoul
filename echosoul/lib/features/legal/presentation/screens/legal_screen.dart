@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
+import '../../../../core/router/route_names.dart';
 import 'package:echosoul/features/profile/presentation/widgets/profile_section_card.dart';
 
 class LegalScreen extends StatelessWidget {
@@ -17,6 +19,16 @@ class LegalScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: EsColors.textPrimaryDark),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.goNamed(RouteNames.companionHome);
+            }
+          },
+        ),
       ),
       body: Center(
         child: ConstrainedBox(

@@ -16,9 +16,8 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/companion/presentation/screens/main_layout_screen.dart';
 import '../../features/companion/presentation/screens/companion_home_screen.dart';
 import '../../features/companion/presentation/screens/chat_screen.dart';
+import '../../features/companion/presentation/screens/voice_call_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
-// import '../../features/mood/presentation/pages/mood_tracker_page.dart';
-// import '../../features/legal/presentation/pages/legal_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Watch the auth state to redirect users automatically
@@ -108,7 +107,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'voice',
                 name: RouteNames.voiceCall,
-                builder: (context, state) => const _PlaceholderPage(label: 'Voice Call'),
+                builder: (context, state) => const VoiceCallScreen(),
               ),
             ],
           ),
@@ -122,12 +121,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: RouteNames.profile,
             builder: (context, state) => const ProfileScreen(),
           ),
+          GoRoute(
+            path: RouteNames.legal,
+            name: RouteNames.legal,
+            builder: (context, state) => const LegalScreen(),
+          ),
         ],
-      ),
-      GoRoute(
-        path: RouteNames.legal,
-        name: RouteNames.legal,
-        builder: (context, state) => const LegalScreen(),
       ),
       GoRoute(
         path: RouteNames.resetPassword,

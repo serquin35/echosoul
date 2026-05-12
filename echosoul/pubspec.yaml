@@ -65,8 +65,7 @@ flutter:
 
   assets:
     - .env
-    # - assets/images/
-    # - assets/animations/
+    - assets/images/
 
   # fonts:
   #   - family: Inter

@@ -178,8 +178,13 @@ class _EsSidebar extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.graphic_eq,
-                        color: Colors.white, size: 20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Image.asset(
+                        'assets/images/logo_icon.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
