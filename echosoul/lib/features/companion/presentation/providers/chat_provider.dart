@@ -72,7 +72,8 @@ class ChatNotifier extends Notifier<ChatState> {
 
     // 2. Call repository
     final sessionId = ref.read(chatSessionIdProvider);
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'anon';
+    const nullUuid = '00000000-0000-0000-0000-000000000000';
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? nullUuid;
     final reply = await ref.read(chatRepositoryProvider).sendMessage(
           userMessage: text.trim(),
           sessionId: sessionId,
