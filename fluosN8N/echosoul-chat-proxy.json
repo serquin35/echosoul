@@ -1,0 +1,534 @@
+{
+  "name": "EchoSoul — chat-proxy",
+  "nodes": [
+    {
+      "id": "67151bdc-8097-4115-b6fe-b7361e8870da",
+      "name": "Webhook Chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "path": "chat",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "fb47254e-3cbb-4880-a9a2-5627757fe4bf",
+      "name": "Check Usage Limits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/messages?user_id=eq.{{ $('Webhook Chat').first().json.user_id }}&created_at=gte.{{ new Date(Date.now()-86400000).toISOString() }}&select=count",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "84daa0cb-b3e8-46fd-a872-f2203c896800",
+      "name": "Parse Usage Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// Supabase devuelve array con un objeto {count: \"N\"} cuando usas ?select=count\nconst raw = $input.first().json;\nconst countArr = Array.isArray(raw) ? raw : [raw];\nconst messageCount = parseInt(countArr[0]?.count ?? countArr.length ?? 0, 10);\n\n// Traemos el límite del plan desde los datos originales del webhook\nconst webhookData = $('Webhook Chat').first().json;\nconst planLimit = webhookData.plan_limit ?? 20; // fallback 20 para plan free\n\nreturn [{ json: {\n  ...webhookData,\n  message_count: messageCount,\n  plan_limit: planLimit,\n  limit_reached: messageCount >= planLimit\n}}];\n"
+      }
+    },
+    {
+      "id": "bb573249-3dbf-4c9a-ae74-1947c03a1aec",
+      "name": "IF Limit Reached",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "67c2bf41-a3b8-45bc-a384-aa5dc0bd9778",
+              "leftValue": "={{ $json.limit_reached }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "33729c49-13b7-46b2-92fc-f82bfc55f27e",
+      "name": "Respond 429 Limit",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        900
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"error\":\"limit_reached\",\"message\":\"Has alcanzado el límite diario de mensajes\",\"upgrade_url\":\"{{ $vars.UPGRADE_URL }}\"}",
+        "options": {
+          "responseCode": 429
+        }
+      }
+    },
+    {
+      "id": "ed66921a-ebaa-4bb9-990f-f4d909f5d87d",
+      "name": "Fetch Memories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/user_memories?user_id=eq.{{ $json.user_id }}&order=importance.desc,updated_at.desc&limit=20",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9bb6c90a-ed6d-4cff-ba01-d9cc253cd066",
+      "name": "Fetch Recent Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/messages?session_id=eq.{{ $('Webhook Chat').first().json.session_id }}&order=created_at.desc&limit=8",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "985d1867-0eb9-4d4e-a652-4d5122b7f947",
+      "name": "Build System Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst webhook  = $('Webhook Chat').first().json;\nconst memories = $('Fetch Memories').all().map(i => i.json);\nconst msgs     = $('Fetch Recent Messages').all().map(i => i.json);\n\nconst memoriesText = memories.length\n  ? memories.map(m => `- [${m.category ?? 'general'}] ${m.content}`).join('\\n')\n  : '(sin memorias previas registradas)';\n\nconst systemPrompt = `Eres EchoSoul, una compañía empática e inteligente.\nTu objetivo es ser una presencia positiva y de apoyo para el usuario.\n\nLo que recuerdas de este usuario:\n${memoriesText}\n\nDirectrices:\n- Responde siempre en el idioma del usuario.\n- Sé empático, cálido y auténtico. No seas artificialmente positivo.\n- Mantén respuestas concisas (2-4 párrafos máximo).\n- Nunca des consejos médicos ni jurídicos específicos.\n- Si el usuario expresa angustia severa, prioriza su bienestar sobre la conversación.`;\n\n// DB devuelve DESC → invertir a ASC para el LLM\nconst history = [...msgs].reverse().map(m => ({ role: m.role, content: m.content }));\nhistory.push({ role: 'user', content: webhook.message });\n\nreturn [{ json: {\n  user_id:      webhook.user_id,\n  session_id:   webhook.session_id,\n  message:      webhook.message,\n  systemPrompt: systemPrompt,\n  messages:     history\n}}];\n"
+      }
+    },
+    {
+      "id": "49124bae-0bff-45a7-81e3-5dba8258a929",
+      "name": "Call Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $vars.CLAUDE_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:$json.systemPrompt,messages:$json.messages}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e99c4442-7b58-4007-b92a-1570232e0728",
+      "name": "Crisis Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.N8N_BASE_URL }}/webhook/crisis-check",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$('Webhook Chat').first().json.user_id,message:$('Webhook Chat').first().json.message}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "8c4489d2-70ef-40fb-9543-9ea5dbdf3e31",
+      "name": "Merge Final Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1900
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst prev    = $('Call Claude API').first().json;\nconst crisis  = $('Crisis Check').first().json;\nconst ctx     = $('Build System Prompt').first().json;\n\nconst llmReply   = prev.content?.[0]?.text ?? '';\nconst isCrisis   = crisis.isCrisis ?? false;\nconst finalReply = isCrisis && crisis.safeReply ? crisis.safeReply : llmReply;\n\nreturn [{ json: {\n  user_id:     ctx.user_id,\n  session_id:  ctx.session_id,\n  message:     ctx.message,\n  reply:       finalReply,\n  is_crisis:   isCrisis,\n  tokens_used: prev.usage?.output_tokens ?? 0\n}}];\n"
+      }
+    },
+    {
+      "id": "657fcde6-b4e5-4b73-b074-492bb995591e",
+      "name": "Save Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        2100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify([{user_id:$json.user_id,session_id:$json.session_id,role:'user',content:$json.message},{user_id:$json.user_id,session_id:$json.session_id,role:'assistant',content:$json.reply}]) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "24234865-24bb-433d-ac57-c2b21631fa5e",
+      "name": "Fire Memory Extractor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        2300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.N8N_BASE_URL }}/webhook/extract-memory",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,message:$json.message,reply:$json.reply}) }}",
+        "options": {
+          "timeout": 100
+        }
+      }
+    },
+    {
+      "id": "c1625413-5ddf-4ea4-977a-f597d102d6e2",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        2500
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({reply:$json.reply,session_id:$json.session_id,is_crisis:$json.is_crisis,tokens_used:$json.tokens_used}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "ecc0fe90-d36b-475b-baba-3bac39234c38",
+      "name": "⚙️ Variables requeridas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        100
+      ],
+      "parameters": {
+        "content": "## Variables n8n requeridas\n- `SUPABASE_URL` → URL de tu proyecto Supabase\n- `SUPABASE_SERVICE_KEY` → Service Role Key\n- `CLAUDE_API_KEY` → API Key de Anthropic\n- `N8N_BASE_URL` → URL pública de tu n8n (ej: https://n8n.tudominio.com)\n- `UPGRADE_URL` → URL de tu página de precios",
+        "height": 200,
+        "width": 340,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Chat": {
+      "main": [
+        [
+          {
+            "node": "Check Usage Limits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Usage Limits": {
+      "main": [
+        [
+          {
+            "node": "Parse Usage Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Usage Count": {
+      "main": [
+        [
+          {
+            "node": "IF Limit Reached",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Limit Reached": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 Limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Memories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Memories": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Messages": {
+      "main": [
+        [
+          {
+            "node": "Build System Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build System Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Claude API": {
+      "main": [
+        [
+          {
+            "node": "Crisis Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crisis Check": {
+      "main": [
+        [
+          {
+            "node": "Merge Final Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Final Reply": {
+      "main": [
+        [
+          {
+            "node": "Save Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Messages": {
+      "main": [
+        [
+          {
+            "node": "Fire Memory Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fire Memory Extractor": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "ff60753d-8e60-4ab6-ae86-0207cfa715b4",
+  "meta": {
+    "instanceId": "echosoul-local"
+  }
+}

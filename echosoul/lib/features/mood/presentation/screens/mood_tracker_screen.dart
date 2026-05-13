@@ -58,26 +58,62 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
 
     return Scaffold(
       backgroundColor: EsColors.backgroundDark,
-      appBar: AppBar(
-        title: const Text('¿Cómo te sientes?', style: EsTypography.headlineLarge),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(EsSpacing.md),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Selection Card
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: EsSpacing.md,
+            vertical: EsSpacing.sm,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Custom Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: EsSpacing.lg),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new,
+                              color: EsColors.textPrimaryDark, size: 20),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        const SizedBox(width: EsSpacing.sm),
+                        Text(
+                          '¿Cómo te sientes?',
+                          style: EsTypography.headlineLarge.copyWith(
+                            color: EsColors.textPrimaryDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Selection Card with Glassmorphism-style
                 Container(
                   padding: const EdgeInsets.all(EsSpacing.lg),
                   decoration: BoxDecoration(
-                    color: EsColors.surfaceDark,
+                    gradient: LinearGradient(
+                      colors: [
+                        EsColors.surfaceDark,
+                        EsColors.surfaceElevated.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: EsColors.surfaceElevated.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -145,8 +181,26 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                             return Container(
                               padding: const EdgeInsets.all(EsSpacing.md),
                               decoration: BoxDecoration(
-                                color: EsColors.surfaceDark,
-                                borderRadius: BorderRadius.circular(16),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    EsColors.surfaceDark,
+                                    EsColors.surfaceElevated.withOpacity(0.4),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.05),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 children: [
@@ -207,8 +261,9 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _getEmojiForScore(int score) {
     return switch (score) {

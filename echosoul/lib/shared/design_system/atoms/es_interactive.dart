@@ -49,7 +49,7 @@ class _EsInteractiveState extends State<EsInteractive> {
           duration: widget.duration,
           curve: Curves.easeOutCubic,
           child: AnimatedOpacity(
-            opacity: _isHovered ? widget.hoverOpacity : 1.0,
+            opacity: (_isHovered ? widget.hoverOpacity : 1.0).clamp(0.0, 1.0),
             duration: widget.duration,
             child: widget.child,
           ),

@@ -55,13 +55,32 @@ class CompanionHomeScreen extends ConsumerWidget {
                           context.pushNamed(RouteNames.profile);
                         },
                         hoverScale: 1.05,
-                        child: CircleAvatar(
-                          radius: 24,
-                          backgroundColor: EsColors.surfaceElevated,
-                          backgroundImage: user?.avatarUrl != null ? NetworkImage(user!.avatarUrl!) : null,
-                          child: user?.avatarUrl == null
-                              ? const Icon(Icons.person, color: EsColors.textSecondaryDark)
-                              : null,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: EsColors.primaryBlue.withOpacity(0.5),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: EsColors.primaryBlue.withOpacity(0.2),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: EsColors.surfaceElevated,
+                            backgroundImage: user?.avatarUrl != null
+                                ? NetworkImage(user!.avatarUrl!)
+                                : null,
+                            child: user?.avatarUrl == null
+                                ? const Icon(Icons.person,
+                                    color: EsColors.textSecondaryDark)
+                                : null,
+                          ),
                         ),
                       ),
                     ],
@@ -77,7 +96,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                       return Transform.scale(
                         scale: 0.8 + (0.2 * value),
                         child: Opacity(
-                          opacity: value,
+                          opacity: value.clamp(0.0, 1.0),
                           child: child,
                         ),
                       );
@@ -88,87 +107,82 @@ class CompanionHomeScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          gradient: LinearGradient(
+                            colors: [
+                              EsColors.primaryBlue.withOpacity(0.15),
+                              EsColors.deepBlue.withOpacity(0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withOpacity(0.15),
                             width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: EsColors.primaryBlue.withOpacity(0.1),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        child: Stack(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Subtle gradient background inside glass
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      EsColors.primaryBlue.withOpacity(0.2),
-                                      EsColors.deepBlue.withOpacity(0.1),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: EsColors.primaryBlue.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: EsColors.primaryBlue.withOpacity(0.4),
+                                        blurRadius: 10,
+                                      ),
                                     ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                                  ),
+                                  child: const Icon(Icons.graphic_eq, color: Colors.white, size: 32),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        companionName,
+                                        style: EsTypography.headlineLarge.copyWith(
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black.withOpacity(0.3),
+                                              offset: const Offset(0, 2),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        'Siempre aquí para escucharte',
+                                        style: EsTypography.bodyMedium.copyWith(
+                                          color: Colors.white.withOpacity(0.8),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: EsColors.primaryBlue.withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: EsColors.primaryBlue.withOpacity(0.4),
-                                            blurRadius: 10,
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(Icons.graphic_eq, color: Colors.white, size: 32),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            companionName,
-                                            style: EsTypography.headlineLarge.copyWith(
-                                              color: Colors.white,
-                                              shadows: [
-                                                Shadow(
-                                                  color: Colors.black.withOpacity(0.3),
-                                                  offset: const Offset(0, 2),
-                                                  blurRadius: 4,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Text(
-                                            'Siempre aquí para escucharte',
-                                            style: EsTypography.bodyMedium.copyWith(
-                                              color: Colors.white.withOpacity(0.8),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                EsButton(
-                                  label: 'Iniciar Chat',
-                                  onPressed: () => context.pushNamed(RouteNames.chat),
-                                  variant: EsButtonVariant.primary,
-                                  width: double.infinity,
-                                  hasGlow: true,
-                                ),
                               ],
+                            ),
+                            const SizedBox(height: 24),
+                            EsButton(
+                              label: 'Iniciar Chat',
+                              onPressed: () => context.pushNamed(RouteNames.chat),
+                              variant: EsButtonVariant.primary,
+                              width: double.infinity,
+                              hasGlow: true,
                             ),
                           ],
                         ),
@@ -193,7 +207,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                           builder: (context, value, child) {
                             return Transform.translate(
                               offset: Offset(0, 20 * (1 - value)),
-                              child: Opacity(opacity: value, child: child),
+                              child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
                             );
                           },
                           child: _QuickActionCard(
@@ -213,7 +227,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                           builder: (context, value, child) {
                             return Transform.translate(
                               offset: Offset(0, 20 * (1 - value)),
-                              child: Opacity(opacity: value, child: child),
+                              child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
                             );
                           },
                           child: _QuickActionCard(
@@ -276,32 +290,60 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return EsInteractive(
       onTap: onTap,
+      hoverScale: 1.03,
+      hoverOpacity: 0.9,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
-          color: EsColors.surfaceDark,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: EsColors.surfaceElevated),
+          gradient: LinearGradient(
+            colors: [
+              EsColors.surfaceDark.withOpacity(0.8),
+              EsColors.surfaceElevated.withOpacity(0.4),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 32),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: EsTypography.bodyMedium.copyWith(
+              style: EsTypography.labelLarge.copyWith(
                 color: EsColors.textPrimaryDark,
                 fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
               ),
             ),
           ],

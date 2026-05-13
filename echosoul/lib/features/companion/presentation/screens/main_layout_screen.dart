@@ -18,8 +18,7 @@ class MainLayoutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Responsive breakpoint: also use sidebar on wide tablets / desktop browsers
     final width = MediaQuery.sizeOf(context).width;
-    final useSidebar =
-        EsPlatform.useSidebarNavigation || width >= EsPlatform.sidebarBreakpoint;
+    final useSidebar = width >= EsPlatform.sidebarBreakpoint;
 
     if (useSidebar) {
       return _WebLayout(child: child);
@@ -160,31 +159,11 @@ class _EsSidebar extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Container(
+                  Image.asset(
+                    'assets/images/logo_icon.png',
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [EsColors.primaryBlue, EsColors.neonCyan],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: EsColors.primaryBlue.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Image.asset(
-                        'assets/images/logo_icon.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(width: 12),
                   Text(

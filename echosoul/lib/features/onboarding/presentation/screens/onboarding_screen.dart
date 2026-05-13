@@ -369,7 +369,7 @@ class _StepFadeIn extends StatelessWidget {
       duration: const Duration(milliseconds: 600),
       builder: (context, value, child) {
         return Opacity(
-          opacity: value,
+          opacity: value.clamp(0.0, 1.0),
           child: Transform.translate(
             offset: Offset(0, 20 * (1 - value)),
             child: child,

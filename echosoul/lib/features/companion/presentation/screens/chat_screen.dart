@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -19,10 +20,10 @@ class ChatScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: EsColors.backgroundDark,
-      appBar: _ChatAppBar(companionName: companionName, showBack: !useSidebar),
       body: SafeArea(
         child: Column(
           children: [
+            _ChatHeader(companionName: companionName, showBack: !useSidebar),
             const Expanded(child: _MessageList()),
             const _TypingIndicator(),
             const _ChatInputBar(),
@@ -37,27 +38,41 @@ class ChatScreen extends ConsumerWidget {
 // App Bar
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _ChatHeader extends StatelessWidget {
   final String companionName;
   final bool showBack;
-  const _ChatAppBar({required this.companionName, required this.showBack});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  const _ChatHeader({required this.companionName, required this.showBack});
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: EsColors.surfaceDark,
-      elevation: 0,
-      automaticallyImplyLeading: showBack,
-      centerTitle: false,
-      title: Row(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: EsSpacing.md,
+        vertical: EsSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: EsColors.backgroundDark,
+        border: Border(
+          bottom: BorderSide(
+            color: EsColors.surfaceElevated.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
         children: [
-          // Companion avatar glow
+          if (showBack) ...[
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: EsColors.textPrimaryDark, size: 20),
+              onPressed: () => context.pop(),
+            ),
+            const SizedBox(width: EsSpacing.xs),
+          ],
+          // Avatar
           Container(
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [EsColors.primaryBlue, EsColors.neonCyan],
@@ -67,25 +82,58 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: EsColors.primaryBlue.withOpacity(0.5),
-                  blurRadius: 8,
+                  color: EsColors.primaryBlue.withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
                 ),
               ],
             ),
-            child: const Icon(Icons.graphic_eq, color: Colors.white, size: 18),
+            child: const Icon(Icons.graphic_eq, color: Colors.white, size: 22),
           ),
-          const SizedBox(width: EsSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(companionName, style: EsTypography.bodyLarge.copyWith(
-                color: EsColors.textPrimaryDark,
-                fontWeight: FontWeight.w600,
-              )),
-              Text('En línea', style: EsTypography.bodySmall.copyWith(
-                color: EsColors.neonCyan,
-              )),
-            ],
+          const SizedBox(width: EsSpacing.md),
+          // Name & Status
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  companionName,
+                  style: EsTypography.headlineSmall.copyWith(
+                    color: EsColors.textPrimaryDark,
+                    fontSize: 20,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: EsColors.neonCyan,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'En línea',
+                      style: EsTypography.bodySmall.copyWith(
+                        color: EsColors.neonCyan,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Action button
+          IconButton(
+            icon: const Icon(Icons.info_outline,
+                color: EsColors.textSecondaryDark),
+            onPressed: () {
+              // TODO: Mostrar info del companion
+            },
           ),
         ],
       ),

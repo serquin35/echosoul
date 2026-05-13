@@ -20,8 +20,8 @@ abstract class EsPlatform {
   /// Offline caching via Hive / SharedPreferences works on native.
   static bool get supportsOfflineMode => !kIsWeb;
 
-  /// Wide sidebar layout is shown on web; bottom nav on mobile.
-  static bool get useSidebarNavigation => kIsWeb;
+  /// Whether to force sidebar navigation. We now rely on width breakpoints.
+  static bool get useSidebarNavigation => false;
 
   /// Minimum width (dp) at which we force sidebar even on web.
   static const double sidebarBreakpoint = 1024.0;

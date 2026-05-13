@@ -40,9 +40,26 @@ class MoodTrendChart extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(EsSpacing.lg),
       decoration: BoxDecoration(
-        color: EsColors.surfaceDark,
+        gradient: LinearGradient(
+          colors: [
+            EsColors.surfaceDark,
+            EsColors.surfaceElevated.withOpacity(0.5),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: EsColors.surfaceElevated, width: 1),
+        border: Border.all(
+          color: EsColors.surfaceElevated.withOpacity(0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +103,18 @@ class _ChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final double spacing = size.width / (labels.length - 1);
-    final double maxHeight = size.height - 20; // Espacio para etiquetas inferiores
+    final double maxHeight = size.height - 20;
+
+    // ── Dibujar cuadrícula horizontal (sutil) ────────────────
+    final gridPaint = Paint()
+      ..color = EsColors.surfaceElevated.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 0; i <= 4; i++) {
+      final y = (maxHeight / 4) * i;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
 
     // Pincel para la línea
     final linePaint = Paint()
