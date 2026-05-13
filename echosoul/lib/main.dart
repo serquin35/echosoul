@@ -16,6 +16,13 @@ void main() async {
   usePathUrlStrategy();
   
   await dotenv.load(fileName: ".env");
+
+  // Diagnostic logs for Production (Safe info only)
+  final webhook = Env.n8nChatWebhookUrl;
+  debugPrint('🔧 Env: Webhook is ${webhook.isEmpty ? 'EMPTY' : 'CONFIGURED'}');
+  if (webhook.isNotEmpty) {
+    debugPrint('🔧 Env: Webhook starts with: ${webhook.substring(0, 10)}...');
+  }
   
   await Supabase.initialize(
     url: Env.supabaseUrl,
