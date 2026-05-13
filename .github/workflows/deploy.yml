@@ -26,7 +26,11 @@ jobs:
           echo "N8N_CHAT_WEBHOOK_URL=${{ secrets.N8N_CHAT_WEBHOOK_URL }}" >> .env
           flutter clean
           flutter pub get
-          flutter build web --release --base-href "/app/"
+          flutter build web --release --base-href "/app/" \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+            --dart-define=N8N_CHAT_WEBHOOK_URL="${{ secrets.N8N_CHAT_WEBHOOK_URL }}" \
+            --dart-define=AUTH_REDIRECT_URL="${{ secrets.AUTH_REDIRECT_URL }}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
