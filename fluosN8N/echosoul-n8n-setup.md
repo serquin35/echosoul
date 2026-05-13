@@ -110,3 +110,5 @@ final data = jsonDecode(response.body);
 - El **fire & forget** de memory-extractor funciona porque el nodo
   `Respond 200 Immediately` está al inicio del flujo.
   n8n responde al caller y sigue ejecutando en background.
+
+

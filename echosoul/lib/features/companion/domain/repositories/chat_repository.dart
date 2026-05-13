@@ -7,5 +7,6 @@ abstract class ChatRepository {
   Future<ChatMessage> sendMessage({
     required String userMessage,
     required String sessionId,
+    required String userId,
   });
 }

@@ -20,13 +20,15 @@ class N8nChatRepositoryImpl implements ChatRepository {
   Future<ChatMessage> sendMessage({
     required String userMessage,
     required String sessionId,
+    required String userId,
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         _webhookUrl,
         data: {
-          'chatInput': userMessage,
-          'sessionId': sessionId,
+          'message': userMessage,
+          'session_id': sessionId,
+          'user_id': userId,
         },
         options: Options(
           headers: {'Content-Type': 'application/json'},
@@ -41,8 +43,8 @@ class N8nChatRepositoryImpl implements ChatRepository {
             'No recibí respuesta. Intenta de nuevo.');
       }
 
-      // n8n ChatBot Cloud returns { output: "..." }
-      final reply = data['output'] as String? ??
+      final reply = data['reply'] as String? ??
+          data['output'] as String? ??
           data['message'] as String? ??
           data['text'] as String? ??
           'No entendí eso. ¿Puedes repetirlo?';
