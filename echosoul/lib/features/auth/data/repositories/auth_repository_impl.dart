@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/config/env.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -85,13 +88,23 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserEntity> signUpWithEmail({
     required String email,
     required String password,
+    String? displayName, // Added displayName
   }) async {
     try {
       final response = await _supabaseClient.auth.signUp(
         email: email,
         password: password,
+        data: displayName != null ? {'full_name': displayName} : null,
       );
       if (response.user == null) throw const AuthException('Error al crear la cuenta.');
+      
+      // Disparar onboarding en n8n (fire & forget)
+      _triggerOnboarding(
+        userId: response.user!.id,
+        email: email,
+        displayName: displayName ?? '',
+      );
+
       return _mapSupabaseUserToEntity(response.user!);
     } catch (e) {
       final err = e.toString();
@@ -101,6 +114,36 @@ class AuthRepositoryImpl implements AuthRepository {
         throw const AuthException('La contraseña debe tener al menos 6 caracteres.');
       }
       throw AuthException('Error al crear la cuenta: $err');
+    }
+  }
+
+  /// Llama al webhook de n8n para iniciar el onboarding.
+  /// No bloquea ni lanza error si falla.
+  Future<void> _triggerOnboarding({
+    required String userId,
+    required String email,
+    required String displayName,
+  }) async {
+    try {
+      final fcmToken = await FcmService().getToken();
+      final n8nUrl = Env.n8nChatWebhookUrl
+          .replaceFirst('/webhook/chat', '/webhook/new-user');
+
+      await http.post(
+        Uri.parse(n8nUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'user_id':      userId,
+          'email':        email,
+          'display_name': displayName,
+          'platform':     'android', // or determine from platform
+          'fcm_token':    fcmToken,
+          'timezone':     DateTime.now().timeZoneName,
+        }),
+      ).timeout(const Duration(seconds: 10));
+    } catch (e) {
+      // El onboarding nunca bloquea el registro
+      debugPrint('Onboarding webhook error (ignorado): $e');
     }
   }
 
@@ -146,11 +189,14 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> deleteAccount() async {
     try {
-      // Typically needs a secure Edge Function or specific setup for user self-deletion.
-      // This is a placeholder for the actual Supabase admin/RPC call.
-      throw const AuthException('Eliminar cuenta no está implementado aún.');
+      final response = await _supabaseClient.functions.invoke('delete-account');
+      if (response.status != 200) {
+        throw AuthException('Error al eliminar cuenta: ${response.data}');
+      }
+      await signOut();
     } catch (e) {
-      throw AuthException(e.toString());
+      if (e is AuthException) rethrow;
+      throw AuthException('Error de red al eliminar la cuenta: $e');
     }
   }
 

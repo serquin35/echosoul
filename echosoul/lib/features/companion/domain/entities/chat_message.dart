@@ -5,6 +5,7 @@ class ChatMessage {
   final bool isFromUser;
   final DateTime timestamp;
   final bool isError;
+  final bool isCrisis;
 
   const ChatMessage({
     required this.id,
@@ -12,6 +13,7 @@ class ChatMessage {
     required this.isFromUser,
     required this.timestamp,
     this.isError = false,
+    this.isCrisis = false,
   });
 
   /// Creates a user message (right side of chat).
@@ -23,11 +25,12 @@ class ChatMessage {
       );
 
   /// Creates a companion message (left side of chat).
-  factory ChatMessage.fromCompanion(String text) => ChatMessage(
+  factory ChatMessage.fromCompanion(String text, {bool isCrisis = false}) => ChatMessage(
         id: '${DateTime.now().millisecondsSinceEpoch}_ai',
         text: text,
         isFromUser: false,
         timestamp: DateTime.now(),
+        isCrisis: isCrisis,
       );
 
   /// Creates an error message shown in the companion bubble.

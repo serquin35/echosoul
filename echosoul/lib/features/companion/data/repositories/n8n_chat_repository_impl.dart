@@ -49,7 +49,9 @@ class N8nChatRepositoryImpl implements ChatRepository {
           data['text'] as String? ??
           'No entendí eso. ¿Puedes repetirlo?';
 
-      return ChatMessage.fromCompanion(reply);
+      final isCrisis = data['is_crisis'] == true || data['crisis_detected'] == true;
+
+      return ChatMessage.fromCompanion(reply, isCrisis: isCrisis);
     } on DioException catch (e) {
       final msg = e.type == DioExceptionType.connectionTimeout ||
               e.type == DioExceptionType.receiveTimeout

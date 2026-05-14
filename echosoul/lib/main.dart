@@ -7,6 +7,7 @@ import 'core/router/app_router.dart';
 import 'core/router/route_names.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/env.dart';
+import 'core/services/fcm_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 
 void main() async {
@@ -16,6 +17,9 @@ void main() async {
   usePathUrlStrategy();
   
   await dotenv.load(fileName: ".env");
+
+  // Inicializar FCM (Mock)
+  await FcmService.initialize();
 
   // Diagnostic logs for Production (Safe info only)
   final webhook = Env.n8nChatWebhookUrl;

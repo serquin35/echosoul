@@ -135,10 +135,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Usuario no autenticado.');
 
-    // Llamamos a la función PostgreSQL que borra al usuario en auth.users
-    // Esto disparará el borrado en cascada (si está configurado) 
-    // o simplemente eliminará al usuario de la base de datos de Auth.
-    await _client.rpc('delete_user');
+    final response = await _client.functions.invoke('delete-account');
+    if (response.status != 200) {
+      throw Exception('Error al eliminar cuenta: ${response.data}');
+    }
     
     // Cerramos sesión localmente
     await _client.auth.signOut();

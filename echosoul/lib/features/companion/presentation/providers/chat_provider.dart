@@ -37,16 +37,19 @@ final chatSessionIdProvider = Provider<String>((ref) {
 class ChatState {
   final List<ChatMessage> messages;
   final bool isTyping;
+  final bool isCrisis;
 
   const ChatState({
     this.messages = const [],
     this.isTyping = false,
+    this.isCrisis = false,
   });
 
-  ChatState copyWith({List<ChatMessage>? messages, bool? isTyping}) {
+  ChatState copyWith({List<ChatMessage>? messages, bool? isTyping, bool? isCrisis}) {
     return ChatState(
       messages: messages ?? this.messages,
       isTyping: isTyping ?? this.isTyping,
+      isCrisis: isCrisis ?? this.isCrisis,
     );
   }
 }
@@ -84,6 +87,7 @@ class ChatNotifier extends Notifier<ChatState> {
     state = state.copyWith(
       messages: [reply, ...state.messages],
       isTyping: false,
+      isCrisis: reply.isCrisis || state.isCrisis, // Keep it true if it was already true, or if the new message is a crisis.
     );
   }
 }

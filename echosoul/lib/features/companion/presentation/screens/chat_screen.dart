@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -24,11 +25,80 @@ class ChatScreen extends ConsumerWidget {
         child: Column(
           children: [
             _ChatHeader(companionName: companionName, showBack: !useSidebar),
+            if (ref.watch(chatProvider).isCrisis) const _CrisisBanner(),
             const Expanded(child: _MessageList()),
             const _TypingIndicator(),
             const _ChatInputBar(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Crisis Banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CrisisBanner extends StatelessWidget {
+  const _CrisisBanner();
+
+  Future<void> _callEmergency() async {
+    final uri = Uri.parse('tel:112'); // Or any general emergency number (024 in Spain for suicide prevention, 911, etc. using 112 as a universal default)
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: EsSpacing.md,
+        vertical: EsSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withOpacity(0.15),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.redAccent.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const SizedBox(width: EsSpacing.sm),
+              Expanded(
+                child: Text(
+                  'No estás solo. Si estás en peligro, por favor busca ayuda inmediata.',
+                  style: EsTypography.bodyMedium.copyWith(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: EsSpacing.sm),
+          ElevatedButton.icon(
+            onPressed: _callEmergency,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            icon: const Icon(Icons.phone),
+            label: const Text('Llamar a Emergencias (112)'),
+          ),
+        ],
       ),
     );
   }

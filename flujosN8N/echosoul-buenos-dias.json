@@ -1,0 +1,149 @@
+{
+  "name": "EchoSoul - Buenos Días",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "e5c1e95e-18ad-4d7a-af39-a9a5f36e4f3f",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [ 200, 200 ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT p.id as user_id, p.fcm_token, p.timezone, c.companion_name, c.call_hour_morning, c.proactive_messages\nFROM public.profiles p\nJOIN public.companion_settings c ON p.id = c.user_id\nWHERE p.fcm_token IS NOT NULL AND c.proactive_messages = true AND p.platform = 'android';"
+      },
+      "id": "d1c2b3a4-1234-5678-9abc-def012345678",
+      "name": "Fetch Users",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [ 400, 200 ],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-db",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const nowUTC = new Date();\nconst activeUsers = [];\n\nfor (const item of $input.all()) {\n  const user = item.json;\n  // Convert to user timezone to check hour\n  let userHour = nowUTC.getUTCHours();\n  try {\n    const formatter = new Intl.DateTimeFormat('en-US', {\n      timeZone: user.timezone || 'UTC',\n      hour: 'numeric',\n      hour12: false\n    });\n    const parts = formatter.formatToParts(nowUTC);\n    const hourPart = parts.find(p => p.type === 'hour');\n    userHour = parseInt(hourPart.value, 10);\n    // fix hour 24 -> 0 if happens\n    if (userHour === 24) userHour = 0;\n  } catch (e) {}\n\n  if (userHour === user.call_hour_morning) {\n    activeUsers.push(item);\n  }\n}\n\nreturn activeUsers;"
+      },
+      "id": "8a7b6c5d-4e3f-2a1b-0c9d-8e7f6a5b4c3d",
+      "name": "Filter by Timezone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 600, 200 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fcm.googleapis.com/v1/projects/echosoul-f2b89/messages:send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MOCK_TOKEN"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": {\n    \"token\": \"{{ $json.fcm_token }}\",\n    \"notification\": {\n      \"title\": \"Buenos días ☀️\",\n      \"body\": \"{{ $json.companion_name }} está aquí. ¿Cómo empiezas el día?\"\n    },\n    \"data\": {\n      \"route\": \"/home/chat\",\n      \"type\": \"proactive_greeting\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "id": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Send FCM Push",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [ 800, 200 ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "checkins",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "triggered_by": "buenos_dias"
+          }
+        }
+      },
+      "id": "f5e4d3c2-b1a0-9f8e-7d6c-5b4a3c2d1e0f",
+      "name": "Log Checkin",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [ 1000, 200 ],
+      "credentials": {
+        "postgres": {
+          "id": "supabase-db",
+          "name": "Supabase"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Users": {
+      "main": [
+        [
+          {
+            "node": "Filter by Timezone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Timezone": {
+      "main": [
+        [
+          {
+            "node": "Send FCM Push",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send FCM Push": {
+      "main": [
+        [
+          {
+            "node": "Log Checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}
