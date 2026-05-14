@@ -1,0 +1,289 @@
+{
+  "name": "EchoSoul — onboarding: new-user-welcome",
+  "nodes": [
+    {
+      "id": "cb31fd8b-c33d-4f87-a717-c4a063f890fd",
+      "name": "Webhook New User",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "path": "new-user",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "f097f2f2-8ab6-4669-b487-7aba7535bb25",
+      "name": "Create user profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_profiles",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:    $json.user_id,display_name: $json.display_name ?? '',email:      $json.email,platform:   $json.platform ?? 'web',fcm_token:  $json.fcm_token ?? null,timezone:   $json.timezone  ?? 'Europe/Madrid'}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d5482b6d-2452-4d33-ac68-0494c51284c0",
+      "name": "Create user plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_plans",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:     $('Webhook New User').first().json.user_id,plan:        'free',daily_limit: 20}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "154349e9-b2af-41fe-ba60-17056c4ae2ec",
+      "name": "Create onboarding record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_onboarding",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:      $('Webhook New User').first().json.user_id,step:         1,platform:     $('Webhook New User').first().json.platform ?? 'web',next_step_at: new Date(Date.now()+86400000).toISOString(),completed:    false}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "dddc1d83-0c2b-4253-8a51-1d610e2cc5e3",
+      "name": "Build welcome email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst data = $json;\nconst name = data.display_name || 'tú';\nconst appUrl = $env.APP_URL ?? 'https://echosoul.app';\n\nconst subject = `Hola ${name}, EchoSoul ya está aquí 👋`;\n\nconst body = `<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px\">\n  <h2 style=\"font-size:22px;font-weight:500;color:#1a1a1a;margin:0 0 16px\">\n    Hola ${name} 👋\n  </h2>\n  <p style=\"color:#555;line-height:1.7;margin:0 0 16px\">\n    Bienvenido/a a <strong>EchoSoul</strong>. Soy tu compañía personal —\n    estoy aquí para escucharte, acompañarte y recordar lo que importa.\n  </p>\n  <p style=\"color:#555;line-height:1.7;margin:0 0 24px\">\n    Empieza con un simple <em>\"hola\"</em> y yo haré el resto.\n  </p>\n  <a href=\"${appUrl}/chat\"\n     style=\"display:inline-block;background:#534AB7;color:#fff;padding:13px 28px;\n            border-radius:8px;text-decoration:none;font-size:15px;font-weight:500\">\n    Abrir EchoSoul →\n  </a>\n  <p style=\"color:#aaa;font-size:12px;margin-top:40px;line-height:1.5\">\n    En los próximos días te enviaré consejos para sacarle el máximo partido.\n    Puedes darte de baja desde tu perfil en cualquier momento.\n  </p>\n</div>`;\n\nreturn [{ json: { ...data, subject, body } }];\n"
+      }
+    },
+    {
+      "id": "8edea55d-abe6-468b-9918-14792b0fde27",
+      "name": "Send welcome email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        1100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "id": "5ce75122-d167-4ba0-9951-07a4e8a956e0",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        1300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"ok\",\"onboarding_started\":true}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "e36eed73-6e21-45e1-8e30-e2d580aac095",
+      "name": "📌 Trigger desde Flutter",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        100
+      ],
+      "parameters": {
+        "content": "## Cómo llamar este webhook\n```dart\nawait http.post(\n  Uri.parse('$n8nUrl/webhook/new-user'),\n  body: jsonEncode({\n    'user_id': user.id,\n    'email': user.email,\n    'display_name': name,\n    'platform': isWeb ? 'web' : 'android',\n    'fcm_token': await fcm.getToken(),\n  }),\n);\n```",
+        "height": 260,
+        "width": 360,
+        "color": 5
+      }
+    }
+  ],
+  "connections": {
+    "Webhook New User": {
+      "main": [
+        [
+          {
+            "node": "Create user profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create user profile": {
+      "main": [
+        [
+          {
+            "node": "Create user plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create user plan": {
+      "main": [
+        [
+          {
+            "node": "Create onboarding record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create onboarding record": {
+      "main": [
+        [
+          {
+            "node": "Build welcome email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build welcome email": {
+      "main": [
+        [
+          {
+            "node": "Send welcome email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send welcome email": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "d680458c-751d-4e17-aa99-f062f33cdb7f",
+  "meta": {
+    "instanceId": "echosoul-local"
+  }
+}

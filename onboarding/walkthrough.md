@@ -1,54 +1,117 @@
-# Refactorización de Infraestructura n8n — EchoSoul
+# EchoSoul — Walkthrough de Infraestructura (Mayo 2026)
 
-Se ha completado la estandarización y endurecimiento de los flujos de n8n que gestionan el ciclo de vida del usuario.
-
-## 🚀 Cambios Realizados
-
-### 1. Centralización de Configuración (Seguridad)
-*   **Supabase:** Se eliminaron todas las URLs (`https://pleeiqlldiwipaxqoumu.supabase.co`) y claves `service_role` de los nodos. Ahora todos los flujos usan `$env.SUPABASE_URL` y `$env.SUPABASE_SERVICE_KEY`.
-*   **App URL:** Se configuró una variable `$env.APP_URL` con fallback automático a la URL de Vercel (`https://echosoul-one.vercel.app`).
-
-### 2. Pipeline de Onboarding
-*   **Workflow: `NewUser-welcome` [ACTIVO 🟢]**
-    *   Asignación de credenciales Gmail (`XI4mlfkFZGAD9dyL`).
-    *   Lógica de creación de perfil, plan y registro de onboarding en Supabase.
-    *   Manejo de errores modernizado (`onError: continueRegularOutput`).
-*   **Workflow: `drip sequence` [ACTIVO 🟢]**
-    *   **Migración FCM v1:** Actualizado del sistema Legacy al endpoint moderno de Google.
-    *   **Credenciales de Firebase:** Se creó la credencial `0o4FmPorago01fiu` (Google Cloud Service Account) usando el JSON de administración de Firebase. Esto elimina la necesidad de tokens manuales.
-
-### 3. Mantenimiento y Estabilidad
-*   Actualización de `typeVersion` en nodos HTTP, Webhook y Gmail para usar las últimas capacidades de n8n.
-*   Implementación de `resolution=merge-duplicates` en las peticiones a Supabase para evitar errores si el usuario ya existe.
+Resumen de todos los hitos completados en n8n, Supabase y CI/CD.
 
 ---
 
-## 🛠️ Requisitos en Dokploy (Variables de Entorno)
-Para que los flujos operen correctamente en producción, asegúrate de que n8n tenga acceso a:
-*   `SUPABASE_URL`
-*   `SUPABASE_SERVICE_KEY`
-*   `FCM_PROJECT_ID` (`echosoul-f2b89`)
-*   `APP_URL` (`https://echosoul-one.vercel.app`)
+## ✅ HITO 1 — Pipeline de Chat IA (chat-proxy + crisis + memoria)
+
+**Workflows activos:** `chat-proxy`, `crisis-detector`, `memory-extractor`
+
+### Qué hace el pipeline
+1. Flutter envía `POST /webhook/chat` con `{user_id, session_id, message, plan_limit}`
+2. **chat-proxy** comprueba límite diario de mensajes (`messages` table)
+3. Carga memorias del usuario (`user_memories`) y últimos 8 mensajes de sesión
+4. Llama a **GPT-4o** con system prompt personalizado + historial
+5. En paralelo asíncrono: **crisis-detector** analiza el mensaje con Claude Haiku
+6. Guarda los dos mensajes (user + assistant) en `messages`
+7. Dispara **memory-extractor** (fire & forget) → GPT-4o-mini extrae datos relevantes → upserta en `user_memories` con deduplicación por `content_hash`
+8. Responde `{reply, is_crisis, tokens_used}` al cliente
+
+### Decisiones técnicas clave
+- **Fire & forget**: memory-extractor responde 200 inmediatamente y procesa en background
+- **Deduplicación**: `content_hash = user_id + content[0:50]` previene memorias duplicadas
+- **Crisis anonimizado**: `crisis_events` solo guarda `user_id + level + msg_hash`, nunca el texto
+- **Límites de uso**: `user_plans.daily_limit` (default: 20 msg/día en plan free)
 
 ---
 
-## 🧪 Cómo verificar que funciona
-Puedes probar el flujo de registro enviando este comando desde tu terminal (PowerShell):
+## ✅ HITO 2 — Pipeline de Onboarding (new-user + drip)
 
-```powershell
-Invoke-RestMethod -Uri "https://n8n.cheosdesign.info/webhook/new-user" `
-  -Method Post `
-  -ContentType "application/json" `
-  -Body '{"user_id": "00000000-0000-0000-0000-000000000000", "email": "tu-email@ejemplo.com", "display_name": "Tester", "platform": "web"}'
+**Workflows activos:** `new-user-welcome`, `drip-sequence`
+
+### Flujo de registro
+1. Flutter llama `POST /webhook/new-user` tras signup exitoso
+2. n8n crea/actualiza registros en: `profiles`, `user_plans` (free, 20 msg/día), `user_onboarding` (step=1)
+3. Envía email de bienvenida HTML via Gmail OAuth2
+4. Cron horario ejecuta `drip-sequence` → procesa usuarios con `next_step_at <= now()` y `completed = false`
+
+### Pasos del drip
+| Paso | Contenido | Delay | Canal |
+|------|-----------|-------|-------|
+| 0 | Bienvenida | Inmediato | Email |
+| 1 | "¿Cómo fue tu primer día?" | +24h | Email + FCM |
+| 2 | Intro al Mood Tracker | +72h | Email + FCM |
+| 3 | Soft upsell Premium | +120h | Email + FCM |
+
+**FCM**: Migrado a Firebase v1 API (Legacy API deprecated). Credencial Google Cloud Service Account (`echosoul-f2b89`) configurada en n8n.
+
+---
+
+## ✅ HITO 3 — Supabase RLS Completo
+
+**11 tablas** con Row Level Security activo. Policies CRUD completas aplicadas en mayo 2026.
+
+### Resumen de policies por tabla
+
+| Tabla | SELECT | INSERT | UPDATE | DELETE | Notas |
+|-------|--------|--------|--------|--------|-------|
+| `profiles` | ✅ | ✅ | ✅ | ✅ | |
+| `messages` | ✅ | ✅ | — | ✅ | n8n escribe via service_role |
+| `user_memories` | ✅ | ✅ | — | ✅ | n8n upserta via service_role |
+| `user_plans` | ✅ | ✅ | ✅ | ✅ | |
+| `user_onboarding` | ✅ | ✅ | ✅ | ✅ | |
+| `companion_settings` | ✅ | ✅ | ✅ | ✅ | |
+| `checkins` | ✅ | ✅ | ✅ | ✅ | |
+| `crisis_flags` | ✅ | ✅ | ✅ | ✅ | |
+| `mood_entries` | ✅ | ✅ | ✅ | ✅ | **Añadido mayo 2026** |
+| `user_preferences` | ✅ | ✅ | ✅ | ✅ | **Añadido mayo 2026** |
+| `crisis_events` | — | — | — | — | Solo service_role (n8n). Intencional. |
+
+Todas las policies usan `auth.uid() = user_id` (o `auth.uid() = id` en `profiles`).
+
+---
+
+## ✅ HITO 4 — Estabilización de Workflows
+
+Correcciones aplicadas durante mayo 2026:
+
+- **UUID validation**: validación de `user_id` en chat-proxy antes de consultas Supabase
+- **Migración a OpenAI**: chat-proxy y memory-extractor migrados de Claude a GPT-4o / GPT-4o-mini
+- **URL hardcodeadas resueltas**: uso de `$env.SUPABASE_URL` y `$env.SUPABASE_SERVICE_KEY`
+- **Error handling**: `onError: continueRegularOutput` en nodos críticos
+- **Schema fix**: tabla `profiles` (era `user_profiles` en onboarding antiguo)
+- **FCM v1**: migración de Legacy API a Google Cloud Service Account
+
+---
+
+## 🔧 Variables de entorno requeridas (Dokploy / n8n)
+
+```env
+SUPABASE_URL=https://pleeiqlldiwipaxqoumu.supabase.co
+SUPABASE_SERVICE_KEY=<service_role_key>
+CLAUDE_API_KEY=<anthropic_key>
+N8N_BASE_URL=https://n8n.cheosdesign.info
+APP_URL=https://echosoul-one.vercel.app
+FCM_PROJECT_ID=echosoul-f2b89
+FCM_SERVER_KEY=<firebase_server_key>
+ADMIN_ALERT_WEBHOOK=<slack_incoming_webhook>
 ```
 
-Si todo es correcto:
-1.  Recibirás un JSON con `{"status":"ok"}`.
-2.  Aparecerá un nuevo registro en tu tabla `user_profiles` de Supabase.
-3.  Te llegará un email de bienvenida.
+## 🔧 Variables de entorno Flutter (echosoul/.env)
+
+```env
+SUPABASE_URL=https://pleeiqlldiwipaxqoumu.supabase.co
+SUPABASE_ANON_KEY=<anon_key>
+AUTH_REDIRECT_URL=https://echosoul-one.vercel.app/reset-password
+N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
+```
 
 ---
 
-## 📌 Pendientes
-*   [ ] **Android:** Colocar `google-services.json` en `android/app/` antes de compilar.
-*   [ ] **FCM Testing:** Una vez compilada la app, enviar un token real para probar las notificaciones push.
+## 📌 Pendientes inmediatos
+
+- [ ] **Android**: colocar `google-services.json` en `android/app/` antes de compilar
+- [ ] **FCM Testing**: enviar un token FCM real desde dispositivo para probar notificaciones push
+- [ ] **Gmail credential**: asignar credencial Gmail en nodos de email de los workflows
+- [ ] **Dominio custom**: configurar en Vercel
