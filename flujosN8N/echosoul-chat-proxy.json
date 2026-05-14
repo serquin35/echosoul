@@ -1,0 +1,277 @@
+{
+  "id": "suBJh6FVjm0EqoNC",
+  "name": "EchoSoul — chat-proxy",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Variables n8n requeridas\n- `SUPABASE_URL` → URL de tu proyecto Supabase\n- `SUPABASE_SERVICE_KEY` → Service Role Key\n- `CLAUDE_API_KEY` → API Key de Anthropic\n- `N8N_BASE_URL` → URL pública de tu n8n (ej: https://n8n.tudominio.com)\n- `UPGRADE_URL` → URL de tu página de precios",
+        "height": 200,
+        "width": 340,
+        "color": 4
+      },
+      "id": "ece375cb-0a0b-4fde-98d8-c8d99ed1cd1e",
+      "name": "⚙️ Variables requeridas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-752, 544]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4d901cb2-2cf2-4c0d-bc12-3c52f4aa0486",
+      "name": "Webhook Chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-368, 592],
+      "webhookId": "622beb0b-5331-4ff0-a8d8-5acd6e25af64"
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/messages?user_id=eq.{{ $json.body.user_id }}&created_at=gte.{{ new Date(Date.now()-86400000).toISOString() }}&select=count",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Prefer", "value": "count=exact" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f31198f6-aa1e-4f53-b8d7-48f610b81571",
+      "name": "Check Usage Limits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-192, 592],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst messageCount = items.length;\n\nconst webhookData = $('Webhook Chat').first().json.body;\nconst planLimit = webhookData.plan_limit ?? 20;\n\nreturn [{\n  json: {\n    ...webhookData,\n    message_count: messageCount,\n    plan_limit: planLimit,\n    limit_reached: messageCount >= planLimit\n  }\n}];"
+      },
+      "id": "d52fd7ad-1236-443e-b295-a818b983ba0e",
+      "name": "Parse Usage Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-16, 592]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "id": "cond_1",
+              "leftValue": "={{ $json.limit_reached }}",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ec9957f1-84b8-4e08-aa40-398592505818",
+      "name": "IF Limit Reached",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [160, 592]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"error\":\"limit_reached\",\"message\":\"Has alcanzado el límite diario de mensajes\"}",
+        "options": { "responseCode": 429 }
+      },
+      "id": "79de586f-4bf1-4780-9aae-dce79e3f6067",
+      "name": "Respond 429 Limit",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [384, 416]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_memories?user_id=eq.{{ $('Webhook Chat').first().json.body.user_id }}&order=importance.desc,updated_at.desc&limit=20",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "af3d8019-52b3-4af3-9d6c-89d1fe45804c",
+      "name": "Fetch Memories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [368, 608],
+      "alwaysOutputData": true,
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/messages?session_id=eq.{{ $('Webhook Chat').first().json.body.session_id }}&order=created_at.desc&limit=8",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68a2b38d-8039-4f2d-b2e6-e34577e944f3",
+      "name": "Fetch Recent Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [560, 608],
+      "alwaysOutputData": true,
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('Webhook Chat').first().json.body;\n\nconst memoriesRaw = $('Fetch Memories').all();\nconst memories = memoriesRaw.map(i => i.json);\n\nconst msgsRaw = $('Fetch Recent Messages').all();\nconst msgs = msgsRaw\n  .map(i => i.json)\n  .filter(m => m && m.role && m.content); // Ignorar items vacíos cuando no hay historial\n\nconst memoriesText = memories.length\n  ? memories.map(m => `- [${m.category ?? 'general'}] ${m.content}`).join('\\n')\n  : '(sin memorias previas registradas)';\n\nconst systemPrompt = `Eres EchoSoul, una compañía empática e inteligente.\nTu objetivo es ser una presencia positiva y de apoyo para el usuario.\n\nLo que recuerdas de este usuario:\n${memoriesText}\n\nDirectrices:\n- Responde siempre en el idioma del usuario.\n- Sé empático, cálido y auténtico.\n- Mantén respuestas concisas.\n- Nunca des consejos médicos ni jurídicos específicos.`;\n\nconst messages = [\n  {\n    role: 'system',\n    content: systemPrompt\n  },\n  ...msgs.reverse().map(m => ({\n    role: m.role,\n    content: m.content\n  })),\n  {\n    role: 'user',\n    content: webhook.message\n  }\n];\n\nreturn [{\n  json: {\n    user_id: webhook.user_id,\n    session_id: webhook.session_id,\n    message: webhook.message,\n    messages\n  }\n}];"
+      },
+      "id": "4bedb44a-49c5-47a7-8c8c-a60d08f33064",
+      "name": "Build System Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [768, 608]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'gpt-4o',messages:$json.messages,max_tokens:800}) }}",
+        "options": {}
+      },
+      "id": "3177300d-918f-4387-8002-ee5fb4116e50",
+      "name": "Call OpenAI API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [960, 608],
+      "credentials": { "openAiApi": { "id": "KzFxOuQEjV23LyRC", "name": "OpenAi account" } }
+    },
+    {
+      "parameters": {
+        "body": "={{ JSON.stringify({user_id:$('Webhook Chat').first().json.body.user_id,message:$('Webhook Chat').first().json.body.message}) }}",
+        "contentType": "raw",
+        "method": "POST",
+        "options": {},
+        "rawContentType": "application/json",
+        "sendBody": true,
+        "url": "https://n8n.cheosdesign.info/webhook/crisis-check"
+      },
+      "id": "e5573c11-f6e7-44d4-8d15-80bdbc27a227",
+      "name": "Crisis Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1168, 608],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('Call OpenAI API').first().json;\nconst crisis = $('Crisis Check').first().json;\nconst ctx = $('Build System Prompt').first().json;\n\nconst llmReply = prev.choices?.[0]?.message?.content ?? '';\nconst isCrisis = crisis.isCrisis ?? false;\nconst finalReply = isCrisis && crisis.safeReply ? crisis.safeReply : llmReply;\n\nreturn [{\n  json: {\n    user_id: ctx.user_id,\n    session_id: ctx.session_id,\n    message: ctx.message,\n    reply: finalReply,\n    is_crisis: isCrisis,\n    tokens_used: prev.usage?.total_tokens ?? 0\n  }\n}];"
+      },
+      "id": "7204e88a-51f3-4937-abbe-84a039da8837",
+      "name": "Merge Final Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1344, 608]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify([{user_id:$json.user_id,session_id:$json.session_id,role:'user',content:$json.message},{user_id:$json.user_id,session_id:$json.session_id,role:'assistant',content:$json.reply}]) }}",
+        "options": {}
+      },
+      "id": "033c8623-5f70-4823-acc9-e5b0a80a6d95",
+      "name": "Save Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1536, 608]
+    },
+    {
+      "parameters": {
+        "body": "={{ JSON.stringify({user_id:$json.user_id,message:$json.message,reply:$json.reply}) }}",
+        "contentType": "raw",
+        "method": "POST",
+        "options": {},
+        "rawContentType": "application/json",
+        "sendBody": true,
+        "url": "https://n8n.cheosdesign.info/webhook/extract-memory"
+      },
+      "id": "b150cc7a-3480-4971-8dea-f3bcd346f4d0",
+      "name": "Fire Memory Extractor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1744, 608],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({reply:$('Merge Final Reply').first().json.reply,session_id:$('Merge Final Reply').first().json.session_id,is_crisis:$('Merge Final Reply').first().json.is_crisis,tokens_used:$('Merge Final Reply').first().json.tokens_used}) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "8d177eac-8067-4b10-ad14-4e33dd77f73d",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1952, 608]
+    }
+  ],
+  "connections": {
+    "Webhook Chat": { "main": [[{ "node": "Check Usage Limits", "type": "main", "index": 0 }]] },
+    "Check Usage Limits": { "main": [[{ "node": "Parse Usage Count", "type": "main", "index": 0 }]] },
+    "Parse Usage Count": { "main": [[{ "node": "IF Limit Reached", "type": "main", "index": 0 }]] },
+    "IF Limit Reached": {
+      "main": [
+        [{ "node": "Respond 429 Limit", "type": "main", "index": 0 }],
+        [{ "node": "Fetch Memories", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Memories": { "main": [[{ "node": "Fetch Recent Messages", "type": "main", "index": 0 }]] },
+    "Fetch Recent Messages": { "main": [[{ "node": "Build System Prompt", "type": "main", "index": 0 }]] },
+    "Build System Prompt": { "main": [[{ "node": "Call OpenAI API", "type": "main", "index": 0 }]] },
+    "Call OpenAI API": { "main": [[{ "node": "Crisis Check", "type": "main", "index": 0 }]] },
+    "Crisis Check": { "main": [[{ "node": "Merge Final Reply", "type": "main", "index": 0 }]] },
+    "Merge Final Reply": { "main": [[{ "node": "Save Messages", "type": "main", "index": 0 }]] },
+    "Save Messages": { "main": [[{ "node": "Fire Memory Extractor", "type": "main", "index": 0 }]] },
+    "Fire Memory Extractor": { "main": [[{ "node": "Respond 200", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

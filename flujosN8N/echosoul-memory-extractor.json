@@ -1,0 +1,152 @@
+{
+  "id": "TMFOIGT1ccrIj47Y",
+  "name": "EchoSoul — memory-extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Patrón fire-and-forget\n`Respond 200 Immediately` está colocado **antes** del procesamiento LLM.\n\nchat-proxy recibe el 200 de inmediato y no espera.\nn8n continúa ejecutando el resto del flujo en background.\n\n**Migrado a OpenAI gpt-4o-mini** ✅",
+        "height": 200,
+        "width": 340,
+        "color": 5
+      },
+      "id": "9e9a80cb-cb7e-4bb5-ae03-9b14af6809f4",
+      "name": "🔄 Fire & Forget",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-768, 272]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "extract-memory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "74f21446-db31-460c-ad2e-b41c5a3a367c",
+      "name": "Webhook Extract Memory",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-368, 336],
+      "webhookId": "8cffea0a-0c2b-49c2-aefa-ec7d307e175b",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"received\"}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "786acaab-2edd-4ab1-b186-ad059e6fa02d",
+      "name": "Respond 200 Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [-192, 336]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [] },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'gpt-4o-mini',max_tokens:500,temperature:0,messages:[{role:'system',content:'You are a memory extraction assistant. Analyze conversation exchanges and extract ONLY important long-term factual information about the user. EXTRACT: name, age, important relationships, lasting preferences, significant life events, fears, goals, work/studies. DO NOT EXTRACT: temporary moods, today chat topic, generic information. If nothing relevant, respond with exactly: []. Respond ONLY with valid JSON array, no markdown, no explanation: [{\"content\": \"...\", \"importance\": 1-5, \"category\": \"personal|preference|event|relationship\"}]'},{role:'user',content:'User: ' + $json.message + '\\nEchoSoul: ' + $json.reply}]}) }}",
+        "options": {}
+      },
+      "id": "17b36ff8-1ef2-4a4f-88a6-7eee192e3499",
+      "name": "Extract Memories LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [0, 336],
+      "credentials": { "openAiApi": { "id": "KzFxOuQEjV23LyRC", "name": "OpenAi account" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// OpenAI returns choices[0].message.content\nconst llmText = $input.first().json.choices?.[0]?.message?.content ?? '[]';\n\nlet memories = [];\ntry {\n  // Clean possible markdown backticks the LLM may add\n  const clean = llmText.replace(/```json|```/gi, '').trim();\n  memories = JSON.parse(clean);\n  if (!Array.isArray(memories)) memories = [];\n} catch(e) {\n  memories = [];\n}\n\n// Filter: only importance >= 2, valid content\nconst filtered = memories\n  .filter(m => m && m.content && (m.importance ?? 0) >= 2)\n  .map(m => ({\n    content:      String(m.content).substring(0, 200).trim(),\n    importance:   Math.min(5, Math.max(1, parseInt(m.importance, 10) || 2)),\n    category:     ['personal','preference','event','relationship'].includes(m.category)\n                  ? m.category : 'personal',\n    content_hash: $('Webhook Extract Memory').first().json.user_id\n                  + ':' + String(m.content).substring(0, 50).toLowerCase().replace(/\\s+/g,' ')\n  }));\n\nconst userId = $('Webhook Extract Memory').first().json.user_id;\n\n// n8n Code nodes NO pueden devolver [] vacío — causa Unknown error\nif (filtered.length === 0) {\n  return [{ json: { _no_memories: true } }];\n}\n\nreturn filtered.map(m => ({ json: { user_id: userId, ...m } }));\n"
+      },
+      "id": "b815cb8f-7d5b-448a-bdd1-e73733da0aea",
+      "name": "Parse Memories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [176, 336]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond_has_memories",
+              "leftValue": "={{ $json._no_memories }}",
+              "operator": { "operation": "notExists", "singleValue": true, "type": "boolean" },
+              "rightValue": ""
+            }
+          ],
+          "options": { "version": 2, "leftValue": "", "caseSensitive": true, "typeValidation": "loose" }
+        },
+        "options": {}
+      },
+      "id": "b5a07c01-5d18-489b-baaa-c6523a20705f",
+      "name": "IF Has Memories",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [368, 320],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "39251eb9-df12-411a-bca9-aa0945b7e9e4",
+      "name": "No Memories Found",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [368, 560]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "198ca079-3c5a-48fa-9db7-b6678feacee0",
+      "name": "Loop Memories",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [608, 304]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_memories",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,content:$json.content,category:$json.category,importance:$json.importance,content_hash:$json.content_hash}) }}",
+        "options": {}
+      },
+      "id": "a0395193-dff9-4e01-a41e-8e1860c1747b",
+      "name": "Upsert Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [816, 288],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook Extract Memory": { "main": [[{ "index": 0, "node": "Respond 200 Immediately", "type": "main" }]] },
+    "Respond 200 Immediately": { "main": [[{ "index": 0, "node": "Extract Memories LLM", "type": "main" }]] },
+    "Extract Memories LLM": { "main": [[{ "index": 0, "node": "Parse Memories", "type": "main" }]] },
+    "Parse Memories": { "main": [[{ "index": 0, "node": "IF Has Memories", "type": "main" }]] },
+    "IF Has Memories": {
+      "main": [
+        [{ "index": 0, "node": "Loop Memories", "type": "main" }],
+        [{ "index": 0, "node": "No Memories Found", "type": "main" }]
+      ]
+    },
+    "Loop Memories": { "main": [[{ "index": 0, "node": "Upsert Memory", "type": "main" }]] },
+    "Upsert Memory": { "main": [[{ "index": 0, "node": "Loop Memories", "type": "main" }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
