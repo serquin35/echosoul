@@ -241,30 +241,6 @@ class CompanionHomeScreen extends ConsumerWidget {
                     ],
                   ),
                   const Spacer(),
-                  
-                  // Temporary Logout Button for Testing
-                  Center(
-                    child: EsInteractive(
-                      onTap: () async {
-                        await ref.read(authControllerProvider.notifier).signOut();
-                      },
-                      hoverOpacity: 0.6,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.logout, color: EsColors.textSecondaryDark, size: 18),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Cerrar sesión (Prueba)',
-                              style: TextStyle(color: EsColors.textSecondaryDark),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
