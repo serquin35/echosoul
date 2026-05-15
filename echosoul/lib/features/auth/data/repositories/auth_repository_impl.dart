@@ -66,7 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final success = await _supabaseClient.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: kIsWeb 
-          ? 'https://echosoul-one.vercel.app/' 
+          ? Uri.base.toString() 
           : 'io.echosoul.app://login-callback',
     );
 
