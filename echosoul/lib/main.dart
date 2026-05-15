@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -77,7 +78,7 @@ class EchoSoulApp extends ConsumerWidget {
       next.whenData((user) async {
         if (user != null) {
           debugPrint('Main: Usuario detectado (${user.email}), sincronizando FCM...');
-          final token = await FcmService.getToken();
+          final token = await FcmService().getToken();
           if (token != null) {
             await ref.read(authRepositoryProvider).updateFcmToken(token);
           }
