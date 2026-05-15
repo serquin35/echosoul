@@ -76,15 +76,8 @@ class EchoSoulApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
 
-    // Listen for auth events (like password recovery)
-    ref.listen(authEventsProvider, (previous, next) {
-      next.whenData((data) {
-        if (data.event == AuthChangeEvent.passwordRecovery) {
-          debugPrint('EVENTO RECUPERACION DETECTADO: Redirigiendo a ResetPassword');
-          router.go(RouteNames.resetPassword);
-        }
-      });
-    });
+    // Note: Password recovery navigation is now handled entirely within app_router.dart's redirect logic.
+    // This avoids race conditions between Riverpod listeners and GoRouter's state machine.
 
     // Sincronización automática de FCM Token al iniciar sesión
     ref.listen(authStateChangesProvider, (previous, next) {

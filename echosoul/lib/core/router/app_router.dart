@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'route_names.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -11,7 +12,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/mood/presentation/screens/mood_tracker_screen.dart';
 import '../../features/legal/presentation/screens/legal_screen.dart';
 
-// ── Feature pages (import when created) ──────────────────
+// ── Feature pages ──────────────────
 import '../../features/landing/presentation/screens/landing_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/companion/presentation/screens/main_layout_screen.dart';
@@ -21,60 +22,59 @@ import '../../features/companion/presentation/screens/voice_call_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // Use a notifier to trigger GoRouter refreshes when auth state changes
-  // We DON'T watch authStateChangesProvider here anymore to prevent the router from being re-created.
-  // Instead, the refreshListenable will notify GoRouter when to re-run the redirect logic.
-  
   return GoRouter(
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
-    // This is critical: notify GoRouter to re-run redirect when Supabase auth state changes.
-    // We listen directly to the Supabase stream to avoid Riverpod's StreamProvider latency/loading states.
+    // Notify GoRouter to re-run redirect when Supabase auth state changes.
     refreshListenable: _GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
     redirect: (context, state) {
-      final matchedLocation = state.matchedLocation;
-      final isLoggingIn = matchedLocation == RouteNames.login;
-      final isResettingPassword = matchedLocation == RouteNames.resetPassword;
-      final isSplash = matchedLocation == RouteNames.splash;
-      final isOnboarding = matchedLocation == RouteNames.onboarding;
+      final uri = state.uri;
+      final path = uri.path;
+      
+      final isLoggingIn = path == RouteNames.login;
+      final isResettingPassword = path == RouteNames.resetPassword;
+      final isSplash = path == RouteNames.splash;
+      final isOnboarding = path == RouteNames.onboarding;
+      final isLegal = path == RouteNames.legal;
       
       // 1. Access auth state SYNCHRONOUSLY
-      // This is the most reliable way to avoid flickering during redirects.
       final auth = Supabase.instance.client.auth;
       final supabaseUser = auth.currentUser;
-      final hasSession = auth.currentSession != null;
       
       // Map to our UserEntity if we have a user
+      final authRepo = ref.read(authRepositoryProvider);
       final activeUser = supabaseUser != null 
-          ? ref.read(authRepositoryProvider).mapSupabaseUser(supabaseUser) 
+          ? authRepo.mapSupabaseUser(supabaseUser) 
           : null;
 
       // 2. Logging for diagnostics
       debugPrint('--- [AUTH ROUTER] ---');
-      debugPrint('Target: $matchedLocation');
-      debugPrint('User: ${activeUser?.email ?? "NULL"}');
-      debugPrint('Session: ${hasSession ? "ACTIVE" : "NONE"}');
-      debugPrint('Onboarding: ${activeUser?.onboardingCompleted ?? "N/A"}');
-      debugPrint('URI: ${state.uri}');
+      debugPrint('Current Path: $path');
+      debugPrint('User: ${activeUser?.email ?? "GUEST"}');
+      debugPrint('Onboarding Done: ${activeUser?.onboardingCompleted ?? "N/A"}');
       
-      // 3. Handle OAuth Callback State (PKCE / Implicit)
-      final fullUri = state.uri.toString();
-      final hasOAuthParams = state.uri.queryParameters.containsKey('code') || 
-                            state.uri.fragment.contains('access_token=') ||
+      // 3. Handle OAuth Callback State
+      final fullUri = uri.toString();
+      final hasOAuthParams = uri.queryParameters.containsKey('code') || 
+                            uri.fragment.contains('access_token=') ||
                             fullUri.contains('access_token=') ||
                             fullUri.contains('code=');
       
       if (hasOAuthParams && activeUser == null) {
-        debugPrint('AUTH ROUTER: OAuth in progress... Blocking redirect.');
-        return null; // Stay on current page while Supabase exchanges tokens
+        debugPrint('AUTH ROUTER: OAuth callback in progress... Blocking redirect.');
+        return null; 
       }
 
-      // 4. Recovery Flow (Password Reset)
-      final isRecovery = state.uri.fragment.contains('type=recovery') || 
-                         state.uri.queryParameters['type'] == 'recovery';
-      
-      if (isResettingPassword || isRecovery) {
-        debugPrint('AUTH ROUTER: Recovery path allowed.');
+      // 4. Guest / Public Routes
+      final isRecovery = uri.fragment.contains('type=recovery') || 
+                         uri.queryParameters['type'] == 'recovery';
+                         
+      if (isResettingPassword || isRecovery || isLegal) {
+        debugPrint('AUTH ROUTER: Public/Recovery path allowed.');
+        if (isRecovery && !isResettingPassword) {
+          debugPrint('AUTH ROUTER: Recovery detected -> Redirecting to RESET PASSWORD');
+          return RouteNames.resetPassword;
+        }
         return null;
       }
 
@@ -82,23 +82,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       
       // Case: NOT Authenticated
       if (activeUser == null) {
-        // If we are not on login or splash, force login
         if (!isLoggingIn && !isSplash) {
-          debugPrint('AUTH ROUTER: No user -> Redirecting to LOGIN');
+          debugPrint('AUTH ROUTER: Guest trying to access protected route -> LOGIN');
           return RouteNames.login;
         }
-        return null; // Already on Login or Splash
+        return null; 
       }
 
       // Case: Authenticated
       
-      // If we are on Auth-only pages, move to the right place
+      // If we are on Guest-only pages (Splash/Login), move to App or Onboarding
       if (isLoggingIn || isSplash) {
         if (!activeUser.onboardingCompleted) {
-          debugPrint('AUTH ROUTER: Authenticated (New) -> ONBOARDING');
+          debugPrint('AUTH ROUTER: Auth (New) -> ONBOARDING');
           return RouteNames.onboarding;
         }
-        debugPrint('AUTH ROUTER: Authenticated (Existing) -> HOME');
+        debugPrint('AUTH ROUTER: Auth (Existing) -> HOME');
         return RouteNames.companionHome;
       }
 
@@ -109,16 +108,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // If we are trying to access protected content but haven't onboarded
-      final isTryingProtected = matchedLocation.startsWith(RouteNames.companionHome) || 
-                                matchedLocation == RouteNames.mood ||
-                                matchedLocation == RouteNames.profile;
-                                
-      if (isTryingProtected && !activeUser.onboardingCompleted) {
-        debugPrint('AUTH ROUTER: Access denied (onboarding required) -> ONBOARDING');
+      final isProtected = path.startsWith(RouteNames.companionHome) || 
+                          path == RouteNames.mood ||
+                          path == RouteNames.profile;
+                                 
+      if (isProtected && !activeUser.onboardingCompleted) {
+        debugPrint('AUTH ROUTER: Onboarding required -> ONBOARDING');
         return RouteNames.onboarding;
       }
 
-      debugPrint('AUTH ROUTER: Path allowed.');
+      debugPrint('AUTH ROUTER: Target allowed.');
       return null;
     },
     routes: [
@@ -202,69 +201,5 @@ class _GoRouterRefreshStream extends ChangeNotifier {
   void dispose() {
     _subscription.cancel();
     super.dispose();
-  }
-}
-
-
-/// Temporary placeholder while features are implemented
-class _PlaceholderPage extends StatelessWidget {
-  final String label;
-  const _PlaceholderPage({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0E17),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const FlutterLogo(size: 64),
-            const SizedBox(height: 16),
-            Text(
-              'EchoSoul — $label',
-              style: const TextStyle(color: Colors.white70, fontSize: 18),
-            ),
-            const SizedBox(height: 32),
-            // Only show logout on home/profile placeholders for testing
-            if (label == 'Companion Home' || label == 'Profile')
-              Consumer(
-                builder: (context, ref, child) {
-                  return ElevatedButton.icon(
-                    onPressed: () async {
-                      try {
-                        await ref.read(authControllerProvider.notifier).signOut();
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Sesión cerrada correctamente.'),
-                              backgroundColor: Color(0xFF0D9488), // EsColors.success
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error: $e'),
-                              backgroundColor: const Color(0xFFE11D48), // EsColors.distress
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Cerrar Sesión'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E1D2D), // EsColors.surface
-                      foregroundColor: const Color(0xFF2DD4BF), // EsColors.neonCyan
-                    ),
-                  );
-                },
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }
