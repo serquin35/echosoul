@@ -1,0 +1,561 @@
+{
+  "name": "EchoSoul — proactividad: mood-insights",
+  "nodes": [
+    {
+      "id": "64502384-fb02-4ed5-889d-18fb516c3f3a",
+      "name": "Webhook mood entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "path": "mood-entry",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "7691c7b1-7b8f-4a30-b578-00b63fdd4f14",
+      "name": "Fetch mood history",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/mood_entries?user_id=eq.{{ $json.body.user_id }}&order=created_at.desc&limit=7",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "31cfb989-852d-498d-a88d-2f285751685c",
+      "name": "Analyze mood pattern",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst entries = $input.all().map(i => i.json);\nconst userId  = $('Webhook mood entry').first().json.body.user_id;\n\nif (entries.length < 3) {\n  return [{ json: { user_id: userId, needsInsight: false, reason: 'not_enough_data' } }];\n}\n\nconst scores = entries.map(e => e.mood_score).filter(s => s != null);\nconst avg    = scores.reduce((a, b) => a + b, 0) / scores.length;\n\n// Detecta racha baja: 3+ entradas consecutivas ≤ 3 (asume escala 1-10)\nconst lastThree    = scores.slice(0, 3);\nconst allLow       = lastThree.every(s => s <= 3);\nconst downwardTrend = scores.length >= 4 &&\n  scores[0] < scores[1] && scores[1] < scores[2] && scores[2] < scores[3];\n\nlet severity = 'none';\nif (allLow && avg <= 2)          severity = 'high';\nelse if (allLow || downwardTrend) severity = 'medium';\nelse if (avg <= 3.5)              severity = 'low';\n\nreturn [{ json: {\n  user_id:      userId,\n  needsInsight: severity !== 'none',\n  severity,\n  avg_score:    Math.round(avg * 10) / 10,\n  entries_count: scores.length\n}}];\n"
+      }
+    },
+    {
+      "id": "3a0cc6da-ec48-444a-a01e-6d06a03fdea7",
+      "name": "IF needs insight",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f81198a6-8e9f-4f79-92a9-8a58c81d742b",
+              "leftValue": "={{ $json.needsInsight }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "7c787eb5-88f8-4743-9740-fecf53a48fe5",
+      "name": "Respond no insight",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        900
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"insight_sent\":false,\"reason\":\"no_pattern\"}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "465a51e3-64c1-4fc1-9d4c-3af3060c8201",
+      "name": "Fetch profile for insight",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?id=eq.{{ $json.user_id }}&select=id,display_name,email,language,platform,fcm_token&limit=1",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e2d6971b-7a2d-48d3-9040-30f617aee77b",
+      "name": "Fetch memories for insight",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_memories?user_id=eq.{{ $('Analyze mood pattern').first().json.user_id }}&order=importance.desc&limit=8",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fe2f343a-39a5-4067-9103-72a57d648621",
+      "name": "Build insight prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst analysis = $('Analyze mood pattern').item.json;\nconst profile  = $('Fetch profile for insight').item.json;\nconst memories = $input.all().map(i => i.json);\n\nconst name    = profile.display_name || 'tú';\nconst lang    = profile.language || 'es';\nconst memText = memories.length ? memories.map(m => `- ${m.content}`).join('\\n') : '';\n\nconst severityPrompt = analysis.severity === 'high'\n  ? 'El usuario puede estar pasando por un momento muy difícil. Sé muy empático, menciona que no está solo/a y que puede hablar contigo cuando quiera.'\n  : 'El usuario lleva varios días con el ánimo bajo. Muéstrate presente y cálido, sin dramatizar.';\n\nconst systemPrompt = `Eres EchoSoul. ${severityPrompt}\n${memText ? `Lo que sabes de ${name}:\\n${memText}` : ''}\nEscribe UN mensaje empático de apoyo. Máx 3 frases. Idioma: ${lang}.\nNO diagnostiques. NO des consejos de salud mental.\nResponde SOLO con el mensaje.`;\n\nreturn [{ json: {\n  user_id:    analysis.user_id,\n  email:      profile.email,\n  fcm_token:  profile.fcm_token,\n  platform:   profile.platform ?? 'web',\n  severity:   analysis.severity,\n  systemPrompt\n}}];\n"
+      }
+    },
+    {
+      "id": "ab931caf-2ad7-4c33-a1e2-4b2f177eba51",
+      "name": "Generate insight message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "{{ $credentials.EchoSoulClaude.value }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:$json.systemPrompt,messages:[{role:'user',content:'Genera el mensaje de apoyo ahora.'}]}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "7f6320a4-8052-4e59-a254-11c9e64d2cbe",
+      "name": "Parse insight",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1700
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst prev    = $('Generate insight message').item.json;\nconst llm_msg = prev.content?.[0]?.text ?? 'EchoSoul está aquí contigo 💙';\nreturn [{ json: { ...prev, generated_message: llm_msg } }];\n"
+      }
+    },
+    {
+      "id": "188be9b2-e376-4630-bc64-3c712b97a9cf",
+      "name": "IF android mood",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "40c257f3-d96d-4169-9f0c-0a95b70c487b",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "android",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "5f8d95a3-cb4d-427e-8d3e-652b7080ce97",
+      "name": "Send FCM insight",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        2100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://fcm.googleapis.com/fcm/send",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "key=YOUR_FCM_SERVER_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({to:$json.fcm_token,notification:{title:'EchoSoul 💙',body:$json.generated_message},data:{type:'mood_insight',severity:$json.severity}}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "fb367069-12aa-4498-a38a-5edf97db58c3",
+      "name": "Send email insight",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        2100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.email }}",
+        "subject": "=EchoSoul tiene algo para ti 💙",
+        "emailType": "html",
+        "message": "={{ '<div style=\"font-family:sans-serif;padding:24px;max-width:480px\">' + $json.generated_message + '</div>' }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "id": "54eb93f2-ed15-495c-a5a7-99b10e7af07e",
+      "name": "Log mood checkin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        2300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,notes:$json.generated_message,triggered_by:'mood-insight'}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "016da49a-c9b7-4722-bab9-98b46135c128",
+      "name": "Respond insight sent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        2500
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({insight_sent:true,severity:$json.severity}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook mood entry": {
+      "main": [
+        [
+          {
+            "node": "Fetch mood history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch mood history": {
+      "main": [
+        [
+          {
+            "node": "Analyze mood pattern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze mood pattern": {
+      "main": [
+        [
+          {
+            "node": "IF needs insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF needs insight": {
+      "main": [
+        [
+          {
+            "node": "Fetch profile for insight",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond no insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch profile for insight": {
+      "main": [
+        [
+          {
+            "node": "Fetch memories for insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch memories for insight": {
+      "main": [
+        [
+          {
+            "node": "Build insight prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build insight prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate insight message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate insight message": {
+      "main": [
+        [
+          {
+            "node": "Parse insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse insight": {
+      "main": [
+        [
+          {
+            "node": "IF android mood",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF android mood": {
+      "main": [
+        [
+          {
+            "node": "Send FCM insight",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email insight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send FCM insight": {
+      "main": [
+        [
+          {
+            "node": "Log mood checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email insight": {
+      "main": [
+        [
+          {
+            "node": "Log mood checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log mood checkin": {
+      "main": [
+        [
+          {
+            "node": "Respond insight sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "7de5a268-f41b-4f7b-ba0f-49f63e27b004",
+  "meta": {
+    "instanceId": "echosoul-local"
+  }
+}
