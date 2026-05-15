@@ -23,10 +23,6 @@ void main() async {
       await initializeDateFormatting('es_ES', null);
       debugPrint('🚀 APP START: Date formatting initialized');
       
-      // Enable clean URLs on web (no #)
-      usePathUrlStrategy();
-      debugPrint('🚀 APP START: URL strategy initialized');
-      
       await dotenv.load(fileName: ".env");
       debugPrint('🚀 APP START: .env loaded');
 
@@ -43,10 +39,14 @@ void main() async {
         url: Env.supabaseUrl,
         anonKey: Env.supabaseAnonKey,
         authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.pkce,
+          authFlowType: AuthFlowType.implicit, // Cambiado a implicit para Flutter Web OAuth
         ),
       );
       debugPrint('🚀 APP START: Supabase initialized');
+
+      // Enable clean URLs on web (no #) AFTER Supabase initialized so it can read fragments
+      usePathUrlStrategy();
+      debugPrint('🚀 APP START: URL strategy initialized');
 
       // Diagnostic: Check if we already have a session or if we are recovering one
       final session = Supabase.instance.client.auth.currentSession;
