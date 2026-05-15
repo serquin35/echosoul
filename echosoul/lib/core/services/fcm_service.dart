@@ -31,6 +31,12 @@ class FcmService {
   }
 
   Future<String?> getToken() async {
-    return await FirebaseMessaging.instance.getToken();
+    try {
+      if (Firebase.apps.isEmpty) return null;
+      return await FirebaseMessaging.instance.getToken();
+    } catch (e) {
+      debugPrint('⚠️ FcmService: Cannot get token, error: $e');
+      return null;
+    }
   }
 }
