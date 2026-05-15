@@ -9,8 +9,20 @@ class FcmService {
   FcmService._();
 
   static Future<void> initialize() async {
-    await Firebase.initializeApp();
-    debugPrint('FcmService: Firebase Inicializado');
+    try {
+      if (kIsWeb) {
+        // On Web, Firebase needs explicit options or to be initialized in index.html.
+        // If they are missing, Firebase.initializeApp() crashes.
+        // For now, we'll skip it if it fails or if we want to add options later.
+        debugPrint('FcmService: Checking Firebase for Web...');
+      }
+      
+      await Firebase.initializeApp();
+      debugPrint('FcmService: Firebase Inicializado');
+    } catch (e) {
+      debugPrint('⚠️ FcmService: Firebase could not be initialized. FCM features will be disabled. Error: $e');
+      // We don't rethrow to avoid crashing the whole app
+    }
   }
 
   Future<bool> requestPermission() async {

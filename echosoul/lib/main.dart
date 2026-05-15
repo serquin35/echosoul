@@ -38,6 +38,7 @@ void main() async {
       final webhook = Env.n8nChatWebhookUrl;
       debugPrint('🔧 Env: Webhook is ${webhook.isEmpty ? 'EMPTY' : 'CONFIGURED'}');
       
+      debugPrint('🚀 APP START: Initializing Supabase...');
       await Supabase.initialize(
         url: Env.supabaseUrl,
         anonKey: Env.supabaseAnonKey,
@@ -50,7 +51,6 @@ void main() async {
       // Diagnostic: Check if we already have a session or if we are recovering one
       final session = Supabase.instance.client.auth.currentSession;
       debugPrint('🚀 Supabase Session: ${session != null ? 'ACTIVE (${session.user.email})' : 'NULL'}');
-
 
       runApp(
         const ProviderScope(
