@@ -1,25 +1,24 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-/// Servicio singleton para gestionar FCM (Mocked por ahora).
+/// Servicio singleton para gestionar FCM.
 class FcmService {
   static final FcmService _instance = FcmService._();
   factory FcmService() => _instance;
   FcmService._();
 
-  /// Inicialización simulada
   static Future<void> initialize() async {
-    debugPrint('FcmService (Mock): Inicializado');
+    await Firebase.initializeApp();
+    debugPrint('FcmService: Firebase Inicializado');
   }
 
-  /// Petición de permisos simulada
   Future<bool> requestPermission() async {
-    debugPrint('FcmService (Mock): requestPermission = true');
-    return true;
+    final settings = await FirebaseMessaging.instance.requestPermission();
+    return settings.authorizationStatus == AuthorizationStatus.authorized;
   }
 
-  /// Devuelve un token simulado para probar flujos en n8n
   Future<String?> getToken() async {
-    debugPrint('FcmService (Mock): getToken llamado');
-    return 'mock_fcm_token_device_001'; 
+    return await FirebaseMessaging.instance.getToken();
   }
 }

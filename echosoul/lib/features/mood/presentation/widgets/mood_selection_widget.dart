@@ -22,55 +22,62 @@ class MoodSelectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _moods.map((mood) {
-        final isSelected = selectedScore == mood['score'];
-        return EsInteractive(
-          onTap: () => onScoreSelected(mood['score'] as int),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: isSelected ? EsColors.primaryBlue.withOpacity(0.2) : EsColors.surfaceElevated,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? EsColors.primaryBlue : Colors.transparent,
-                    width: 2,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: _moods.map((mood) {
+          final isSelected = selectedScore == mood['score'];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: EsInteractive(
+              onTap: () => onScoreSelected(mood['score'] as int),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: isSelected ? EsColors.primaryBlue.withOpacity(0.2) : EsColors.surfaceElevated,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? EsColors.primaryBlue : Colors.transparent,
+                        width: 2,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: EsColors.primaryBlue.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              )
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        mood['emoji'] as String,
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                    ),
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: EsColors.primaryBlue.withOpacity(0.3),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          )
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    mood['emoji'] as String,
-                    style: const TextStyle(fontSize: 32),
+                  const SizedBox(height: 8),
+                  Text(
+                    mood['label'] as String,
+                    style: TextStyle(
+                      color: isSelected ? EsColors.textPrimaryDark : EsColors.textSecondaryDark,
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                mood['label'] as String,
-                style: TextStyle(
-                  color: isSelected ? EsColors.textPrimaryDark : EsColors.textSecondaryDark,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }

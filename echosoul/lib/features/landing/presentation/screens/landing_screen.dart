@@ -84,10 +84,11 @@ class LandingScreen extends StatelessWidget {
                             width: 1,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.graphic_eq,
-                          color: EsColors.neonCyan,
-                          size: 64,
+                        child: Image.asset(
+                          'assets/images/logo_icon.png',
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(height: EsSpacing.xl),
@@ -127,24 +128,7 @@ class LandingScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: EsSpacing.lg),
 
-                      // Android CTA (Placeholder for future)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.android,
-                            color: EsColors.textSecondaryDark,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Próximamente en Android',
-                            style: EsTypography.bodyMedium.copyWith(
-                              color: EsColors.textSecondaryDark,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const SizedBox(height: EsSpacing.lg),
                     ],
                   ),
                 ),

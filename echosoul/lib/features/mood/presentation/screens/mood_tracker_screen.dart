@@ -40,6 +40,11 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
           label: label,
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
+    
+    // Ocultar teclado
+    if (mounted) {
+      FocusScope.of(context).unfocus();
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

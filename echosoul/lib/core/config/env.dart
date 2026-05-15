@@ -22,4 +22,10 @@ class Env {
       const String.fromEnvironment('N8N_CHAT_WEBHOOK_URL').isNotEmpty
           ? const String.fromEnvironment('N8N_CHAT_WEBHOOK_URL')
           : dotenv.env['N8N_CHAT_WEBHOOK_URL'] ?? '';
+
+  /// Google Web Client ID for native Google Sign-In.
+  static String get googleWebClientId =>
+      const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
+          ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
+          : dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '';
 }

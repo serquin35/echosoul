@@ -33,6 +33,9 @@ abstract class AuthRepository {
   /// Update the password for the current user (used after recovery).
   Future<void> updatePassword(String newPassword);
 
+  /// Update FCM token for the current user in Supabase profiles.
+  Future<void> updateFcmToken(String token);
+
   /// Stream of auth state changes.
   Stream<UserEntity?> get authStateChanges;
 }

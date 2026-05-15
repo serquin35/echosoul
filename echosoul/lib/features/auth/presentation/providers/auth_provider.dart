@@ -79,4 +79,8 @@ class AuthController extends _$AuthController {
       return ref.read(authRepositoryProvider).getCurrentUser();
     });
   }
+
+  Future<void> updateFcmToken(String token) async {
+    await ref.read(authRepositoryProvider).updateFcmToken(token);
+  }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
@@ -32,33 +33,56 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity> signInWithGoogle() async {
     try {
-      // NOTE: For a real mobile build, configuring Google Sign-in requires
-      // the google_sign_in package with proper OAuth client IDs for iOS/Android.
-      // We will fallback to Supabase OAuth web-flow if native isn't setup.
-      final String? envRedirect = Env.authRedirectUrl;
-      final String redirectTo = envRedirect ?? (kIsWeb ? '${Uri.base.origin}/' : 'echosoul://login-callback/');
-      final success = await _supabaseClient.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: redirectTo,
-      );
-
-      if (!success) {
-        throw const AuthException('Fallo al iniciar sesión con Google.');
-      }
-
-      // In OAuth web flow, the user isn't immediately returned here.
-      // The authStateChanges stream will catch the successful login after deep-link redirect.
-      // For this abstraction, we just return a temporary placeholder or await the session.
-      final user = _supabaseClient.auth.currentUser;
-      if (user != null) {
-        return _mapSupabaseUserToEntity(user);
+      if (kIsWeb) {
+        return await _signInWithGoogleWeb();
       } else {
-        // Will be populated later via deep link
-        return const UserEntity(id: '', email: '');
+        return await _signInWithGoogleNative();
       }
     } catch (e) {
       throw AuthException(e.toString());
     }
+  }
+
+  Future<UserEntity> _signInWithGoogleWeb() async {
+    final String? envRedirect = Env.authRedirectUrl;
+    final String redirectTo = envRedirect ?? (kIsWeb ? '${Uri.base.origin}/' : 'echosoul://login-callback/');
+    final success = await _supabaseClient.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo,
+    );
+
+    if (!success) {
+      throw const AuthException('Fallo al iniciar sesión con Google.');
+    }
+
+    final user = _supabaseClient.auth.currentUser;
+    if (user != null) {
+      return _mapSupabaseUserToEntity(user);
+    } else {
+      return const UserEntity(id: '', email: '');
+    }
+  }
+
+  Future<UserEntity> _signInWithGoogleNative() async {
+    final googleSignIn = GoogleSignIn(
+      serverClientId: Env.googleWebClientId,
+    );
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) throw const AuthException('Inicio con Google cancelado.');
+
+    final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null) throw const AuthException('No se pudo obtener el token de Google.');
+
+    final response = await _supabaseClient.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: googleAuth.accessToken,
+    );
+
+    if (response.user == null) throw const AuthException('Error al autenticar con Supabase.');
+
+    return _mapSupabaseUserToEntity(response.user!);
   }
 
   @override
@@ -97,14 +121,6 @@ class AuthRepositoryImpl implements AuthRepository {
         data: displayName != null ? {'full_name': displayName} : null,
       );
       if (response.user == null) throw const AuthException('Error al crear la cuenta.');
-      
-      // Disparar onboarding en n8n (fire & forget)
-      _triggerOnboarding(
-        userId: response.user!.id,
-        email: email,
-        displayName: displayName ?? '',
-      );
-
       return _mapSupabaseUserToEntity(response.user!);
     } catch (e) {
       final err = e.toString();
@@ -117,35 +133,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Llama al webhook de n8n para iniciar el onboarding.
-  /// No bloquea ni lanza error si falla.
-  Future<void> _triggerOnboarding({
-    required String userId,
-    required String email,
-    required String displayName,
-  }) async {
-    try {
-      final fcmToken = await FcmService().getToken();
-      final n8nUrl = Env.n8nChatWebhookUrl
-          .replaceFirst('/webhook/chat', '/webhook/new-user');
 
-      await http.post(
-        Uri.parse(n8nUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'user_id':      userId,
-          'email':        email,
-          'display_name': displayName,
-          'platform':     'android', // or determine from platform
-          'fcm_token':    fcmToken,
-          'timezone':     DateTime.now().timeZoneName,
-        }),
-      ).timeout(const Duration(seconds: 10));
-    } catch (e) {
-      // El onboarding nunca bloquea el registro
-      debugPrint('Onboarding webhook error (ignorado): $e');
-    }
-  }
 
   @override
   Future<void> resetPasswordForEmail(String email) async {
@@ -197,6 +185,23 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException('Error de red al eliminar la cuenta: $e');
+    }
+  }
+
+  @override
+  Future<void> updateFcmToken(String token) async {
+    try {
+      final userId = _supabaseClient.auth.currentUser?.id;
+      if (userId == null) return;
+      
+      await _supabaseClient
+          .from('profiles')
+          .update({'fcm_token': token})
+          .eq('id', userId);
+          
+      debugPrint('AuthRepository: FCM Token actualizado en Supabase');
+    } catch (e) {
+      debugPrint('AuthRepository: Error al actualizar FCM Token: $e');
     }
   }
 
