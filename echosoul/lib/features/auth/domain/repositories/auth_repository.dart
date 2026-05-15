@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../entities/user_entity.dart';
 
 /// Contract for auth operations.
@@ -38,4 +39,7 @@ abstract class AuthRepository {
 
   /// Stream of auth state changes.
   Stream<UserEntity?> get authStateChanges;
+
+  /// Helper to map a Supabase User to a UserEntity.
+  UserEntity mapSupabaseUser(User supabaseUser);
 }

@@ -28,78 +28,97 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
-    // This is critical: notify GoRouter to re-run redirect when authRepository notifies
-    refreshListenable: _GoRouterRefreshStream(ref.watch(authRepositoryProvider).authStateChanges),
+    // This is critical: notify GoRouter to re-run redirect when Supabase auth state changes.
+    // We listen directly to the Supabase stream to avoid Riverpod's StreamProvider latency/loading states.
+    refreshListenable: _GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
     redirect: (context, state) {
-      final isLoggingIn = state.matchedLocation == RouteNames.login;
-      final isResettingPassword = state.matchedLocation == RouteNames.resetPassword;
-      final isSplash = state.matchedLocation == RouteNames.splash;
+      final matchedLocation = state.matchedLocation;
+      final isLoggingIn = matchedLocation == RouteNames.login;
+      final isResettingPassword = matchedLocation == RouteNames.resetPassword;
+      final isSplash = matchedLocation == RouteNames.splash;
+      final isOnboarding = matchedLocation == RouteNames.onboarding;
       
-      // Access current auth state using ref.read
-      final authState = ref.read(authStateChangesProvider);
-      final isAuthLoading = authState is AsyncLoading;
-      final user = authState.value;
+      // 1. Access auth state SYNCHRONOUSLY
+      // This is the most reliable way to avoid flickering during redirects.
+      final auth = Supabase.instance.client.auth;
+      final supabaseUser = auth.currentUser;
+      final hasSession = auth.currentSession != null;
+      
+      // Map to our UserEntity if we have a user
+      final activeUser = supabaseUser != null 
+          ? ref.read(authRepositoryProvider).mapSupabaseUser(supabaseUser) 
+          : null;
 
-      // 1. Log transition for debugging
-      debugPrint('AUTH ROUTER: [${state.matchedLocation}] User: ${user?.email ?? 'NULL'}, Loading: $isAuthLoading');
-      debugPrint('AUTH ROUTER: Full URI: ${state.uri}');
-
-      // 2. If auth state is still loading, stay/wait
-      if (isAuthLoading) {
-        debugPrint('AUTH ROUTER: Auth is loading, waiting...');
-        return null;
+      // 2. Logging for diagnostics
+      debugPrint('--- [AUTH ROUTER] ---');
+      debugPrint('Target: $matchedLocation');
+      debugPrint('User: ${activeUser?.email ?? "NULL"}');
+      debugPrint('Session: ${hasSession ? "ACTIVE" : "NONE"}');
+      debugPrint('Onboarding: ${activeUser?.onboardingCompleted ?? "N/A"}');
+      debugPrint('URI: ${state.uri}');
+      
+      // 3. Handle OAuth Callback State (PKCE / Implicit)
+      final fullUri = state.uri.toString();
+      final hasOAuthParams = state.uri.queryParameters.containsKey('code') || 
+                            state.uri.fragment.contains('access_token=') ||
+                            fullUri.contains('access_token=') ||
+                            fullUri.contains('code=');
+      
+      if (hasOAuthParams && activeUser == null) {
+        debugPrint('AUTH ROUTER: OAuth in progress... Blocking redirect.');
+        return null; // Stay on current page while Supabase exchanges tokens
       }
 
-      // 3. If there was an error during auth, log it and redirect to login
-      if (authState.hasError) {
-        debugPrint('AUTH ROUTER ERROR: ${authState.error}');
-        if (!isLoggingIn) return RouteNames.login;
-        return null;
-      }
-
-      // 4. Detect recovery flow (type=recovery in hash or query)
+      // 4. Recovery Flow (Password Reset)
       final isRecovery = state.uri.fragment.contains('type=recovery') || 
                          state.uri.queryParameters['type'] == 'recovery';
       
-      // 5. Detect if we are in an OAuth/PKCE callback flow (URL has code or tokens)
-      final fullUriString = state.uri.toString();
-      final hasAuthTokens = state.uri.queryParameters.containsKey('code') || 
-                           state.uri.fragment.contains('access_token=') ||
-                           fullUriString.contains('access_token=') ||
-                           fullUriString.contains('code=');
+      if (isResettingPassword || isRecovery) {
+        debugPrint('AUTH ROUTER: Recovery path allowed.');
+        return null;
+      }
+
+      // 5. Access Control Logic
       
-      if (user == null && hasAuthTokens) {
-        debugPrint('AUTH ROUTER: Detectado token/código en URL, bloqueando redirección para procesar sesión...');
-        return null; // Stay put, Supabase is processing the token
+      // Case: NOT Authenticated
+      if (activeUser == null) {
+        // If we are not on login or splash, force login
+        if (!isLoggingIn && !isSplash) {
+          debugPrint('AUTH ROUTER: No user -> Redirecting to LOGIN');
+          return RouteNames.login;
+        }
+        return null; // Already on Login or Splash
       }
 
-      // 6. If resetting password or in recovery flow, allow it and don't redirect to home
-      if (isResettingPassword || isRecovery) return null;
-
-      // 7. If user is NOT logged in and NOT on login page and NOT on splash(landing) page, redirect to login
-      if (user == null && !isLoggingIn && !isSplash) {
-        debugPrint('AUTH ROUTER: Usuario no autenticado, enviando a Login');
-        return RouteNames.login;
-      }
-
-      // 8. If user IS logged in and ON login or splash(landing) page, redirect to home
-      if (user != null && (isLoggingIn || isSplash)) {
-        debugPrint('AUTH ROUTER: Usuario autenticado (${user.email}), redirigiendo a Home/Onboarding');
-        if (!user.onboardingCompleted) {
+      // Case: Authenticated
+      
+      // If we are on Auth-only pages, move to the right place
+      if (isLoggingIn || isSplash) {
+        if (!activeUser.onboardingCompleted) {
+          debugPrint('AUTH ROUTER: Authenticated (New) -> ONBOARDING');
           return RouteNames.onboarding;
         }
+        debugPrint('AUTH ROUTER: Authenticated (Existing) -> HOME');
         return RouteNames.companionHome;
       }
 
-      // 9. If user IS logged in, but tries to access companionHome while not having completed onboarding
-      if (user != null && state.matchedLocation.startsWith(RouteNames.companionHome)) {
-         if (!user.onboardingCompleted) {
-           debugPrint('AUTH ROUTER: Onboarding pendiente, redirigiendo...');
-           return RouteNames.onboarding;
-         }
+      // If we are on Onboarding but already finished it, move to Home
+      if (isOnboarding && activeUser.onboardingCompleted) {
+        debugPrint('AUTH ROUTER: Onboarding already done -> HOME');
+        return RouteNames.companionHome;
       }
 
-      // Allow navigation
+      // If we are trying to access protected content but haven't onboarded
+      final isTryingProtected = matchedLocation.startsWith(RouteNames.companionHome) || 
+                                matchedLocation == RouteNames.mood ||
+                                matchedLocation == RouteNames.profile;
+                                
+      if (isTryingProtected && !activeUser.onboardingCompleted) {
+        debugPrint('AUTH ROUTER: Access denied (onboarding required) -> ONBOARDING');
+        return RouteNames.onboarding;
+      }
+
+      debugPrint('AUTH ROUTER: Path allowed.');
       return null;
     },
     routes: [

@@ -18,8 +18,27 @@ class AuthRepositoryImpl implements AuthRepository {
   Stream<UserEntity?> get authStateChanges {
     return _supabaseClient.auth.onAuthStateChange.map((event) {
       final session = event.session;
-      if (session == null || session.user == null) return null;
-      return _mapSupabaseUserToEntity(session.user!);
+      final user = session?.user;
+      
+      debugPrint('--- [AUTH REPOSITORY EVENT] ---');
+      debugPrint('Event: ${event.event}');
+      debugPrint('Session: ${session != null ? "ACTIVE" : "NONE"}');
+      debugPrint('User: ${user?.email ?? "NULL"}');
+      if (user != null) {
+        debugPrint('Metadata: ${user.userMetadata}');
+      }
+      
+      if (user == null) return null;
+      return mapSupabaseUser(user);
+    }).distinct((prev, next) {
+      // Only emit if the user ID or onboarding status changed
+      final changed = prev?.id != next?.id || 
+                      prev?.onboardingCompleted != next?.onboardingCompleted;
+      
+      if (changed) {
+        debugPrint('AUTH REPOSITORY: State changed (ID: ${next?.id}, Onboarded: ${next?.onboardingCompleted})');
+      }
+      return !changed;
     });
   }
 
@@ -27,7 +46,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserEntity?> getCurrentUser() async {
     final user = _supabaseClient.auth.currentUser;
     if (user == null) return null;
-    return _mapSupabaseUserToEntity(user);
+    return mapSupabaseUser(user);
   }
 
   @override
@@ -57,7 +76,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final user = _supabaseClient.auth.currentUser;
     if (user != null) {
-      return _mapSupabaseUserToEntity(user);
+      return mapSupabaseUser(user);
     } else {
       return const UserEntity(id: '', email: '');
     }
@@ -82,7 +101,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     if (response.user == null) throw const AuthException('Error al autenticar con Supabase.');
 
-    return _mapSupabaseUserToEntity(response.user!);
+    return mapSupabaseUser(response.user!);
   }
 
   @override
@@ -96,7 +115,7 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       if (response.user == null) throw const AuthException('Credenciales inválidas.');
-      return _mapSupabaseUserToEntity(response.user!);
+      return mapSupabaseUser(response.user!);
     } catch (e) {
       final err = e.toString();
       if (err.contains('Invalid login credentials')) {
@@ -121,7 +140,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: displayName != null ? {'full_name': displayName} : null,
       );
       if (response.user == null) throw const AuthException('Error al crear la cuenta.');
-      return _mapSupabaseUserToEntity(response.user!);
+      return mapSupabaseUser(response.user!);
     } catch (e) {
       final err = e.toString();
       if (err.contains('User already registered')) {
@@ -205,7 +224,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  UserEntity _mapSupabaseUserToEntity(User supabaseUser) {
+  @override
+  UserEntity mapSupabaseUser(User supabaseUser) {
     return UserEntity(
       id: supabaseUser.id,
       email: supabaseUser.email ?? '',
