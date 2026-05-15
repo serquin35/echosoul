@@ -63,11 +63,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<UserEntity> _signInWithGoogleWeb() async {
-    final String? envRedirect = Env.authRedirectUrl;
-    final String redirectTo = envRedirect ?? (kIsWeb ? '${Uri.base.origin}/' : 'echosoul://login-callback/');
     final success = await _supabaseClient.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: redirectTo,
+      redirectTo: kIsWeb 
+          ? 'https://echosoul-one.vercel.app/' 
+          : 'io.echosoul.app://login-callback',
     );
 
     if (!success) {

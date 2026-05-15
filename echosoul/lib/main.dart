@@ -15,6 +15,7 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    usePathUrlStrategy(); // ← MOVER AQUÍ, primera línea
     debugPrint('🚀 APP START: WidgetsBinding initialized');
     
     try {
@@ -26,10 +27,6 @@ void main() async {
       await dotenv.load(fileName: ".env");
       debugPrint('🚀 APP START: .env loaded');
 
-      // Inicializar FCM
-      await FcmService.initialize();
-      debugPrint('🚀 APP START: FCM initialized');
-
       // Diagnostic logs for Production (Safe info only)
       final webhook = Env.n8nChatWebhookUrl;
       debugPrint('🔧 Env: Webhook is ${webhook.isEmpty ? 'EMPTY' : 'CONFIGURED'}');
@@ -39,14 +36,14 @@ void main() async {
         url: Env.supabaseUrl,
         anonKey: Env.supabaseAnonKey,
         authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.implicit, // Cambiado a implicit para Flutter Web OAuth
+          authFlowType: AuthFlowType.pkce, // ← CAMBIAR de implicit a pkce
         ),
       );
       debugPrint('🚀 APP START: Supabase initialized');
 
-      // Enable clean URLs on web (no #) AFTER Supabase initialized so it can read fragments
-      usePathUrlStrategy();
-      debugPrint('🚀 APP START: URL strategy initialized');
+      // FCM/Firebase DESPUÉS de Supabase
+      await FcmService.initialize();
+      debugPrint('🚀 APP START: FCM initialized');
 
       // Diagnostic: Check if we already have a session or if we are recovering one
       final session = Supabase.instance.client.auth.currentSession;
