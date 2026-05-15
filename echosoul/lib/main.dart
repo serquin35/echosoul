@@ -13,47 +13,60 @@ import 'core/services/fcm_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    debugPrint('🚀 APP START: WidgetsBinding initialized');
+    
+    try {
   
-  // Initialize date formatting for intl
-  await initializeDateFormatting('es_ES', null);
-  
-  // Enable clean URLs on web (no #)
-  usePathUrlStrategy();
-  
-  await dotenv.load(fileName: ".env");
+      // Initialize date formatting for intl
+      await initializeDateFormatting('es_ES', null);
+      debugPrint('🚀 APP START: Date formatting initialized');
+      
+      // Enable clean URLs on web (no #)
+      usePathUrlStrategy();
+      debugPrint('🚀 APP START: URL strategy initialized');
+      
+      await dotenv.load(fileName: ".env");
+      debugPrint('🚀 APP START: .env loaded');
 
-  // Inicializar FCM
-  await FcmService.initialize();
+      // Inicializar FCM
+      await FcmService.initialize();
+      debugPrint('🚀 APP START: FCM initialized');
 
-  // Diagnostic logs for Production (Safe info only)
-  final webhook = Env.n8nChatWebhookUrl;
-  debugPrint('🔧 Env: Webhook is ${webhook.isEmpty ? 'EMPTY' : 'CONFIGURED'}');
-  if (webhook.isNotEmpty) {
-    debugPrint('🔧 Env: Webhook starts with: ${webhook.substring(0, 10)}...');
-  }
-  
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    anonKey: Env.supabaseAnonKey,
-    authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce,
-    ),
-  );
+      // Diagnostic logs for Production (Safe info only)
+      final webhook = Env.n8nChatWebhookUrl;
+      debugPrint('🔧 Env: Webhook is ${webhook.isEmpty ? 'EMPTY' : 'CONFIGURED'}');
+      
+      await Supabase.initialize(
+        url: Env.supabaseUrl,
+        anonKey: Env.supabaseAnonKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+        ),
+      );
+      debugPrint('🚀 APP START: Supabase initialized');
 
-  // Diagnostic: Check if we already have a session or if we are recovering one
-  final session = Supabase.instance.client.auth.currentSession;
-  debugPrint('🚀 Supabase Init: Session is ${session != null ? 'ACTIVE' : 'NULL'}');
-  if (session != null) {
-    debugPrint('🚀 Supabase Init: User is ${session.user.email}');
-  }
+      // Diagnostic: Check if we already have a session or if we are recovering one
+      final session = Supabase.instance.client.auth.currentSession;
+      debugPrint('🚀 Supabase Session: ${session != null ? 'ACTIVE (${session.user.email})' : 'NULL'}');
 
 
-  runApp(
-    const ProviderScope(
-      child: EchoSoulApp(),
-    ),
-  );
+      runApp(
+        const ProviderScope(
+          child: EchoSoulApp(),
+        ),
+      );
+    } catch (e, stack) {
+      debugPrint('❌ CRITICAL STARTUP ERROR: $e');
+      debugPrint('❌ STACKTRACE: $stack');
+      // Show a basic error app if initialization fails completely
+      runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Error al iniciar: $e')))));
+    }
+  }, (error, stack) {
+    debugPrint('❌ UNHANDLED GLOBAL ERROR: $error');
+    debugPrint('❌ STACKTRACE: $stack');
+  });
 }
 
 class EchoSoulApp extends ConsumerWidget {

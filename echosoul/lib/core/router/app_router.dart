@@ -22,18 +22,21 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Use a notifier to trigger GoRouter refreshes when auth state changes
-  final authState = ref.watch(authStateChangesProvider);
+  // We DON'T watch authStateChangesProvider here anymore to prevent the router from being re-created.
+  // Instead, the refreshListenable will notify GoRouter when to re-run the redirect logic.
   
   return GoRouter(
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
-    // This is critical: notify GoRouter to re-run redirect when authState changes
+    // This is critical: notify GoRouter to re-run redirect when authRepository notifies
     refreshListenable: _GoRouterRefreshStream(ref.watch(authRepositoryProvider).authStateChanges),
     redirect: (context, state) {
       final isLoggingIn = state.matchedLocation == RouteNames.login;
       final isResettingPassword = state.matchedLocation == RouteNames.resetPassword;
       final isSplash = state.matchedLocation == RouteNames.splash;
       
+      // Access current auth state using ref.read
+      final authState = ref.read(authStateChangesProvider);
       final isAuthLoading = authState is AsyncLoading;
       final user = authState.value;
 
@@ -59,7 +62,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                          state.uri.queryParameters['type'] == 'recovery';
       
       // 5. Detect if we are in an OAuth/PKCE callback flow (URL has code or tokens)
-      // We check queryParameters, fragment, and even the full URI string for safety
       final fullUriString = state.uri.toString();
       final hasAuthTokens = state.uri.queryParameters.containsKey('code') || 
                            state.uri.fragment.contains('access_token=') ||
@@ -174,7 +176,6 @@ class _GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
 
   _GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
     _subscription = stream.listen((_) => notifyListeners());
   }
 
