@@ -574,7 +574,7 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
 ///   El sistema Android gestiona correctamente un color sólido + shape.
 void _showCompanionInfo(BuildContext context, String companionName) {
   final screenH = MediaQuery.sizeOf(context).height;
-  final sheetH  = screenH > 100 ? screenH * 0.82 : 580.0;
+  final sheetH  = screenH > 100 ? screenH * 0.76 : 540.0;
 
   showModalBottomSheet(
     context: context,
