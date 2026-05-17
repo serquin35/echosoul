@@ -1,4 +1,4 @@
-package com.example.echosoul
+package com.serquin.echosoul
 
 import io.flutter.embedding.android.FlutterActivity
 
