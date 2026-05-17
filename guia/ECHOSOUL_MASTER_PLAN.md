@@ -188,7 +188,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 **Pendiente:**
 - [ ] Conectar workflow `buenos-dias` al cron de n8n
 - [ ] Integración Retell AI / Vapi.ai (voz proactiva)
-- [ ] Build AAB firmado → Google Play Console
+- [x] Build AAB firmado → Google Play Console
 - [ ] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
 
 ### 💳 FASE 3 — Monetización [PENDIENTE]
@@ -201,7 +201,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Disclaimers éticos en onboarding y chat
 - [x] Política de Privacidad + T&C públicos
 - [x] `crisis_events` anonimizado (hash, sin texto)
-- [ ] Crisis: teléfonos de emergencia reales por país (ES: 024, 112)
+- [x] Crisis: teléfonos de emergencia reales por país (ES: 024, 112)
 - [ ] Opción "pausar compañero" (UI + lógica n8n)
 - [ ] GDPR: exportar datos del usuario desde la app
 - [x] GDPR: eliminar cuenta + todos los datos desde la app
@@ -232,12 +232,12 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 6 | Llamadas de voz proactivas | 🔲 |
 | 7 | Mood tracker funcional | ✅ |
 | 8 | Disclaimers éticos visibles | ✅ |
-| 9 | Crisis con recursos reales (teléfonos) | 🔲 |
+| 9 | Crisis con recursos reales (teléfonos) | ✅ |
 | 10 | Privacidad + T&C públicos | ✅ |
-| 11 | App firmada en Play Console | 🔲 |
+| 11 | App firmada en Play Console | ✅ |
 | 12 | Data Safety Form completado | 🔲 |
 
-**8/12 completados — faltan 4 para poder publicar.**
+**10/12 completados — faltan 2 para poder publicar.**
 
 ---
 
@@ -248,10 +248,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
 | ~~**H1**~~ | ~~FCM real: `google-services.json` + token~~ | ~~✅ COMPLETADO~~ | ✅ |
-| **H2** | Build AAB firmado + Play Console | Keystore, firma, subir a Play Console (internal testing) | 🟡 Medio |
+| ~~**H2**~~ | ~~Build AAB firmado + Play Console~~ | ~~✅ COMPLETADO~~ | ✅ |
 | **H3** | Data Safety Form Play Store | Completar formulario en Play Console | 🟢 Bajo |
 | ~~**H4**~~ | ~~Google Sign-In Android~~ | ~~✅ COMPLETADO — SHA-1 + flow nativo~~ | ✅ |
-| **H5** | Crisis con teléfonos de emergencia reales | Mostrar 024 / 112 en crisis HIGH (ES) — cambio mínimo en n8n + Flutter | 🟢 Bajo |
+| ~~**H5**~~ | ~~Crisis con teléfonos de emergencia reales~~ | ~~✅ COMPLETADO~~ | ✅ |
 
 ### 🟠 ALTA PRIORIDAD — Core del producto
 
