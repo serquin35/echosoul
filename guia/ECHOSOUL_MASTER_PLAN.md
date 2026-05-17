@@ -1,6 +1,6 @@
 # EchoSoul — Master Plan de Desarrollo
 
-> **Versión:** 5.1 | **Fecha:** 17 Mayo 2026 | **Autor:** Serquin + Antigravity
+> **Versión:** 5.2 | **Fecha:** 17 Mayo 2026 | **Autor:** Serquin + Antigravity
 > **Repositorio:** `serquin35/echosoul` | **Rama activa:** `master`
 > **⚠️ Este archivo es la ÚNICA fuente de verdad del proyecto.**
 
@@ -27,7 +27,7 @@
 | Auth / DB / Storage | Supabase (`pleeiqlldiwipaxqoumu`) | ✅ Activo |
 | Automatizaciones | n8n en VPS Contabo/Dokploy (`n8n.cheosdesign.info`) | ✅ 8 workflows activos |
 | IA conversacional | GPT-4o (chat) · GPT-4o-mini (memoria) · Claude Haiku (crisis) | ✅ En n8n |
-| Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ⚠️ Test consola OK · sin test E2E real |
+| Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ✅ FCM E2E validado en dispositivo físico |
 | Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
 | Web deploy | Vercel via GitHub Actions (`echosoul-one.vercel.app`) | ✅ Activo |
 | Android deploy | Google Play Console | 🔲 Pendiente |
@@ -168,13 +168,14 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [ ] Google Sign-In web — pendiente
 - [ ] Dominio custom en Vercel — pendiente
 
-### 🎯 FASE 2 — MVP Android [EN PROGRESO ~45%]
+### 🎯 FASE 2 — MVP Android [EN PROGRESO ~65%]
 
 **Completado en sesión 17/05/2026:**
 - [x] `google-services.json` en `android/app/` + `AndroidManifest.xml` con permisos FCM
 - [x] `fcm_service.dart` — maneja Foreground / Background / Terminated
 - [x] Sincronización FCM token en login → Supabase `profiles.fcm_token`
-- [x] Test push exitoso desde Firebase Console
+- [x] Test push E2E real — daily-checkin, smart-nudge y mood-insights validados en Xiaomi físico
+- [x] **Google Sign-In Android** — configurado con SHA-1 en Firebase + flow nativo funcional
 - [x] **Fix Android Companion Info Sheet** — bug crítico de renderizado negro resuelto:
   - Causa raíz: `Border()` con colores no uniformes + `borderRadius` → excepción Flutter en Android
   - Fix: `Border.all()` uniforme + `backgroundColor` sólido en `showModalBottomSheet`
@@ -183,12 +184,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Botón (i) de info del companion funcional en Android y Web
 
 **Pendiente:**
-- [ ] Test push notifications E2E real (daily-checkin, smart-nudge, mood-insights)
 - [ ] Conectar workflow `buenos-dias` al cron de n8n
-- [ ] Google Sign-In nativo Android
 - [ ] Integración Retell AI / Vapi.ai (voz proactiva)
 - [ ] Build AAB firmado → Google Play Console
-- [ ] Test flujo completo E2E en dispositivo físico
+- [ ] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
 
 ### 💳 FASE 3 — Monetización [PENDIENTE]
 - [ ] Google Play Billing (compra in-app Android)
@@ -224,10 +223,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | # | Criterio | Estado |
 |---|----------|--------|
 | 1 | Registro email | ✅ |
-| 2 | Registro Google Sign-In | 🔲 |
+| 2 | Registro Google Sign-In | ✅ |
 | 3 | Chat IA fluido con memoria | ✅ |
 | 4 | Memoria a largo plazo | ✅ |
-| 5 | Buenos días / check-ins proactivos | 🔲 |
+| 5 | Buenos días / check-ins proactivos (FCM E2E ✅) | ⚠️ Falta conectar `buenos-dias` cron |
 | 6 | Llamadas de voz proactivas | 🔲 |
 | 7 | Mood tracker funcional | ✅ |
 | 8 | Disclaimers éticos visibles | ✅ |
@@ -236,7 +235,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 11 | App firmada en Play Console | 🔲 |
 | 12 | Data Safety Form completado | 🔲 |
 
-**6/12 completados — faltan 6 para poder publicar.**
+**8/12 completados — faltan 4 para poder publicar.**
 
 ---
 
@@ -246,10 +245,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
-| **H1** | FCM real: `google-services.json` + token | Archivo en `android/app/`, obtener token FCM real, verificar push | 🟡 Medio |
+| ~~**H1**~~ | ~~FCM real: `google-services.json` + token~~ | ~~✅ COMPLETADO~~ | ✅ |
 | **H2** | Build AAB firmado + Play Console | Keystore, firma, subir a Play Console (internal testing) | 🟡 Medio |
 | **H3** | Data Safety Form Play Store | Completar formulario en Play Console | 🟢 Bajo |
-| **H4** | Google Sign-In Android | Activar OAuth con `google_sign_in` (package ya instalado) | 🟡 Medio |
+| ~~**H4**~~ | ~~Google Sign-In Android~~ | ~~✅ COMPLETADO — SHA-1 + flow nativo~~ | ✅ |
 | **H5** | Crisis con teléfonos de emergencia reales | Mostrar 024 / 112 en crisis HIGH (ES) — cambio mínimo en n8n + Flutter | 🟢 Bajo |
 
 ### 🟠 ALTA PRIORIDAD — Core del producto
@@ -257,7 +256,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
 | **H6** | Conectar workflow `buenos-dias` al cron | El JSON existe, solo activar en n8n y enlazar trigger | 🟢 Bajo |
-| **H7** | Test E2E notificaciones push reales | Verificar daily-checkin + smart-nudge + mood-insights con FCM real | 🟡 Medio |
+| ~~**H7**~~ | ~~Test E2E notificaciones push reales~~ | ~~✅ COMPLETADO — daily-checkin + smart-nudge + mood-insights en Xiaomi~~ | ✅ |
 | **H8** | Opción "pausar compañero" | UI toggle en Profile + flag en `profiles` + n8n skip si pausa activa | 🟡 Medio |
 | **H9** | Eliminar cuenta desde la app (GDPR) | Borrar auth.users + datos Supabase — requerido para Play Store | 🟡 Medio |
 
@@ -290,8 +289,6 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Ítem | Urgencia |
 |------|---------|
 | `buenos-dias.json` creado pero sin activar en n8n | 🔴 Alta |
-| Test E2E notificaciones push en dispositivo físico real | 🔴 Alta |
-| Google Sign-In sin probar end-to-end en Android | 🔴 Alta |
 | FCM token sin actualizar en re-login (token caduca al reinstalar) | 🟡 Media |
 | Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
 | Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
@@ -358,4 +355,4 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ---
 
-*Última actualización: 17 Mayo 2026 — Próxima revisión: tras completar H7 (Test E2E FCM real) + H2 (Build AAB Play Store)*
+*Última actualización: 17 Mayo 2026 — Próxima revisión: tras completar H2 (Build AAB Play Store) + H6 (Conectar `buenos-dias` cron)*
