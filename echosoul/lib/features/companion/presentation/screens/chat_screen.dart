@@ -579,14 +579,17 @@ class _CompanionInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.72,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
-      expand: false,
-      snap: true,
-      snapSizes: const [0.72, 0.92],
-      builder: (context, scrollController) => _CompanionInfoContent(
+    // DraggableScrollableSheet con expand:false tiene un bug conocido en
+    // Flutter Web (height=0). Usamos SizedBox + MediaQuery para compatibilidad
+    // multiplataforma (web y Android).
+    // - 0.92 para que el sheet cubra casi toda la pantalla sin cortar contenido.
+    // - Fallback a 640 si MediaQuery devuelve 0 al primer frame (reload en web).
+    final rawHeight = MediaQuery.sizeOf(context).height;
+    final height = rawHeight > 100 ? rawHeight * 0.92 : 640.0;
+    final scrollController = ScrollController();
+    return SizedBox(
+      height: height,
+      child: _CompanionInfoContent(
         companionName: companionName,
         scrollController: scrollController,
       ),
