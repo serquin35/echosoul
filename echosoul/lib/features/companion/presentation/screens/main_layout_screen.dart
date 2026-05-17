@@ -71,6 +71,7 @@ class _MobileLayout extends StatelessWidget {
     final path = GoRouterState.of(context).uri.path;
     if (path.startsWith(RouteNames.mood)) return 1;
     if (path.startsWith(RouteNames.profile)) return 2;
+    if (path.startsWith(RouteNames.legal)) return 3;
     return 0;
   }
 
@@ -82,6 +83,8 @@ class _MobileLayout extends StatelessWidget {
         context.goNamed(RouteNames.mood);
       case 2:
         context.goNamed(RouteNames.profile);
+      case 3:
+        context.goNamed(RouteNames.legal);
     }
   }
 
@@ -123,6 +126,11 @@ class _MobileLayout extends StatelessWidget {
               icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
               label: 'Perfil',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shield_outlined),
+              activeIcon: Icon(Icons.shield),
+              label: 'Legal',
             ),
           ],
         ),
