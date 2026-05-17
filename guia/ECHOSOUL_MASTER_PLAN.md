@@ -204,7 +204,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [ ] Crisis: teléfonos de emergencia reales por país (ES: 024, 112)
 - [ ] Opción "pausar compañero" (UI + lógica n8n)
 - [ ] GDPR: exportar datos del usuario desde la app
-- [ ] GDPR: eliminar cuenta + todos los datos desde la app
+- [x] GDPR: eliminar cuenta + todos los datos desde la app
 - [ ] Data Safety Form Play Store
 - [ ] Límites diarios de interacción configurables
 
@@ -260,7 +260,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | **H6** | Conectar workflow `buenos-dias` al cron | El JSON existe, solo activar en n8n y enlazar trigger | 🟢 Bajo |
 | ~~**H7**~~ | ~~Test E2E notificaciones push reales~~ | ~~✅ COMPLETADO — daily-checkin + smart-nudge + mood-insights en Xiaomi~~ | ✅ |
 | **H8** | Opción "pausar compañero" | UI toggle en Profile + flag en `profiles` + n8n skip si pausa activa | 🟡 Medio |
-| **H9** | Eliminar cuenta desde la app (GDPR) | Borrar auth.users + datos Supabase — requerido para Play Store | 🟡 Medio |
+| ~~**H9**~~ | ~~Eliminar cuenta desde la app (GDPR)~~ | ~~✅ COMPLETADO — Edge Function + cascade deletes~~ | ✅ |
 
 ### 🟡 MEDIA PRIORIDAD — Mejoras de producto
 
