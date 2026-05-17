@@ -79,10 +79,15 @@ class EchoSoulApp extends ConsumerWidget {
     ref.listen(authStateChangesProvider, (previous, next) {
       next.whenData((user) async {
         if (user != null) {
-          debugPrint('Main: Usuario detectado (${user.email}), sincronizando FCM...');
-          final token = await FcmService().getToken();
-          if (token != null) {
-            await ref.read(authRepositoryProvider).updateFcmToken(token);
+          debugPrint('Main: Usuario detectado (${user.email}), solicitando permisos y sincronizando FCM...');
+          final hasPermission = await FcmService().requestPermission();
+          if (hasPermission) {
+            final token = await FcmService().getToken();
+            if (token != null) {
+              await ref.read(authRepositoryProvider).updateFcmToken(token);
+            }
+          } else {
+            debugPrint('Main: Permiso FCM denegado por el usuario.');
           }
         }
       });
