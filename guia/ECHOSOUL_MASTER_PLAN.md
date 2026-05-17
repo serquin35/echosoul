@@ -1,6 +1,6 @@
 # EchoSoul — Master Plan de Desarrollo
 
-> **Versión:** 5.0 | **Fecha:** Mayo 2026 | **Autor:** Serquin + Antigravity
+> **Versión:** 5.1 | **Fecha:** 17 Mayo 2026 | **Autor:** Serquin + Antigravity
 > **Repositorio:** `serquin35/echosoul` | **Rama activa:** `master`
 > **⚠️ Este archivo es la ÚNICA fuente de verdad del proyecto.**
 
@@ -27,7 +27,7 @@
 | Auth / DB / Storage | Supabase (`pleeiqlldiwipaxqoumu`) | ✅ Activo |
 | Automatizaciones | n8n en VPS Contabo/Dokploy (`n8n.cheosdesign.info`) | ✅ 8 workflows activos |
 | IA conversacional | GPT-4o (chat) · GPT-4o-mini (memoria) · Claude Haiku (crisis) | ✅ En n8n |
-| Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ⚠️ Sin test real |
+| Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ⚠️ Test consola OK · sin test E2E real |
 | Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
 | Web deploy | Vercel via GitHub Actions (`echosoul-one.vercel.app`) | ✅ Activo |
 | Android deploy | Google Play Console | 🔲 Pendiente |
@@ -168,15 +168,27 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [ ] Google Sign-In web — pendiente
 - [ ] Dominio custom en Vercel — pendiente
 
-### 🎯 FASE 2 — MVP Android [EN PROGRESO ~30%]
-- [ ] `google-services.json` en `android/app/`
-- [ ] FCM token real desde dispositivo físico
-- [ ] Test push notifications (daily-checkin, smart-nudge, mood-insights)
+### 🎯 FASE 2 — MVP Android [EN PROGRESO ~45%]
+
+**Completado en sesión 17/05/2026:**
+- [x] `google-services.json` en `android/app/` + `AndroidManifest.xml` con permisos FCM
+- [x] `fcm_service.dart` — maneja Foreground / Background / Terminated
+- [x] Sincronización FCM token en login → Supabase `profiles.fcm_token`
+- [x] Test push exitoso desde Firebase Console
+- [x] **Fix Android Companion Info Sheet** — bug crítico de renderizado negro resuelto:
+  - Causa raíz: `Border()` con colores no uniformes + `borderRadius` → excepción Flutter en Android
+  - Fix: `Border.all()` uniforme + `backgroundColor` sólido en `showModalBottomSheet`
+  - Fix adicional: `MediaQuery.sizeOf` leído del contexto exterior (no del builder del modal)
+- [x] Páginas legales públicas (`/privacy`, `/terms`, `/cookies`) con navegación correcta
+- [x] Botón (i) de info del companion funcional en Android y Web
+
+**Pendiente:**
+- [ ] Test push notifications E2E real (daily-checkin, smart-nudge, mood-insights)
 - [ ] Conectar workflow `buenos-dias` al cron de n8n
 - [ ] Google Sign-In nativo Android
 - [ ] Integración Retell AI / Vapi.ai (voz proactiva)
 - [ ] Build AAB firmado → Google Play Console
-- [ ] Test E2E en dispositivo físico
+- [ ] Test flujo completo E2E en dispositivo físico
 
 ### 💳 FASE 3 — Monetización [PENDIENTE]
 - [ ] Google Play Billing (compra in-app Android)
@@ -278,12 +290,21 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Ítem | Urgencia |
 |------|---------|
 | `buenos-dias.json` creado pero sin activar en n8n | 🔴 Alta |
-| Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
-| Google Sign-In sin probar end-to-end en web | 🟡 Media |
+| Test E2E notificaciones push en dispositivo físico real | 🔴 Alta |
+| Google Sign-In sin probar end-to-end en Android | 🔴 Alta |
 | FCM token sin actualizar en re-login (token caduca al reinstalar) | 🟡 Media |
+| Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
 | Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
 | JSON legacy referenciando `user_profiles` (tabla renombrada a `profiles`) | 🟢 Baja (son backups) |
 | Modo offline sin implementar (hive instalado, sin usar) | 🟢 Baja |
+
+### ✅ Deuda técnica resuelta (17/05/2026)
+| Ítem resuelto | Fix aplicado |
+|---------------|--------------|
+| `Border()` no uniforme + `borderRadius` → excepción Android | `Border.all()` uniforme en `_CompanionInfoContent` |
+| `showModalBottomSheet` con `Colors.transparent` → negro en Android | `backgroundColor: EsColors.backgroundDark` + `shape` nativo |
+| `MediaQuery` leído del contexto del builder modal → dimensiones incorrectas | `MediaQuery.sizeOf` leído del contexto exterior pre-modal |
+| `DraggableScrollableSheet` sin `expand: false` → sheet vacío en web | Reemplazado por `SizedBox` con altura calculada |
 
 ---
 
@@ -294,6 +315,18 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 3. **n8n separado** — Sin lógica mixta en flujos de automatización
 4. **Wrappers siempre** — Repositorios entre UI y APIs externas
 5. **`EsPlatform`** — Nunca `kIsWeb` directamente en features
+
+## 🛠️ GUÍA DE DEBUGGING — REGLAS APRENDIDAS
+
+| Situación | Herramienta correcta | Trampa común |
+|-----------|---------------------|--------------|
+| Debug en Android físico | `flutter run -d <device_id>` desde terminal | Android Studio con APK instalado no muestra logs de excepción |
+| Ver device IDs | `flutter devices` | — |
+| Hot reload (cambios UI) | `r` en la terminal de flutter run | No funciona tras cambios estructurales |
+| Hot restart (cambios lógica) | `R` mayúscula en la terminal | — |
+| `Border()` con `borderRadius` | Usar siempre `Border.all()` (colores uniformes) | `Border()` con lados distintos lanza excepción silenciosa en Android |
+| `MediaQuery` en `showModalBottomSheet` | Leer ANTES de abrir el modal, del contexto exterior | El contexto del builder vive en el Overlay (dimensiones incorrectas en Android) |
+| `backgroundColor` en bottom sheets | Usar color sólido real, nunca `Colors.transparent` | Transparencias apiladas causan bug de composición GPU en ciertos Android |
 
 ---
 
@@ -325,4 +358,4 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ---
 
-*Última actualización: Mayo 2026 — Próxima revisión: tras completar H1 + H2 (Build Android)*
+*Última actualización: 17 Mayo 2026 — Próxima revisión: tras completar H7 (Test E2E FCM real) + H2 (Build AAB Play Store)*
