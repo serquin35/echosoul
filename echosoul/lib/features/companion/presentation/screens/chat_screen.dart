@@ -1,3 +1,4 @@
+import 'dart:math' show min;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -574,7 +575,10 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
 ///   El sistema Android gestiona correctamente un color sólido + shape.
 void _showCompanionInfo(BuildContext context, String companionName) {
   final screenH = MediaQuery.sizeOf(context).height;
-  final sheetH  = screenH > 100 ? screenH * 0.76 : 540.0;
+  // Cap en 640px: en monitores grandes (27") el 76% de screenH daba ~820px,
+  // haciendo el sheet desproporcionado. 640px cubre el contenido perfectamente
+  // en cualquier pantalla (móvil pequeño: fallback a 540px).
+  final sheetH = screenH > 100 ? min(screenH * 0.76, 640.0) : 540.0;
 
   showModalBottomSheet(
     context: context,
