@@ -579,19 +579,23 @@ class _CompanionInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DraggableScrollableSheet con expand:false tiene un bug conocido en
-    // Flutter Web (height=0). Usamos SizedBox + MediaQuery para compatibilidad
-    // multiplataforma (web y Android).
-    // - 0.92 para que el sheet cubra casi toda la pantalla sin cortar contenido.
-    // - Fallback a 640 si MediaQuery devuelve 0 al primer frame (reload en web).
-    final rawHeight = MediaQuery.sizeOf(context).height;
-    final height = rawHeight > 100 ? rawHeight * 0.92 : 640.0;
-    final scrollController = ScrollController();
+    // IMPORTANTE: NO usar LayoutBuilder aquí.
+    // showModalBottomSheet pasa constraints.maxHeight = double.infinity en Android,
+    // lo que hace que el contenido no tenga altura y aparezca vacío.
+    // La solución correcta es usar MediaQuery para obtener la altura real de la pantalla.
+    final screenH = MediaQuery.sizeOf(context).height;
+    // Fallback de 640px si MediaQuery devuelve 0 (primer frame tras hot reload en web)
+    final sheetHeight = screenH > 0 ? screenH * 0.88 : 640.0;
+
     return SizedBox(
-      height: height,
-      child: _CompanionInfoContent(
-        companionName: companionName,
-        scrollController: scrollController,
+      height: sheetHeight,
+      child: Material(
+        // Material es necesario para que textos e InkWells no sean invisibles
+        // en ciertas plataformas (Android incluido).
+        color: Colors.transparent,
+        child: _CompanionInfoContent(
+          companionName: companionName,
+        ),
       ),
     );
   }
@@ -599,10 +603,8 @@ class _CompanionInfoSheet extends StatelessWidget {
 
 class _CompanionInfoContent extends StatelessWidget {
   final String companionName;
-  final ScrollController scrollController;
   const _CompanionInfoContent({
     required this.companionName,
-    required this.scrollController,
   });
 
   @override
@@ -635,13 +637,13 @@ class _CompanionInfoContent extends StatelessWidget {
           ),
         ],
       ),
-      child: ListView(
-        controller: scrollController,
+      child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: EsSpacing.lg,
           vertical: EsSpacing.md,
         ),
-        children: [
+        child: Column(
+          children: [
           // ── Handle pill ──
           Center(
             child: Container(
@@ -852,6 +854,7 @@ class _CompanionInfoContent extends StatelessWidget {
           ),
           const SizedBox(height: EsSpacing.lg),
         ],
+        ),
       ),
     );
   }
