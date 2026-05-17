@@ -55,7 +55,7 @@ Aplicación móvil Android-first de **acompañante virtual proactivo** impulsada
 - Recuperación de contraseña
 
 **RF-003: Logout y Eliminación de Cuenta**
-- Opción de eliminar cuenta completa (con confirmación y borrado de datos)
+- Opción de eliminar cuenta completa (con confirmación y borrado de datos) [✅ IMPLEMENTADO - Edge Function + Cascade Deletes]
 
 **RF-004: Onboarding Inicial**
 - Flujo después del primer login: nombre, edad, preferencias de tono (amigo, terapeuta, motivador, etc.), horarios seguros, nivel de proactividad, temas favoritos.

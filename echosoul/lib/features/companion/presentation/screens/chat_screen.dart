@@ -45,8 +45,8 @@ class ChatScreen extends ConsumerWidget {
 class _CrisisBanner extends StatelessWidget {
   const _CrisisBanner();
 
-  Future<void> _callEmergency() async {
-    final uri = Uri.parse('tel:112'); // Or any general emergency number (024 in Spain for suicide prevention, 911, etc. using 112 as a universal default)
+  Future<void> _callNumber(String number) async {
+    final uri = Uri.parse('tel:$number');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -56,28 +56,26 @@ class _CrisisBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: EsSpacing.md,
-        vertical: EsSpacing.sm,
-      ),
+      padding: const EdgeInsets.all(EsSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.15),
+        color: Colors.redAccent.withOpacity(0.12),
         border: Border(
           bottom: BorderSide(
-            color: Colors.redAccent.withOpacity(0.5),
-            width: 1,
+            color: Colors.redAccent.withOpacity(0.4),
+            width: 1.5,
           ),
         ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 24),
               const SizedBox(width: EsSpacing.sm),
               Expanded(
                 child: Text(
-                  'No estás solo. Si estás en peligro, por favor busca ayuda inmediata.',
+                  'No estás solo. Si sientes que estás en peligro o necesitas hablar con alguien, por favor utiliza estos recursos gratuitos y confidenciales las 24 horas:',
                   style: EsTypography.bodyMedium.copyWith(
                     color: Colors.redAccent,
                     fontWeight: FontWeight.w600,
@@ -86,21 +84,95 @@ class _CrisisBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: EsSpacing.sm),
-          ElevatedButton.icon(
-            onPressed: _callEmergency,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            icon: const Icon(Icons.phone),
-            label: const Text('Llamar a Emergencias (112)'),
+          const SizedBox(height: EsSpacing.md),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWebOrLarge = constraints.maxWidth > 500;
+              final buttons = [
+                _CrisisButton(
+                  icon: Icons.emergency_outlined,
+                  label: 'Emergencias (112)',
+                  color: Colors.redAccent,
+                  onPressed: () => _callNumber('112'),
+                ),
+                _CrisisButton(
+                  icon: Icons.healing_outlined,
+                  label: 'Prevención Suicidio (024)',
+                  color: Colors.orangeAccent[700] ?? Colors.orangeAccent,
+                  onPressed: () => _callNumber('024'),
+                ),
+                _CrisisButton(
+                  icon: Icons.favorite_outline,
+                  label: 'T. Esperanza (717003717)',
+                  color: Colors.blueAccent[700] ?? Colors.blueAccent,
+                  onPressed: () => _callNumber('717003717'),
+                ),
+              ];
+
+              if (isWebOrLarge) {
+                return Row(
+                  children: buttons
+                      .map((b) => Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: EsSpacing.xs),
+                              child: b,
+                            ),
+                          ))
+                      .toList(),
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: buttons
+                      .map((b) => Padding(
+                            padding: const EdgeInsets.only(bottom: EsSpacing.xs),
+                            child: b,
+                          ))
+                      .toList(),
+                );
+              }
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CrisisButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onPressed;
+
+  const _CrisisButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      icon: Icon(icon, size: 18),
+      label: Text(
+        label,
+        style: EsTypography.bodyMedium.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
       ),
     );
   }
@@ -789,9 +861,9 @@ class _CompanionInfoContent extends StatelessWidget {
                   const SizedBox(height: EsSpacing.md),
 
                   // ── Badges de identidad ──
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       _IdentityBadge(
                         icon: Icons.verified,
                         label: 'IA Verificada',
@@ -814,9 +886,9 @@ class _CompanionInfoContent extends StatelessWidget {
                   const SizedBox(height: EsSpacing.xl),
 
                   // ── Sección: Capacidades ──
-                  _SectionLabel(label: 'Capacidades'),
+                  const _SectionLabel(label: 'Capacidades'),
                   const SizedBox(height: EsSpacing.sm),
-                  _InfoFeatureRow(
+                  const _InfoFeatureRow(
                     icon: Icons.memory_outlined,
                     iconColor: EsColors.primaryBlue,
                     title: 'Memoria Adaptativa',
@@ -824,15 +896,15 @@ class _CompanionInfoContent extends StatelessWidget {
                         'Recuerda tus sueños, miedos y pasiones para ofrecerte un acompañamiento con contexto y profundidad real.',
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  _InfoFeatureRow(
+                  const _InfoFeatureRow(
                     icon: Icons.favorite_border,
-                    iconColor: const Color(0xFFFF6B9D),
+                    iconColor: Color(0xFFFF6B9D),
                     title: 'Apoyo Emocional 24/7',
                     description:
                         'Siempre disponible, libre de juicios y enfocado en tu bienestar. Un espacio para expresarte sin filtros.',
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  _InfoFeatureRow(
+                  const _InfoFeatureRow(
                     icon: Icons.notifications_active_outlined,
                     iconColor: EsColors.neonCyan,
                     title: 'Check-ins Proactivos',
@@ -840,9 +912,9 @@ class _CompanionInfoContent extends StatelessWidget {
                         'Buenos días personalizados, recordatorios y llamadas de voz para acompañarte en tu rutina diaria.',
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  _InfoFeatureRow(
+                  const _InfoFeatureRow(
                     icon: Icons.security_outlined,
-                    iconColor: const Color(0xFF10B981),
+                    iconColor: Color(0xFF10B981),
                     title: 'Cifrado y Privacidad',
                     description:
                         'Tus conversaciones están protegidas con cifrado extremo a extremo. Nunca se venderán ni compartirán.',

@@ -1,10 +1,21 @@
 # echosoul
 
-A new Flutter project.
+A Flutter application for EchoSoul.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Running the App Locally
+
+**CRITICAL NOTE FOR DEPLOYMENT:** 
+To properly build and deploy the app to the physical testing device (and to avoid hidden phantom build errors), you **MUST** run the app using the following command from the terminal within the `echosoul` directory:
+
+```bash
+flutter run -d 22101320G
+```
+
+This ensures the app targets the specific connected device explicitly.
+
+---
 
 A few resources to get you started if this is your first Flutter project:
 

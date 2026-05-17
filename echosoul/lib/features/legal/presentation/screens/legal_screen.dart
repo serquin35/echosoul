@@ -44,7 +44,7 @@ class LegalScreen extends StatelessWidget {
             child: Column(
               children: [
                 // ── Ética de la IA ────────────────────────────────
-                ProfileSectionCard(
+                const ProfileSectionCard(
                   title: 'Nuestro Compromiso Ético',
                   subtitle: 'Cómo usamos la Inteligencia Artificial',
                   children: [
@@ -91,14 +91,24 @@ class LegalScreen extends StatelessWidget {
                 ProfileSectionCard(
                   title: 'En caso de crisis',
                   children: [
-                    _LegalTile(
-                      title: 'Ayuda Inmediata',
-                      description: 'Si sientes que estás en peligro o tienes pensamientos de hacerte daño, por favor contacta inmediatamente con los servicios de emergencia de tu país (ej: 112 en España, 911 en EEUU).',
+                    const _LegalTile(
+                      title: 'Ayuda Inmediata (España)',
+                      description: 'Si sientes que estás en peligro, tienes pensamientos de hacerte daño o necesitas soporte emocional inmediato en España, por favor recurre a los siguientes recursos oficiales, públicos y gratuitos disponibles las 24 horas del día.',
                     ),
                     _LegalActionTile(
-                      icon: Icons.phone_in_talk,
+                      icon: Icons.emergency_outlined,
                       label: 'Llamar a Emergencias (112)',
                       onTap: () => _launchUrl('tel:112'),
+                    ),
+                    _LegalActionTile(
+                      icon: Icons.healing_outlined,
+                      label: 'Línea de Prevención del Suicidio (024)',
+                      onTap: () => _launchUrl('tel:024'),
+                    ),
+                    _LegalActionTile(
+                      icon: Icons.favorite_outline,
+                      label: 'Teléfono de la Esperanza (717 003 717)',
+                      onTap: () => _launchUrl('tel:717003717'),
                     ),
                   ],
                 ),
