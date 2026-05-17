@@ -564,27 +564,35 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
 /// Muestra el bottom sheet al pulsar el botón (i) en el header.
 /// UI tonta: no contiene lógica de negocio, solo presentación.
 ///
-/// CRÍTICO: leemos [screenH] del contexto EXTERIOR (ChatScreen) antes de
-/// abrir el modal. En Android el BuildContext que recibe el builder del
-/// showModalBottomSheet vive en el Overlay y su MediaQuery no refleja las
-/// dimensiones reales de la pantalla → el sheet aparece vacío o negro.
+/// NOTAS DE PLATAFORMA:
+/// - screenH se lee del contexto EXTERIOR: el contexto del builder del
+///   showModalBottomSheet vive en el Overlay y su MediaQuery no tiene las
+///   dimensiones correctas en Android.
+/// - backgroundColor usa el color real (NO transparent): en Android,
+///   múltiples capas de transparencia apiladas causan un bug de composición
+///   de GPU donde el contenido del sheet aparece completamente negro.
+///   El sistema Android gestiona correctamente un color sólido + shape.
 void _showCompanionInfo(BuildContext context, String companionName) {
-  // Capturamos la altura AQUÍ, donde el contexto es correcto.
   final screenH = MediaQuery.sizeOf(context).height;
   final sheetH  = screenH > 100 ? screenH * 0.82 : 580.0;
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: Colors.transparent,
+    // ─── FIX ANDROID ────────────────────────────────────────────────────
+    // Colors.transparent causa un bug de composición GPU en Android donde
+    // todo el sheet aparece negro. Usar el color real permite que Android
+    // composite correctamente las capas del widget tree.
+    backgroundColor: EsColors.backgroundDark,
+    // shape en el nivel de showModalBottomSheet: recorte nativo de Android,
+    // mucho más fiable que aplicar borderRadius dentro del árbol Flutter.
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    // ────────────────────────────────────────────────────────────────────
     isScrollControlled: true,
-    // useSafeArea: false → lo gestionamos nosotros con sheetH para no
-    // enmascarar el header del chat ni producir doble-constraining.
     builder: (_) => SizedBox(
       height: sheetH,
-      child: Material(
-        color: Colors.transparent,
-        child: _CompanionInfoContent(companionName: companionName),
-      ),
+      child: _CompanionInfoContent(companionName: companionName),
     ),
   );
 }
