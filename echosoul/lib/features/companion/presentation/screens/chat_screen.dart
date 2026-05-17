@@ -612,19 +612,13 @@ class _CompanionInfoContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: EsColors.backgroundDark,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(
-          top: BorderSide(
-            color: EsColors.primaryBlue.withValues(alpha: 0.25),
-            width: 1,
-          ),
-          left: BorderSide(
-            color: EsColors.primaryBlue.withValues(alpha: 0.10),
-            width: 1,
-          ),
-          right: BorderSide(
-            color: EsColors.primaryBlue.withValues(alpha: 0.10),
-            width: 1,
-          ),
+        // FIX ANDROID: Border() con colores distintos por lado + borderRadius
+        // lanza "A borderRadius can only be given on borders with uniform colors"
+        // en Android → el widget se renderiza negro. Border.all() es uniforme
+        // y compatible con borderRadius en todas las plataformas.
+        border: Border.all(
+          color: EsColors.primaryBlue.withValues(alpha: 0.20),
+          width: 1,
         ),
         // Sutil glow superior
         boxShadow: [
