@@ -4,22 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Política de Privacidad - EchoSoul</title>
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #e2e8f0; background: #0f172a; max-width: 800px; margin: 0 auto; padding: 2rem; }
-    h1, h2 { color: #f8fafc; }
-    a { color: #38bdf8; }
-  </style>
+  <link rel="stylesheet" href="/legal-style.css">
 </head>
 <body>
-  <h1>Política de Privacidad</h1>
-  <p>Última actualización: Mayo 2026</p>
-  <h2>1. Información que recopilamos</h2>
-  <p>En EchoSoul, recopilamos información mínima necesaria para proporcionar tu companion virtual. Esto incluye tu nombre de perfil, dirección de correo electrónico, y de manera opcional, tu contacto de emergencia.</p>
-  <h2>2. Uso de la información</h2>
-  <p>Utilizamos tus datos exclusivamente para personalizar la experiencia de EchoSoul, proporcionar alertas de crisis y mantener tu cuenta. Las conversaciones se cifran y los datos sensibles se anonimizan.</p>
-  <h2>3. Compartir información</h2>
-  <p>No vendemos, alquilamos ni compartimos tus datos personales con terceros para fines publicitarios. En situaciones de riesgo inminente detectado (crisis), la aplicación puede sugerir recursos de ayuda, pero no contactará a emergencias sin tu intervención manual.</p>
-  <h2>4. Tus derechos (GDPR)</h2>
-  <p>Tienes derecho a acceder, rectificar o eliminar todos tus datos en cualquier momento a través de la opción "Eliminar cuenta" dentro de la aplicación.</p>
+  <div class="legal-container">
+    <a href="/" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Volver al Inicio
+    </a>
+    
+    <div class="legal-card">
+      <h1>Política de Privacidad</h1>
+      <span class="update-date">Última actualización: 17 de mayo de 2026</span>
+      
+      <div class="alert-box">
+        <p><strong>Tu privacidad es nuestra prioridad absoluta.</strong> En EchoSoul creemos que tu salud emocional y tus conversaciones son sagradas. Todos tus chats con tu companion están cifrados y nunca se venderán ni se utilizarán para publicidad.</p>
+      </div>
+
+      <h2>1. Quiénes Somos y el Compromiso</h2>
+      <p>EchoSoul es una plataforma desarrollada por <strong>No More Alone</strong> ("nosotros"). Nos comprometemos solemnemente a proteger la privacidad y los datos personales de nuestros usuarios. Esta política describe con total transparencia cómo recopilamos, almacenamos y tratamos tu información conforme al Reglamento General de Protección de Datos (RGPD) y los requisitos exigidos por Google Play Console.</p>
+
+      <h2>2. Información que Recopilamos</h2>
+      <p>Para ofrecerte una experiencia de acompañamiento emocional personalizada y segura, recopilamos únicamente los datos mínimos indispensables:</p>
+      <ul>
+        <li><strong>Información de Cuenta:</strong> Correo electrónico, nombre o pseudónimo y foto de perfil seleccionados durante el registro para identificarte de forma segura.</li>
+        <li><strong>Historial de Conversación:</strong> Mensajes intercambiados con tu companion virtual, los cuales son necesarios para que la IA mantenga la coherencia del diálogo y te brinde un soporte emocional continuo.</li>
+        <li><strong>Datos de Detección de Crisis:</strong> Nuestro sistema analiza local y éticamente si existen expresiones que sugieran situaciones de alto riesgo o crisis emocional, con el único fin de mostrarte de forma preventiva recursos de ayuda locales.</li>
+        <li><strong>Contacto de Emergencia (Opcional):</strong> Si decides configurarlo, guardaremos el nombre y teléfono de una persona de tu total confianza para que puedas llamarla o alertarla directamente desde la app en momentos difíciles.</li>
+      </ul>
+
+      <h2>3. Uso de la Información</h2>
+      <p>Procesamos tus datos exclusivamente para los siguientes fines legítimos:</p>
+      <ul>
+        <li>Proporcionar y personalizar el servicio de conversación interactiva con el companion virtual.</li>
+        <li>Facilitar las funciones de bienestar, check-ins proactivos y diarios emocionales.</li>
+        <li>Garantizar tu seguridad mediante la activación de flujos éticos de soporte ante detecciones de crisis.</li>
+        <li>Prevenir fraudes, abusos y asegurar la estabilidad técnica de los servidores de Supabase.</li>
+      </ul>
+
+      <h2>4. Cifrado y Seguridad de Datos</h2>
+      <p>Implementamos medidas de seguridad de nivel industrial para proteger tus datos:</p>
+      <ul>
+        <li>Toda la transferencia de datos entre la aplicación y nuestra base de datos en Supabase se realiza bajo canales cifrados SSL/TLS.</li>
+        <li>Las bases de datos emplean cifrado en reposo para evitar accesos no autorizados.</li>
+        <li>La lógica de procesamiento de los modelos de lenguaje (LLM) se ejecuta bajo estrictas políticas de confidencialidad sin almacenar copias externas de tus chats para entrenamiento generalizado.</li>
+      </ul>
+
+      <h2>5. Transferencia y Compartición de Datos</h2>
+      <p><strong>No vendemos, alquilamos ni comercializamos tus datos personales.</strong> Tus datos solo se comparten bajo las siguientes condiciones estrictas:</p>
+      <ul>
+        <li><strong>Proveedores de Servicios:</strong> Infraestructuras en la nube fiables (como Supabase, Vercel y n8n) para sostener el almacenamiento y flujos de la aplicación. Estos proveedores operan bajo estrictos contratos de tratamiento de datos personales.</li>
+        <li><strong>Requerimientos Legales:</strong> Únicamente cuando sea estrictamente obligatorio por ley o requerimiento formal de autoridades judiciales.</li>
+      </ul>
+
+      <h2>6. Tus Derechos y Control Total (RGPD/GDPR)</h2>
+      <p>Como dueño de tus datos personales, tienes el control absoluto en todo momento. Puedes ejercer los siguientes derechos directamente desde los ajustes de la aplicación:</p>
+      <ul>
+        <li><strong>Derecho de Acceso y Rectificación:</strong> Puedes ver y modificar los datos de tu perfil cuando lo desees.</li>
+        <li><strong>Derecho de Eliminación (Derecho al Olvido):</strong> Puedes pulsar el botón "Eliminar Cuenta" en tu perfil. Esto borrará permanentemente todos tus datos personales, perfiles de companion, diarios y conversaciones en Supabase de forma irreversible en un plazo máximo de 48 horas.</li>
+        <li><strong>Derecho de Portabilidad:</strong> Puedes solicitar una copia de tus interacciones con fines de respaldo personal.</li>
+      </ul>
+
+      <h2>7. Enlaces y Servicios de Terceros</h2>
+      <p>Nuestra aplicación puede ofrecer accesos a líneas de ayuda y redes de soporte externas en caso de crisis. No nos hacemos responsables de las políticas de privacidad o el contenido de dichos sitios externos de terceros.</p>
+
+      <h2>8. Cambios a esta Política</h2>
+      <p>Podemos actualizar esta Política de Privacidad periódicamente para reflejar mejoras en el servicio o cambios regulatorios. Te notificaremos cualquier cambio sustancial publicando la nueva versión aquí o mediante un aviso destacado en la aplicación.</p>
+
+      <h2>9. Contacto</h2>
+      <p>Si tienes preguntas, dudas o deseas ejercer tus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición), puedes escribirnos en cualquier momento a:</p>
+      <p>📧 <strong>soporte@echosoul.app</strong> (o el correo correspondiente a tu dominio configurado).</p>
+
+      <div class="legal-footer">
+        <p>&copy; 2026 EchoSoul - No More Alone. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

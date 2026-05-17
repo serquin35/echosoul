@@ -32,7 +32,7 @@ class MoodSelectionWidget extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: EsInteractive(
-              onTap: () => onScoreSelected(mood['score'] as int),
+              onTap: () => onScoreSelected((mood['score'] as num).toInt()),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -25,7 +26,12 @@ class LegalScreen extends StatelessWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.goNamed(RouteNames.companionHome);
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user != null) {
+                context.goNamed(RouteNames.companionHome);
+              } else {
+                context.goNamed(RouteNames.login);
+              }
             }
           },
         ),
@@ -65,17 +71,17 @@ class LegalScreen extends StatelessWidget {
                     _LegalActionTile(
                       icon: Icons.description_outlined,
                       label: 'Términos y Condiciones',
-                      onTap: () => _launchUrl('https://echosoul.app/terms'),
+                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/terms'),
                     ),
                     _LegalActionTile(
                       icon: Icons.privacy_tip_outlined,
                       label: 'Política de Privacidad',
-                      onTap: () => _launchUrl('https://echosoul.app/privacy'),
+                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/privacy'),
                     ),
                     _LegalActionTile(
                       icon: Icons.cookie_outlined,
                       label: 'Política de Cookies',
-                      onTap: () => _launchUrl('https://echosoul.app/cookies'),
+                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/cookies'),
                     ),
                   ],
                 ),

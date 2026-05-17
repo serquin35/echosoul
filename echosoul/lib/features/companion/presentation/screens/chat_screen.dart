@@ -6,6 +6,7 @@ import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/utils/es_platform.dart';
+import '../../../../core/router/route_names.dart';
 import '../providers/chat_provider.dart';
 import '../providers/companion_data_provider.dart';
 import '../widgets/chat_message_bubble.dart';
@@ -197,13 +198,12 @@ class _ChatHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Action button
+          // Action button — abre el bottom sheet premium
           IconButton(
             icon: const Icon(Icons.info_outline,
                 color: EsColors.textSecondaryDark),
-            onPressed: () {
-              // TODO: Mostrar info del companion
-            },
+            tooltip: 'Info del compañero',
+            onPressed: () => _showCompanionInfo(context, companionName),
           ),
         ],
       ),
@@ -551,6 +551,504 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Companion Info Bottom Sheet — Premium
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Muestra el bottom sheet al pulsar el botón (i) en el header.
+/// UI tonta: no contiene lógica de negocio, solo presentación.
+void _showCompanionInfo(BuildContext context, String companionName) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => _CompanionInfoSheet(companionName: companionName),
+  );
+}
+
+class _CompanionInfoSheet extends StatelessWidget {
+  final String companionName;
+  const _CompanionInfoSheet({required this.companionName});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.72,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      snap: true,
+      snapSizes: const [0.72, 0.92],
+      builder: (context, scrollController) => _CompanionInfoContent(
+        companionName: companionName,
+        scrollController: scrollController,
+      ),
+    );
+  }
+}
+
+class _CompanionInfoContent extends StatelessWidget {
+  final String companionName;
+  final ScrollController scrollController;
+  const _CompanionInfoContent({
+    required this.companionName,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: EsColors.backgroundDark,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(
+            color: EsColors.primaryBlue.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          left: BorderSide(
+            color: EsColors.primaryBlue.withValues(alpha: 0.10),
+            width: 1,
+          ),
+          right: BorderSide(
+            color: EsColors.primaryBlue.withValues(alpha: 0.10),
+            width: 1,
+          ),
+        ),
+        // Sutil glow superior
+        boxShadow: [
+          BoxShadow(
+            color: EsColors.primaryBlue.withValues(alpha: 0.12),
+            blurRadius: 40,
+            spreadRadius: -4,
+            offset: const Offset(0, -8),
+          ),
+        ],
+      ),
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(
+          horizontal: EsSpacing.lg,
+          vertical: EsSpacing.md,
+        ),
+        children: [
+          // ── Handle pill ──
+          Center(
+            child: Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: EsColors.textSecondaryDark.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: EsSpacing.xl),
+
+          // ── Avatar con aura animada ──
+          Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Aura exterior difuminada
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: EsColors.neonCyan.withValues(alpha: 0.20),
+                        blurRadius: 32,
+                        spreadRadius: 8,
+                      ),
+                      BoxShadow(
+                        color: EsColors.primaryBlue.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                // Avatar
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [EsColors.primaryBlue, EsColors.neonCyan],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.graphic_eq,
+                    color: Colors.white,
+                    size: 38,
+                  ),
+                ),
+                // Indicador online
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: EsColors.neonCyan,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: EsColors.backgroundDark,
+                        width: 2.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: EsColors.neonCyan.withValues(alpha: 0.5),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: EsSpacing.md),
+
+          // ── Nombre y tipo ──
+          Text(
+            companionName,
+            style: EsTypography.displayMedium.copyWith(
+              color: EsColors.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Compañero Empático · EchoSoul',
+            style: EsTypography.bodyMedium.copyWith(
+              color: EsColors.neonCyan,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: EsSpacing.md),
+
+          // ── Badges de identidad ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              _IdentityBadge(
+                icon: Icons.verified,
+                label: 'IA Verificada',
+                color: EsColors.primaryBlue,
+              ),
+              SizedBox(width: EsSpacing.sm),
+              _IdentityBadge(
+                icon: Icons.lock_outline,
+                label: 'Privado',
+                color: EsColors.neonCyan,
+              ),
+              SizedBox(width: EsSpacing.sm),
+              _IdentityBadge(
+                icon: Icons.psychology_alt_outlined,
+                label: 'GPT-4o',
+                color: Color(0xFF9B6DFF),
+              ),
+            ],
+          ),
+          const SizedBox(height: EsSpacing.xl),
+
+          // ── Sección: Capacidades ──
+          _SectionLabel(label: 'Capacidades'),
+          const SizedBox(height: EsSpacing.sm),
+          _InfoFeatureRow(
+            icon: Icons.memory_outlined,
+            iconColor: EsColors.primaryBlue,
+            title: 'Memoria Adaptativa',
+            description:
+                'Recuerda tus sueños, miedos y pasiones para ofrecerte un acompañamiento con contexto y profundidad real.',
+          ),
+          const SizedBox(height: EsSpacing.sm),
+          _InfoFeatureRow(
+            icon: Icons.favorite_border,
+            iconColor: const Color(0xFFFF6B9D),
+            title: 'Apoyo Emocional 24/7',
+            description:
+                'Siempre disponible, libre de juicios y enfocado en tu bienestar. Un espacio para expresarte sin filtros.',
+          ),
+          const SizedBox(height: EsSpacing.sm),
+          _InfoFeatureRow(
+            icon: Icons.notifications_active_outlined,
+            iconColor: EsColors.neonCyan,
+            title: 'Check-ins Proactivos',
+            description:
+                'Buenos días personalizados, recordatorios y llamadas de voz para acompañarte en tu rutina diaria.',
+          ),
+          const SizedBox(height: EsSpacing.sm),
+          _InfoFeatureRow(
+            icon: Icons.security_outlined,
+            iconColor: const Color(0xFF10B981),
+            title: 'Cifrado y Privacidad',
+            description:
+                'Tus conversaciones están protegidas con cifrado extremo a extremo. Nunca se venderán ni compartirán.',
+          ),
+          const SizedBox(height: EsSpacing.xl),
+
+          // ── Disclaimer Ético (importante para Play Store) ──
+          Container(
+            padding: const EdgeInsets.all(EsSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.amber.withValues(alpha: 0.25),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.amber.withValues(alpha: 0.8),
+                  size: 20,
+                ),
+                const SizedBox(width: EsSpacing.sm),
+                Expanded(
+                  child: Text(
+                    '$companionName es una IA, no un profesional de salud mental. '
+                    'No ofrece diagnósticos ni sustituye la terapia. '
+                    'En una crisis, busca ayuda profesional real.',
+                    style: EsTypography.bodySmall.copyWith(
+                      color: Colors.amber.withValues(alpha: 0.85),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: EsSpacing.lg),
+
+          // ── Botón Legal ──
+          _LegalButton(
+            onTap: () {
+              Navigator.pop(context);
+              context.push(RouteNames.legal);
+            },
+          ),
+          const SizedBox(height: EsSpacing.lg),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Sub-widgets premium ─────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [EsColors.primaryBlue, EsColors.neonCyan],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: EsSpacing.sm),
+        Text(
+          label.toUpperCase(),
+          style: EsTypography.bodySmall.copyWith(
+            color: EsColors.textSecondaryDark,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IdentityBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _IdentityBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: EsTypography.bodySmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoFeatureRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+
+  const _InfoFeatureRow({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(EsSpacing.md),
+      decoration: BoxDecoration(
+        color: EsColors.surfaceDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: iconColor.withValues(alpha: 0.12),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: EsSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: EsTypography.headlineSmall.copyWith(
+                    color: EsColors.textPrimaryDark,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: EsTypography.bodySmall.copyWith(
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegalButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _LegalButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: LinearGradient(
+            colors: [
+              EsColors.primaryBlue.withValues(alpha: 0.15),
+              EsColors.neonCyan.withValues(alpha: 0.08),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          border: Border.all(
+            color: EsColors.neonCyan.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: EsColors.primaryBlue.withValues(alpha: 0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.gavel_outlined,
+              color: EsColors.neonCyan,
+              size: 18,
+            ),
+            const SizedBox(width: EsSpacing.sm),
+            Text(
+              'Avisos Legales y Éticos',
+              style: EsTypography.labelLarge.copyWith(
+                color: EsColors.textPrimaryDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: EsSpacing.xs),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: EsColors.textSecondaryDark.withValues(alpha: 0.5),
+              size: 13,
+            ),
+          ],
         ),
       ),
     );

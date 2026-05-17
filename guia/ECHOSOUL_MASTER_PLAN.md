@@ -1,13 +1,21 @@
 # EchoSoul — Master Plan de Desarrollo
 
-> **Versión:** 4.0 | **Fecha:** Mayo 2026 | **Autor:** Serquin + Antigravity
-> **Repositorio:** serquin35/echosoul | **Rama activa:** `master`
+> **Versión:** 5.0 | **Fecha:** Mayo 2026 | **Autor:** Serquin + Antigravity
+> **Repositorio:** `serquin35/echosoul` | **Rama activa:** `master`
+> **⚠️ Este archivo es la ÚNICA fuente de verdad del proyecto.**
 
 ---
 
 ## 🎯 VISIÓN DEL PRODUCTO
 
-**EchoSoul** combate la soledad mediante un compañero virtual proactivo con IA empática, memoria a largo plazo, check-ins emocionales y llamadas de voz personalizadas.
+**EchoSoul** combate la soledad mediante un compañero virtual proactivo con IA empática:
+- Conversación con **memoria a largo plazo** personalizada
+- **Check-ins emocionales** diarios (mensaje y voz)
+- **Buenos días / buenas noches** automáticos por n8n
+- **Llamadas de voz proactivas** cortas (3–7 min) via Retell/Vapi
+- **Detección ética de crisis** con escalada a recursos reales
+
+**Plataformas:** Android-first (compañía íntima) · Web (adquisición + onboarding)
 
 ---
 
@@ -15,59 +23,93 @@
 
 | Capa | Tecnología | Estado |
 |------|-----------|--------|
-| Frontend móvil/web | Flutter (Dart) 3.x | ✅ Activo |
-| Estado | Riverpod 2.x + go_router 14.x | ✅ Activo |
-| Backend/Auth/DB | Supabase (`pleeiqlldiwipaxqoumu`) | ✅ Activo |
-| Automatizaciones | n8n (VPS Contabo via Dokploy) | ✅ 5 workflows activos |
-| IA conversacional | GPT-4o (chat) + GPT-4o-mini (memoria) + Claude Haiku (crisis) | ✅ En n8n |
+| App móvil/web | Flutter 3.x + Riverpod 2.x + go_router 14.x | ✅ Activo |
+| Auth / DB / Storage | Supabase (`pleeiqlldiwipaxqoumu`) | ✅ Activo |
+| Automatizaciones | n8n en VPS Contabo/Dokploy (`n8n.cheosdesign.info`) | ✅ 8 workflows activos |
+| IA conversacional | GPT-4o (chat) · GPT-4o-mini (memoria) · Claude Haiku (crisis) | ✅ En n8n |
+| Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ⚠️ Sin test real |
 | Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
-| Push notifications | FCM v1 (Android) + Email (Web) | 🔲 Test real pendiente |
-| Landing Web | Vite + HTML/CSS | ✅ Activo |
-| Deploy Web | Vercel via GitHub Actions | ✅ Activo |
-| Deploy Android | Google Play Console | 🔲 Pendiente |
+| Web deploy | Vercel via GitHub Actions (`echosoul-one.vercel.app`) | ✅ Activo |
+| Android deploy | Google Play Console | 🔲 Pendiente |
+| Pagos | Google Play Billing (Android) · Paddle (Web) | 🔲 Pendiente |
 
-### Infraestructura n8n (n8n.cheosdesign.info)
+### Pipeline de datos
 
 ```
-Flutter → /webhook/new-user → new-user-welcome → drip-sequence (cron)
-Flutter → /webhook/chat    → chat-proxy → crisis-detector + memory-extractor
+Flutter ──POST /webhook/new-user──► new-user-welcome ──► drip-sequence (cron/1h)
+Flutter ──POST /webhook/chat──────► chat-proxy ──┬──► crisis-detector (Claude Haiku)
+                                                  └──► memory-extractor (GPT-4o-mini, fire&forget)
+Flutter ──POST /webhook/mood-entry► mood-insights ──► FCM / Email
+n8n cron 09:00 ───────────────────► daily-checkin ──► FCM / Email
+n8n cron */6h  ───────────────────► smart-nudge   ──► FCM / Email (si inactivo >6h)
+```
+
+### CI/CD
+
+```
+git push → GitHub Actions → flutter build web → Vercel (CDN)
+                           → flutter build aab → Google Play Console (pendiente)
 ```
 
 ---
 
 ## 🗄️ BASE DE DATOS SUPABASE
 
-### Estado de tablas (mayo 2026)
+**11 tablas — todas con RLS activo (Mayo 2026)**
 
-| Tabla | RLS | Policies | Notas |
-|-------|-----|----------|-------|
-| `profiles` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `messages` | ✅ | SELECT·INSERT·DELETE | ✅ n8n escribe via service_role |
-| `user_memories` | ✅ | SELECT·INSERT·DELETE | ✅ n8n upserta via service_role |
-| `user_plans` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `user_onboarding` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `companion_settings` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `checkins` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `crisis_flags` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `mood_entries` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `user_preferences` | ✅ | SELECT·INSERT·UPDATE·DELETE | ✅ |
-| `crisis_events` | ✅ | *(sin policy cliente — intencional)* | Solo n8n service_role |
+| Tabla | CRUD Cliente | Notas |
+|-------|-------------|-------|
+| `profiles` | ✅ Completo | Incluye `email`, `platform`, `fcm_token` |
+| `messages` | SELECT · INSERT · DELETE | n8n escribe via `service_role` |
+| `user_memories` | SELECT · INSERT · DELETE | n8n upserta. Deduplicación por `content_hash` |
+| `user_plans` | ✅ Completo | `free` (20 msg/día) / `premium` |
+| `user_onboarding` | ✅ Completo | State machine drip steps 0–3 |
+| `companion_settings` | ✅ Completo | Preferencias del companion por usuario |
+| `checkins` | ✅ Completo | triggered_by: `daily-checkin` · `smart-nudge` · `mood-insight` |
+| `crisis_flags` | ✅ Completo | Banderas activas de crisis |
+| `mood_entries` | ✅ Completo | Escala 1–10 |
+| `user_preferences` | ✅ Completo | Preferencias de notificación |
+| `crisis_events` | ❌ Sin policy cliente | Solo `service_role`. Solo hash, nunca texto. GDPR Art.5 |
 
-> `crisis_events`: RLS activo sin policies de cliente = nadie desde Flutter puede leer/escribir. Solo `service_role` (n8n). Cumple GDPR Art. 5 (minimización de datos).
+> ⚠️ Los JSON en `/onboardingN8N/` referencian `user_profiles` (schema antiguo). La tabla activa es `profiles`. Los JSON son backups, no la fuente de verdad.
 
 ---
 
-## 🤖 WORKFLOWS N8N ACTIVOS
+## 🤖 WORKFLOWS N8N — INVENTARIO COMPLETO
 
-| Workflow | Endpoint | IA | Estado |
-|----------|----------|----|--------|
-| `new-user-welcome` | `POST /webhook/new-user` | — | ✅ |
-| `drip-sequence` | Cron (cada hora) | — | ✅ |
+### Chat & IA (`/flujosN8N/`)
+
+| Workflow | Trigger | IA | Estado |
+|----------|---------|-----|--------|
 | `chat-proxy` | `POST /webhook/chat` | GPT-4o | ✅ |
-| `crisis-detector` | `POST /webhook/crisis-check` | Claude Haiku | ✅ |
-| `memory-extractor` | `POST /webhook/extract-memory` | GPT-4o-mini | ✅ |
+| `crisis-detector` | Interno desde chat-proxy | Claude Haiku | ✅ |
+| `memory-extractor` | Fire&forget desde chat-proxy | GPT-4o-mini | ✅ |
+| `buenos-dias` | *(sin conectar al cron aún)* | — | ⚠️ Creado, inactivo |
 
-### Variables n8n (Dokploy)
+### Onboarding (`/onboardingN8N/`)
+
+| Workflow | Trigger | Canal | Estado |
+|----------|---------|-------|--------|
+| `new-user-welcome` | `POST /webhook/new-user` | Email Gmail OAuth2 | ✅ |
+| `drip-sequence` | Cron cada hora | Email + FCM v1 | ✅ |
+
+**Pasos del drip:**
+| Paso | Contenido | Delay | Canal |
+|------|-----------|-------|-------|
+| 0 | Bienvenida | Inmediato | Email |
+| 1 | "¿Cómo fue tu primer día?" | +24h | Email + FCM |
+| 2 | Intro Mood Tracker | +72h | Email + FCM |
+| 3 | Soft upsell Premium | +120h | Email + FCM |
+
+### Proactividad (`/ProactividadN8N/`)
+
+| Workflow | Trigger | Canal | Estado |
+|----------|---------|-------|--------|
+| `daily-checkin` | Cron `0 9 * * *` | FCM + Email | ✅ (sin test FCM real) |
+| `smart-nudge` | Cron `0 */6 * * *` | FCM + Email | ✅ (sin test FCM real) |
+| `mood-insights` | `POST /webhook/mood-entry` | FCM + Email | ✅ (sin test FCM real) |
+
+### Variables de entorno — n8n/Dokploy
 
 | Variable | Valor |
 |----------|-------|
@@ -77,80 +119,11 @@ Flutter → /webhook/chat    → chat-proxy → crisis-detector + memory-extract
 | `N8N_BASE_URL` | `https://n8n.cheosdesign.info` |
 | `APP_URL` | `https://echosoul-one.vercel.app` |
 | `FCM_PROJECT_ID` | `echosoul-f2b89` |
-| `FCM_SERVER_KEY` | Firebase Cloud Messaging Key |
-| `ADMIN_ALERT_WEBHOOK` | Slack webhook para crisis HIGH |
+| `FCM_SERVER_KEY` | Firebase Cloud Messaging Server Key |
+| `ADMIN_ALERT_WEBHOOK` | Slack Incoming Webhook (alertas crisis HIGH) |
 
-> ⚠️ El JSON `onboarding/echosoul-onboarding-new-user-welcome.json` en disco referencia `user_profiles` (schema antiguo). La configuración **activa en n8n** usa la tabla correcta `profiles`. Los JSONs son referencia, no la fuente de verdad.
+### Variables Flutter (`echosoul/.env`)
 
----
-
-## 📊 ESTADO DEL DESARROLLO
-
-### ✅ FASE 0 — Infraestructura (COMPLETADA)
-- [x] Flutter + Supabase + GoRouter + auth guards
-- [x] CI/CD GitHub Actions → Vercel
-- [x] Autenticación email + reset password (PKCE)
-- [x] 11 tablas Supabase con RLS completo (todas las políticas CRUD)
-
-### ✅ FASE 1 — MVP Web (COMPLETADA EN SU MAYOR PARTE)
-- [x] Landing, Auth, Onboarding, Chat, Mood, Profile, Legal, Voice UI
-- [x] 5 workflows n8n activos y funcionando
-- [x] Memoria a largo plazo con deduplicación por hash
-- [x] Detección de crisis (3 niveles) con alerta admin
-- [x] Drip emails de onboarding (pasos 0-3) + FCM Firebase v1
-- [x] Deploy Vercel estable
-- [ ] Google Sign-In web
-- [ ] Dominio custom
-
-### 🎯 FASE 2 — MVP Android (PENDIENTE)
-- [ ] `google-services.json` en `android/app/`
-- [ ] FCM Push con token real
-- [ ] Workflows: Buenos Días + Check-in emocional + Llamada proactiva
-- [ ] Integración Retell AI / Vapi.ai para voz
-- [ ] Build AAB firmado → Play Console
-
-### 💳 FASE 3 — Monetización (PENDIENTE)
-- [ ] Google Play Billing + Paddle web
-- [ ] UI de paywall + lógica free/premium
-- [ ] Webhook n8n → sincronizar suscripción en Supabase
-
-### 🛡️ FASE 4 — Ética y Cumplimiento (PENDIENTE)
-- [ ] Crisis con recursos reales (teléfonos de emergencia)
-- [ ] Opción "pausar compañero"
-- [ ] GDPR: exportar + eliminar datos desde la app
-- [ ] Política de Privacidad + T&C en URL pública
-- [ ] Data Safety Form Play Store
-
-### 🚀 FASE 5 — Post-MVP (FUTURO)
-- [ ] Memoria vectorial (pgvector)
-- [ ] WhatsApp (Twilio), iOS, Multi-idioma
-
----
-
-## 🚦 CRITERIOS MVP PLAY STORE
-
-| # | Criterio | Estado |
-|---|----------|--------|
-| 1 | Registro email | ✅ |
-| 2 | Registro Google | 🔲 |
-| 3 | Chat IA fluido | ✅ |
-| 4 | Memoria largo plazo | ✅ |
-| 5 | Buenos días / check-ins proactivos | 🔲 |
-| 6 | Llamadas de voz | 🔲 |
-| 7 | Mood tracker | ✅ |
-| 8 | Disclaimers éticos | ✅ |
-| 9 | Crisis con recursos reales | 🔲 |
-| 10 | Privacidad + T&C públicos | 🔲 |
-| 11 | App firmada en Play Console | 🔲 |
-| 12 | Data Safety Form | 🔲 |
-
-**5/12 completados** — MVP Android en progreso.
-
----
-
-## ⚙️ VARIABLES DE ENTORNO
-
-### echosoul/.env (Flutter)
 ```env
 SUPABASE_URL=https://pleeiqlldiwipaxqoumu.supabase.co
 SUPABASE_ANON_KEY=eyJh...
@@ -160,27 +133,196 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ---
 
-## 🔧 PRINCIPIOS ARQUITECTÓNICOS
+## 📱 FLUTTER — FEATURES IMPLEMENTADAS
 
-1. **UI tonta** — pantallas solo renderizan estado
-2. **Lógica ciega** — providers/use cases no conocen la UI
-3. **n8n separado** — nunca lógica mixta en flujos
-4. **Wrappers siempre** — repositorios entre UI y APIs externas
-5. **`EsPlatform`** — nunca `kIsWeb` directamente
+| Feature | Pantallas / Estado |
+|---------|-------------------|
+| `auth` | Login · Reset Password ✅ |
+| `companion` | Home · Chat · Layout · Voice UI ✅ |
+| `mood` | Mood Tracker ✅ |
+| `onboarding` | Flujo completo ✅ |
+| `profile` | Perfil de usuario ✅ |
+| `legal` | Política + T&C ✅ |
+| `landing` | Landing page ✅ |
+
+**Arquitectura:** Clean Architecture · UI tonta + Lógica ciega · `EsPlatform` wrapper · Navegación adaptativa (Bottom Nav Android / Sidebar Web ≥720dp)
 
 ---
 
-## 📞 SKILLS DISPONIBLES
+## 📊 ESTADO DEL DESARROLLO POR FASES
+
+### ✅ FASE 0 — Infraestructura Base [COMPLETADA]
+- [x] Flutter + Supabase + GoRouter + auth guards
+- [x] CI/CD GitHub Actions → Vercel
+- [x] Auth email + reset password (PKCE)
+- [x] 11 tablas Supabase con RLS completo
+
+### ✅ FASE 1 — MVP Web [COMPLETADA ~85%]
+- [x] Todas las pantallas implementadas (Landing, Auth, Onboarding, Chat, Mood, Profile, Legal, Voice UI)
+- [x] 8 workflows n8n activos y funcionando
+- [x] Memoria a largo plazo con deduplicación por hash
+- [x] Detección de crisis (3 niveles) con alerta admin Slack
+- [x] Drip onboarding (pasos 0–3) + FCM Firebase v1
+- [x] Deploy Vercel estable
+- [x] Política de Privacidad + T&C en URL pública
+- [ ] Google Sign-In web — pendiente
+- [ ] Dominio custom en Vercel — pendiente
+
+### 🎯 FASE 2 — MVP Android [EN PROGRESO ~30%]
+- [ ] `google-services.json` en `android/app/`
+- [ ] FCM token real desde dispositivo físico
+- [ ] Test push notifications (daily-checkin, smart-nudge, mood-insights)
+- [ ] Conectar workflow `buenos-dias` al cron de n8n
+- [ ] Google Sign-In nativo Android
+- [ ] Integración Retell AI / Vapi.ai (voz proactiva)
+- [ ] Build AAB firmado → Google Play Console
+- [ ] Test E2E en dispositivo físico
+
+### 💳 FASE 3 — Monetización [PENDIENTE]
+- [ ] Google Play Billing (compra in-app Android)
+- [ ] Paddle (billing web externo)
+- [ ] UI paywall + lógica free/premium en Flutter
+- [ ] Webhook n8n → sincronizar suscripción en `user_plans`
+
+### 🛡️ FASE 4 — Ética y Cumplimiento [EN PROGRESO ~40%]
+- [x] Disclaimers éticos en onboarding y chat
+- [x] Política de Privacidad + T&C públicos
+- [x] `crisis_events` anonimizado (hash, sin texto)
+- [ ] Crisis: teléfonos de emergencia reales por país (ES: 024, 112)
+- [ ] Opción "pausar compañero" (UI + lógica n8n)
+- [ ] GDPR: exportar datos del usuario desde la app
+- [ ] GDPR: eliminar cuenta + todos los datos desde la app
+- [ ] Data Safety Form Play Store
+- [ ] Límites diarios de interacción configurables
+
+### 🚀 FASE 5 — Post-MVP / Futuro [PENDIENTE]
+- [ ] Memoria vectorial (pgvector embeddings)
+- [ ] WhatsApp Business API (Twilio)
+- [ ] iOS (App Store)
+- [ ] Multi-idioma (i18n — español + inglés)
+- [ ] Challenges IRL (hábitos sociales)
+- [ ] Modo offline real (Hive cache — package ya instalado)
+- [ ] Accesibilidad TalkBack / VoiceOver
+- [ ] Comunidad entre usuarios (TBD)
+
+---
+
+## 🚦 CRITERIOS MVP PLAY STORE
+
+| # | Criterio | Estado |
+|---|----------|--------|
+| 1 | Registro email | ✅ |
+| 2 | Registro Google Sign-In | 🔲 |
+| 3 | Chat IA fluido con memoria | ✅ |
+| 4 | Memoria a largo plazo | ✅ |
+| 5 | Buenos días / check-ins proactivos | 🔲 |
+| 6 | Llamadas de voz proactivas | 🔲 |
+| 7 | Mood tracker funcional | ✅ |
+| 8 | Disclaimers éticos visibles | ✅ |
+| 9 | Crisis con recursos reales (teléfonos) | 🔲 |
+| 10 | Privacidad + T&C públicos | ✅ |
+| 11 | App firmada en Play Console | 🔲 |
+| 12 | Data Safety Form completado | 🔲 |
+
+**6/12 completados — faltan 6 para poder publicar.**
+
+---
+
+## 🎯 HITOS PENDIENTES — MAYOR A MENOR IMPORTANCIA
+
+### 🔴 CRÍTICO — Bloqueantes para publicar en Play Store
+
+| # | Hito | Descripción | Esfuerzo |
+|---|------|-------------|---------|
+| **H1** | FCM real: `google-services.json` + token | Archivo en `android/app/`, obtener token FCM real, verificar push | 🟡 Medio |
+| **H2** | Build AAB firmado + Play Console | Keystore, firma, subir a Play Console (internal testing) | 🟡 Medio |
+| **H3** | Data Safety Form Play Store | Completar formulario en Play Console | 🟢 Bajo |
+| **H4** | Google Sign-In Android | Activar OAuth con `google_sign_in` (package ya instalado) | 🟡 Medio |
+| **H5** | Crisis con teléfonos de emergencia reales | Mostrar 024 / 112 en crisis HIGH (ES) — cambio mínimo en n8n + Flutter | 🟢 Bajo |
+
+### 🟠 ALTA PRIORIDAD — Core del producto
+
+| # | Hito | Descripción | Esfuerzo |
+|---|------|-------------|---------|
+| **H6** | Conectar workflow `buenos-dias` al cron | El JSON existe, solo activar en n8n y enlazar trigger | 🟢 Bajo |
+| **H7** | Test E2E notificaciones push reales | Verificar daily-checkin + smart-nudge + mood-insights con FCM real | 🟡 Medio |
+| **H8** | Opción "pausar compañero" | UI toggle en Profile + flag en `profiles` + n8n skip si pausa activa | 🟡 Medio |
+| **H9** | Eliminar cuenta desde la app (GDPR) | Borrar auth.users + datos Supabase — requerido para Play Store | 🟡 Medio |
+
+### 🟡 MEDIA PRIORIDAD — Mejoras de producto
+
+| # | Hito | Descripción | Esfuerzo |
+|---|------|-------------|---------|
+| **H10** | Voz proactiva (Retell/Vapi) | Integrar SDK + definir pricing por llamada | 🔴 Alto |
+| **H11** | Monetización (Play Billing + Paddle) | Paywall UI + lógica free/premium + webhook Supabase | 🔴 Alto |
+| **H12** | Exportar datos GDPR | Edge Function o n8n endpoint → ZIP JSON de datos del usuario | 🟡 Medio |
+| **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
+| **H14** | Fuentes Inter en Flutter | Descomentar sección `fonts` en `pubspec.yaml` + añadir TTF | 🟢 Bajo |
+
+### 🟢 BAJA PRIORIDAD — Post-MVP / Futuro
+
+| # | Hito | Descripción | Esfuerzo |
+|---|------|-------------|---------|
+| **H15** | Memoria vectorial (pgvector) | Embeddings semánticos para búsqueda de memoria precisa | 🔴 Alto |
+| **H16** | WhatsApp Business (Twilio) | Canal adicional de notificaciones proactivas | 🔴 Alto |
+| **H17** | Multi-idioma (i18n) | `flutter_localizations` + ARB files EN/ES | 🟡 Medio |
+| **H18** | iOS (App Store) | Build + certificados Apple + review | 🔴 Alto |
+| **H19** | Challenges IRL | Feature hábitos sociales ("llama a un amigo hoy") | 🟡 Medio |
+| **H20** | Accesibilidad (TalkBack/VoiceOver) | Semantics en widgets clave | 🟡 Medio |
+| **H21** | Modo offline real (Hive cache) | Cache de mensajes — `hive_flutter` ya instalado | 🟡 Medio |
+
+---
+
+## ⚠️ DEUDA TÉCNICA
+
+| Ítem | Urgencia |
+|------|---------|
+| `buenos-dias.json` creado pero sin activar en n8n | 🔴 Alta |
+| Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
+| Google Sign-In sin probar end-to-end en web | 🟡 Media |
+| FCM token sin actualizar en re-login (token caduca al reinstalar) | 🟡 Media |
+| Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
+| JSON legacy referenciando `user_profiles` (tabla renombrada a `profiles`) | 🟢 Baja (son backups) |
+| Modo offline sin implementar (hive instalado, sin usar) | 🟢 Baja |
+
+---
+
+## 🔧 PRINCIPIOS ARQUITECTÓNICOS
+
+1. **UI tonta** — Pantallas solo renderizan estado del provider
+2. **Lógica ciega** — Providers/use cases sin conocimiento de UI
+3. **n8n separado** — Sin lógica mixta en flujos de automatización
+4. **Wrappers siempre** — Repositorios entre UI y APIs externas
+5. **`EsPlatform`** — Nunca `kIsWeb` directamente en features
+
+---
+
+## 📚 SKILLS DISPONIBLES
 
 | Skill | Uso |
 |-------|-----|
 | `echosoul-flutter-lead` | Features Flutter, arquitectura |
 | `echosoul-automation-specialist` | Workflows n8n |
 | `echosoul-data-architect` | Tablas, RLS, migraciones |
-| `echosoul-ethical-ai-strategist` | Prompts, crisis |
+| `echosoul-ethical-ai-strategist` | Prompts, crisis, ética |
 | `echosoul-landing-architect` | Landing page |
 | `n8n-mcp-tools-expert` | MCP tools n8n |
 
 ---
 
-*Última actualización: Mayo 2026*
+## 📚 MAPA DE DOCUMENTACIÓN
+
+| Archivo | Propósito | Rol |
+|---------|-----------|-----|
+| `guia/ECHOSOUL_MASTER_PLAN.md` | **Este archivo** — Estado global, fases, workflows, DB | 🟢 Fuente de verdad |
+| `guia/Arquitectura Multi-Plataforma.md` | Decisiones Android vs Web, CI/CD, navegación | 📖 Referencia |
+| `guia/Especificación de Requerimientos.md` | RF originales, criterios MVP | 📖 Referencia (no modificar) |
+| `guia/Buenas Practicas.md` | Principios de arquitectura y calidad | 📖 Referencia |
+| `flujosN8N/echosoul-n8n-setup.md` | Guía instalación Chat & IA workflows | 📖 Referencia técnica |
+| `ProactividadN8N/echosoul-proactividad-setup.md` | Guía workflows proactividad | 📖 Referencia técnica |
+| `onboardingN8N/echosoul-onboarding-setup.md` | Guía workflows onboarding + drip | 📖 Referencia técnica |
+| `onboardingN8N/walkthrough.md` | Historial de hitos completados | 📖 Histórico |
+
+---
+
+*Última actualización: Mayo 2026 — Próxima revisión: tras completar H1 + H2 (Build Android)*

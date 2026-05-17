@@ -3,7 +3,7 @@
 class MoodEntryEntity {
   final String id;
   final String userId;
-  final int moodScore; // 1-10
+  final int? moodScore; // 1-10
   final String? moodLabel; // 'triste', 'ansioso', 'bien', etc.
   final String? notes;
   final String triggeredBy; // 'scheduled', 'user_initiated', 'crisis_detected'
@@ -12,7 +12,7 @@ class MoodEntryEntity {
   const MoodEntryEntity({
     required this.id,
     required this.userId,
-    required this.moodScore,
+    this.moodScore,
     this.moodLabel,
     this.notes,
     this.triggeredBy = 'user_initiated',
@@ -23,7 +23,7 @@ class MoodEntryEntity {
     return MoodEntryEntity(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      moodScore: json['mood_score'] as int,
+      moodScore: (json['mood_score'] as num?)?.toInt(),
       moodLabel: json['mood_label'] as String?,
       notes: json['notes'] as String?,
       triggeredBy: json['triggered_by'] as String? ?? 'user_initiated',
@@ -41,7 +41,7 @@ class MoodEntryEntity {
     };
   }
 
-  bool get isCritical => moodScore <= 2;
-  bool get isLow => moodScore <= 4;
-  bool get isPositive => moodScore >= 7;
+  bool get isCritical => moodScore != null && moodScore! <= 2;
+  bool get isLow => moodScore != null && moodScore! <= 4;
+  bool get isPositive => moodScore != null && moodScore! >= 7;
 }

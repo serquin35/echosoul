@@ -24,14 +24,15 @@ class MoodTrendChart extends StatelessWidget {
 
     final List<double?> dataPoints = last7Days.map((date) {
       final dayEntries = entries.where((e) {
-        return e.createdAt.year == date.year &&
+        return e.moodScore != null &&
+            e.createdAt.year == date.year &&
             e.createdAt.month == date.month &&
             e.createdAt.day == date.day;
       }).toList();
 
       if (dayEntries.isEmpty) return null;
 
-      final average = dayEntries.map((e) => e.moodScore).reduce((a, b) => a + b) / dayEntries.length;
+      final average = dayEntries.map((e) => e.moodScore!).reduce((a, b) => a + b) / dayEntries.length;
       return average;
     }).toList();
 

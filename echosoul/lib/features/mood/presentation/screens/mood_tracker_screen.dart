@@ -270,7 +270,8 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
   );
 }
 
-  String _getEmojiForScore(int score) {
+  String _getEmojiForScore(int? score) {
+    if (score == null) return '📝';
     return switch (score) {
       <= 2 => '😭',
       <= 4 => '😔',

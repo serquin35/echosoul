@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart'; // Add this
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/router/app_router.dart';
-import 'core/router/route_names.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/env.dart';
 import 'core/services/fcm_service.dart';

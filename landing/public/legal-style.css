@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* 
+   EchoSoul Legal Stylesheet - Premium Blue Harmony Edition
+   Estilo unificado y responsivo para páginas legales de EchoSoul.
+*/
+
+
+:root {
+  --bg-dark: #0b0f19;
+  --surface-dark: #121826;
+  --primary-blue: #3b82f6;
+  --neon-cyan: #22d3ee;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --divider: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(18, 24, 38, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.7;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Background Glowing Aura effect */
+body::before {
+  content: "";
+  position: fixed;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(34, 211, 238, 0.03) 70%, transparent 100%);
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+.legal-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Back Button */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--neon-cyan);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 2rem;
+  transition: all 0.25s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(34, 211, 238, 0.05);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+}
+
+.back-btn:hover {
+  background: rgba(34, 211, 238, 0.12);
+  transform: translateX(-4px);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+}
+
+/* Premium Glass Card */
+.legal-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Headers */
+h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--text-primary) 30%, #a5f3fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.update-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+  display: block;
+}
+
+h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--divider);
+  padding-bottom: 0.5rem;
+}
+
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: var(--neon-cyan);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--neon-cyan);
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 0.975rem;
+  margin-bottom: 1.25rem;
+}
+
+strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.alert-box {
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid var(--primary-blue);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.alert-box p {
+  color: var(--text-primary);
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* Lists */
+ul {
+  list-style: none;
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+li::before {
+  content: "✦";
+  position: absolute;
+  left: 0;
+  color: var(--neon-cyan);
+  font-size: 0.85rem;
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(34, 211, 238, 0.4);
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+/* Footer Section */
+.legal-footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--divider);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Responsive adjustment */
+@media (max-width: 640px) {
+  body {
+    padding: 1.5rem 0.5rem;
+  }
+  .legal-card {
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+}

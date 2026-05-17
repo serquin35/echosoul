@@ -16,12 +16,20 @@ class MoodRepositoryImpl implements MoodRepository {
         .from('checkins')
         .select()
         .eq('user_id', user.id)
+        .not('mood_score', 'is', null)
         .order('created_at', ascending: false)
         .limit(30);
 
-    return (response as List)
-        .map((json) => MoodEntryEntity.fromJson(json as Map<String, dynamic>))
-        .toList();
+    try {
+      return (response as List)
+          .map((json) => MoodEntryEntity.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      // Loggear el error para debugging
+      print('Error mapeando MoodEntryEntity: $e');
+      print('Response data: $response');
+      rethrow;
+    }
   }
 
   @override

@@ -290,21 +290,17 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "url": "https://api.openai.com/v1/chat/completions",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "x-api-key",
-              "value": "{{ $credentials.EchoSoulClaude.value }}"
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoulOpenAI.value }}"
             },
             {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
@@ -312,7 +308,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,system:$json.systemPrompt,messages:[{role:'user',content:'Genera el mensaje de check-in ahora.'}]}) }}",
+        "body": "={{ JSON.stringify({model:'gpt-4o-mini',max_tokens:200,messages:[{role:'system',content:$json.systemPrompt},{role:'user',content:'Genera el mensaje de check-in ahora.'}]}) }}",
         "options": {}
       }
     },
@@ -327,7 +323,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "\nconst prev = $('Generate checkin message').item.json;\nconst msg  = prev.content?.[0]?.text ?? 'Hola, EchoSoul está aquí contigo hoy 💙';\nreturn [{ json: { ...prev, generated_message: msg } }];\n"
+        "jsCode": "\nconst prev = $('Generate checkin message').item.json;\nconst msg  = prev.choices?.[0]?.message?.content ?? 'Hola, EchoSoul está aquí contigo hoy 💙';\nreturn [{ json: { ...prev, generated_message: msg } }];\n"
       }
     },
     {

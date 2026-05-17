@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/es_colors.dart';
@@ -21,13 +22,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+  
   bool _isLoginMode = true;
   bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        context.pushNamed(RouteNames.legal);
+      };
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        context.pushNamed(RouteNames.legal);
+      };
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     super.dispose();
   }
 
@@ -213,10 +232,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: EsSpacing.lg),
-                      Text(
-                        'Al continuar, aceptas nuestros Términos de Servicio y Políticas de Privacidad.',
-                        style: EsTypography.caption,
+                      RichText(
                         textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: EsTypography.caption.copyWith(
+                            color: EsColors.textSecondaryDark,
+                          ),
+                          children: [
+                            const TextSpan(text: 'Al continuar, aceptas nuestros '),
+                            TextSpan(
+                              text: 'Términos de Servicio',
+                              style: const TextStyle(
+                                color: EsColors.neonCyan,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: _termsRecognizer,
+                            ),
+                            const TextSpan(text: ' y '),
+                            TextSpan(
+                              text: 'Políticas de Privacidad',
+                              style: const TextStyle(
+                                color: EsColors.neonCyan,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: _privacyRecognizer,
+                            ),
+                            const TextSpan(text: '.'),
+                          ],
+                        ),
                       ),
                       if (kDebugMode) ...[
                         const SizedBox(height: EsSpacing.xxl),
