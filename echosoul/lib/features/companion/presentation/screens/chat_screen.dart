@@ -575,30 +575,48 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
 ///   El sistema Android gestiona correctamente un color sólido + shape.
 void _showCompanionInfo(BuildContext context, String companionName) {
   final screenH = MediaQuery.sizeOf(context).height;
-  // Cap en 640px: en monitores grandes (27") el 76% de screenH daba ~820px,
-  // haciendo el sheet desproporcionado. 640px cubre el contenido perfectamente
-  // en cualquier pantalla (móvil pequeño: fallback a 540px).
-  final sheetH = screenH > 100 ? min(screenH * 0.76, 640.0) : 540.0;
+  final screenW = MediaQuery.sizeOf(context).width;
 
-  showModalBottomSheet(
-    context: context,
-    // ─── FIX ANDROID ────────────────────────────────────────────────────
-    // Colors.transparent causa un bug de composición GPU en Android donde
-    // todo el sheet aparece negro. Usar el color real permite que Android
-    // composite correctamente las capas del widget tree.
-    backgroundColor: EsColors.backgroundDark,
-    // shape en el nivel de showModalBottomSheet: recorte nativo de Android,
-    // mucho más fiable que aplicar borderRadius dentro del árbol Flutter.
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-    ),
-    // ────────────────────────────────────────────────────────────────────
-    isScrollControlled: true,
-    builder: (_) => SizedBox(
-      height: sheetH,
-      child: _CompanionInfoContent(companionName: companionName),
-    ),
-  );
+  if (screenW >= 600) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 480,
+            maxHeight: 650,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: _CompanionInfoContent(
+                companionName: companionName,
+                isDialog: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  } else {
+    final sheetH = screenH > 100 ? min(screenH * 0.76, 640.0) : 540.0;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: EsColors.backgroundDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      isScrollControlled: true,
+      builder: (_) => SizedBox(
+        height: sheetH,
+        child: _CompanionInfoContent(companionName: companionName),
+      ),
+    );
+  }
 }
 
 // _CompanionInfoSheet eliminada: la lógica de altura se resolvió
@@ -606,8 +624,10 @@ void _showCompanionInfo(BuildContext context, String companionName) {
 
 class _CompanionInfoContent extends StatelessWidget {
   final String companionName;
+  final bool isDialog;
   const _CompanionInfoContent({
     required this.companionName,
+    this.isDialog = false,
   });
 
   @override
@@ -615,7 +635,9 @@ class _CompanionInfoContent extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: EsColors.backgroundDark,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: isDialog
+            ? BorderRadius.circular(28)
+            : const BorderRadius.vertical(top: Radius.circular(28)),
         // FIX ANDROID: Border() con colores distintos por lado + borderRadius
         // lanza "A borderRadius can only be given on borders with uniform colors"
         // en Android → el widget se renderiza negro. Border.all() es uniforme
@@ -624,234 +646,258 @@ class _CompanionInfoContent extends StatelessWidget {
           color: EsColors.primaryBlue.withValues(alpha: 0.20),
           width: 1,
         ),
-        // Sutil glow superior
+        // Sutil glow superior / periférico
         boxShadow: [
           BoxShadow(
             color: EsColors.primaryBlue.withValues(alpha: 0.12),
             blurRadius: 40,
             spreadRadius: -4,
-            offset: const Offset(0, -8),
+            offset: isDialog ? const Offset(0, 0) : const Offset(0, -8),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: EsSpacing.lg,
-          vertical: EsSpacing.md,
-        ),
-        child: Column(
-          children: [
-          // ── Handle pill ──
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: EsColors.textSecondaryDark.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Handle pill or Close button ──
+          if (isDialog)
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: EsColors.textSecondaryDark),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            )
+          else ...[
+            const SizedBox(height: EsSpacing.md),
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: EsColors.textSecondaryDark.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: EsSpacing.xl),
+            const SizedBox(height: EsSpacing.xl),
+          ],
 
-          // ── Avatar con aura animada ──
-          Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Aura exterior difuminada
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: EsColors.neonCyan.withValues(alpha: 0.20),
-                        blurRadius: 32,
-                        spreadRadius: 8,
-                      ),
-                      BoxShadow(
-                        color: EsColors.primaryBlue.withValues(alpha: 0.25),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-                // Avatar
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [EsColors.primaryBlue, EsColors.neonCyan],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.graphic_eq,
-                    color: Colors.white,
-                    size: 38,
-                  ),
-                ),
-                // Indicador online
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: EsColors.neonCyan,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: EsColors.backgroundDark,
-                        width: 2.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: EsColors.neonCyan.withValues(alpha: 0.5),
-                          blurRadius: 6,
+          // ── Scrollable Content ──
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: EsSpacing.lg,
+                right: EsSpacing.lg,
+                bottom: EsSpacing.lg,
+                top: 0,
+              ),
+              child: Column(
+                children: [
+                  // ── Avatar con aura animada ──
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Aura exterior difuminada
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: EsColors.neonCyan.withValues(alpha: 0.20),
+                                blurRadius: 32,
+                                spreadRadius: 8,
+                              ),
+                              BoxShadow(
+                                color: EsColors.primaryBlue.withValues(alpha: 0.25),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Avatar
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [EsColors.primaryBlue, EsColors.neonCyan],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.graphic_eq,
+                            color: Colors.white,
+                            size: 38,
+                          ),
+                        ),
+                        // Indicador online
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: EsColors.neonCyan,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: EsColors.backgroundDark,
+                                width: 2.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: EsColors.neonCyan.withValues(alpha: 0.5),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: EsSpacing.md),
+                  const SizedBox(height: EsSpacing.md),
 
-          // ── Nombre y tipo ──
-          Text(
-            companionName,
-            style: EsTypography.displayMedium.copyWith(
-              color: EsColors.textPrimaryDark,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Compañero Empático · EchoSoul',
-            style: EsTypography.bodyMedium.copyWith(
-              color: EsColors.neonCyan,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: EsSpacing.md),
+                  // ── Nombre y tipo ──
+                  Text(
+                    companionName,
+                    style: EsTypography.displayMedium.copyWith(
+                      color: EsColors.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Compañero Empático · EchoSoul',
+                    style: EsTypography.bodyMedium.copyWith(
+                      color: EsColors.neonCyan,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: EsSpacing.md),
 
-          // ── Badges de identidad ──
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              _IdentityBadge(
-                icon: Icons.verified,
-                label: 'IA Verificada',
-                color: EsColors.primaryBlue,
-              ),
-              SizedBox(width: EsSpacing.sm),
-              _IdentityBadge(
-                icon: Icons.lock_outline,
-                label: 'Privado',
-                color: EsColors.neonCyan,
-              ),
-              SizedBox(width: EsSpacing.sm),
-              _IdentityBadge(
-                icon: Icons.psychology_alt_outlined,
-                label: 'GPT-4o',
-                color: Color(0xFF9B6DFF),
-              ),
-            ],
-          ),
-          const SizedBox(height: EsSpacing.xl),
+                  // ── Badges de identidad ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      _IdentityBadge(
+                        icon: Icons.verified,
+                        label: 'IA Verificada',
+                        color: EsColors.primaryBlue,
+                      ),
+                      SizedBox(width: EsSpacing.sm),
+                      _IdentityBadge(
+                        icon: Icons.lock_outline,
+                        label: 'Privado',
+                        color: EsColors.neonCyan,
+                      ),
+                      SizedBox(width: EsSpacing.sm),
+                      _IdentityBadge(
+                        icon: Icons.psychology_alt_outlined,
+                        label: 'GPT-4o',
+                        color: Color(0xFF9B6DFF),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: EsSpacing.xl),
 
-          // ── Sección: Capacidades ──
-          _SectionLabel(label: 'Capacidades'),
-          const SizedBox(height: EsSpacing.sm),
-          _InfoFeatureRow(
-            icon: Icons.memory_outlined,
-            iconColor: EsColors.primaryBlue,
-            title: 'Memoria Adaptativa',
-            description:
-                'Recuerda tus sueños, miedos y pasiones para ofrecerte un acompañamiento con contexto y profundidad real.',
-          ),
-          const SizedBox(height: EsSpacing.sm),
-          _InfoFeatureRow(
-            icon: Icons.favorite_border,
-            iconColor: const Color(0xFFFF6B9D),
-            title: 'Apoyo Emocional 24/7',
-            description:
-                'Siempre disponible, libre de juicios y enfocado en tu bienestar. Un espacio para expresarte sin filtros.',
-          ),
-          const SizedBox(height: EsSpacing.sm),
-          _InfoFeatureRow(
-            icon: Icons.notifications_active_outlined,
-            iconColor: EsColors.neonCyan,
-            title: 'Check-ins Proactivos',
-            description:
-                'Buenos días personalizados, recordatorios y llamadas de voz para acompañarte en tu rutina diaria.',
-          ),
-          const SizedBox(height: EsSpacing.sm),
-          _InfoFeatureRow(
-            icon: Icons.security_outlined,
-            iconColor: const Color(0xFF10B981),
-            title: 'Cifrado y Privacidad',
-            description:
-                'Tus conversaciones están protegidas con cifrado extremo a extremo. Nunca se venderán ni compartirán.',
-          ),
-          const SizedBox(height: EsSpacing.xl),
+                  // ── Sección: Capacidades ──
+                  _SectionLabel(label: 'Capacidades'),
+                  const SizedBox(height: EsSpacing.sm),
+                  _InfoFeatureRow(
+                    icon: Icons.memory_outlined,
+                    iconColor: EsColors.primaryBlue,
+                    title: 'Memoria Adaptativa',
+                    description:
+                        'Recuerda tus sueños, miedos y pasiones para ofrecerte un acompañamiento con contexto y profundidad real.',
+                  ),
+                  const SizedBox(height: EsSpacing.sm),
+                  _InfoFeatureRow(
+                    icon: Icons.favorite_border,
+                    iconColor: const Color(0xFFFF6B9D),
+                    title: 'Apoyo Emocional 24/7',
+                    description:
+                        'Siempre disponible, libre de juicios y enfocado en tu bienestar. Un espacio para expresarte sin filtros.',
+                  ),
+                  const SizedBox(height: EsSpacing.sm),
+                  _InfoFeatureRow(
+                    icon: Icons.notifications_active_outlined,
+                    iconColor: EsColors.neonCyan,
+                    title: 'Check-ins Proactivos',
+                    description:
+                        'Buenos días personalizados, recordatorios y llamadas de voz para acompañarte en tu rutina diaria.',
+                  ),
+                  const SizedBox(height: EsSpacing.sm),
+                  _InfoFeatureRow(
+                    icon: Icons.security_outlined,
+                    iconColor: const Color(0xFF10B981),
+                    title: 'Cifrado y Privacidad',
+                    description:
+                        'Tus conversaciones están protegidas con cifrado extremo a extremo. Nunca se venderán ni compartirán.',
+                  ),
+                  const SizedBox(height: EsSpacing.xl),
 
-          // ── Disclaimer Ético (importante para Play Store) ──
-          Container(
-            padding: const EdgeInsets.all(EsSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.amber.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: Colors.amber.withValues(alpha: 0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: EsSpacing.sm),
-                Expanded(
-                  child: Text(
-                    '$companionName es una IA, no un profesional de salud mental. '
-                    'No ofrece diagnósticos ni sustituye la terapia. '
-                    'En una crisis, busca ayuda profesional real.',
-                    style: EsTypography.bodySmall.copyWith(
-                      color: Colors.amber.withValues(alpha: 0.85),
-                      height: 1.5,
+                  // ── Disclaimer Ético (importante para Play Store) ──
+                  Container(
+                    padding: const EdgeInsets.all(EsSpacing.md),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.25),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: Colors.amber.withValues(alpha: 0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: EsSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            '$companionName es una IA, no un profesional de salud mental. '
+                            'No ofrece diagnósticos ni sustituye la terapia. '
+                            'En una crisis, busca ayuda profesional real.',
+                            style: EsTypography.bodySmall.copyWith(
+                              color: Colors.amber.withValues(alpha: 0.85),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: EsSpacing.lg),
+
+                  // ── Botón Legal ──
+                  _LegalButton(
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push(RouteNames.legal);
+                    },
+                  ),
+                  const SizedBox(height: EsSpacing.lg),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: EsSpacing.lg),
-
-          // ── Botón Legal ──
-          _LegalButton(
-            onTap: () {
-              Navigator.pop(context);
-              context.push(RouteNames.legal);
-            },
-          ),
-          const SizedBox(height: EsSpacing.lg),
         ],
-        ),
       ),
     );
   }

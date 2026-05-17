@@ -21,8 +21,11 @@ import '../../features/companion/presentation/screens/chat_screen.dart';
 import '../../features/companion/presentation/screens/voice_call_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: RouteNames.splash,
     debugLogDiagnostics: true,
     // Notify GoRouter to re-run redirect when Supabase auth state changes.

@@ -175,11 +175,13 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] `fcm_service.dart` — maneja Foreground / Background / Terminated
 - [x] Sincronización FCM token en login → Supabase `profiles.fcm_token`
 - [x] Test push E2E real — daily-checkin, smart-nudge y mood-insights validados en Xiaomi físico
+- [x] **Deep Routing en Tap de Notificaciones (FCM)** — Configuración de `rootNavigatorKey` en `app_router.dart` y redirección en `fcm_service.dart` para llevar al usuario al screen correcto (Chat, Mood, Home) al abrir notificaciones en background/terminated.
 - [x] **Google Sign-In Android** — configurado con SHA-1 en Firebase + flow nativo funcional
 - [x] **Fix Android Companion Info Sheet** — bug crítico de renderizado negro resuelto:
   - Causa raíz: `Border()` con colores no uniformes + `borderRadius` → excepción Flutter en Android
   - Fix: `Border.all()` uniforme + `backgroundColor` sólido en `showModalBottomSheet`
   - Fix adicional: `MediaQuery.sizeOf` leído del contexto exterior (no del builder del modal)
+- [x] **Modal Dialog Responsivo para Web/Escritorio (≥600px)** — En pantallas anchas (como monitores de 27 pulgadas), la info del compañero ahora se dibuja centrada y premium como un `Dialog` con un botón de cierre (`Icons.close`), eliminando el desplazamiento vertical excesivo.
 - [x] Páginas legales públicas (`/privacy`, `/terms`, `/cookies`) con navegación correcta
 - [x] Botón (i) de info del companion funcional en Android y Web
 
