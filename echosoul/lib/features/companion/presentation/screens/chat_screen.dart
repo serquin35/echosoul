@@ -563,43 +563,34 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
 
 /// Muestra el bottom sheet al pulsar el botón (i) en el header.
 /// UI tonta: no contiene lógica de negocio, solo presentación.
+///
+/// CRÍTICO: leemos [screenH] del contexto EXTERIOR (ChatScreen) antes de
+/// abrir el modal. En Android el BuildContext que recibe el builder del
+/// showModalBottomSheet vive en el Overlay y su MediaQuery no refleja las
+/// dimensiones reales de la pantalla → el sheet aparece vacío o negro.
 void _showCompanionInfo(BuildContext context, String companionName) {
+  // Capturamos la altura AQUÍ, donde el contexto es correcto.
+  final screenH = MediaQuery.sizeOf(context).height;
+  final sheetH  = screenH > 100 ? screenH * 0.82 : 580.0;
+
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    useSafeArea: true,
-    builder: (_) => _CompanionInfoSheet(companionName: companionName),
+    // useSafeArea: false → lo gestionamos nosotros con sheetH para no
+    // enmascarar el header del chat ni producir doble-constraining.
+    builder: (_) => SizedBox(
+      height: sheetH,
+      child: Material(
+        color: Colors.transparent,
+        child: _CompanionInfoContent(companionName: companionName),
+      ),
+    ),
   );
 }
 
-class _CompanionInfoSheet extends StatelessWidget {
-  final String companionName;
-  const _CompanionInfoSheet({required this.companionName});
-
-  @override
-  Widget build(BuildContext context) {
-    // IMPORTANTE: NO usar LayoutBuilder aquí.
-    // showModalBottomSheet pasa constraints.maxHeight = double.infinity en Android,
-    // lo que hace que el contenido no tenga altura y aparezca vacío.
-    // La solución correcta es usar MediaQuery para obtener la altura real de la pantalla.
-    final screenH = MediaQuery.sizeOf(context).height;
-    // Fallback de 640px si MediaQuery devuelve 0 (primer frame tras hot reload en web)
-    final sheetHeight = screenH > 0 ? screenH * 0.88 : 640.0;
-
-    return SizedBox(
-      height: sheetHeight,
-      child: Material(
-        // Material es necesario para que textos e InkWells no sean invisibles
-        // en ciertas plataformas (Android incluido).
-        color: Colors.transparent,
-        child: _CompanionInfoContent(
-          companionName: companionName,
-        ),
-      ),
-    );
-  }
-}
+// _CompanionInfoSheet eliminada: la lógica de altura se resolvió
+// directamente en _showCompanionInfo usando el contexto externo.
 
 class _CompanionInfoContent extends StatelessWidget {
   final String companionName;
