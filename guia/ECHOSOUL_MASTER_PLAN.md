@@ -347,7 +347,7 @@ Nunca uses `kIsWeb` directamente en código de feature — usa siempre `EsPlatfo
 ## 🔑 CREDENCIALES ANDROID (Keystore)
 
 Para compilar el App Bundle (.aab) firmado, las credenciales están configuradas en `echosoul/android/key.properties`:
-- **Contraseña de Keystore y Key:** `echosoul_password_123`
+- **Contraseña de Keystore y Key:** `[REDACTED - VER key.properties LOCAL]`
 - **Alias:** `upload`
 - **Archivo Keystore:** `upload-keystore.jks` (Generado vía `keytool` y excluido en `.gitignore`)
 
