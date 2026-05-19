@@ -1,4 +1,4 @@
-{
+﻿{
   "updatedAt": "2026-05-15T20:07:37.480Z",
   "createdAt": "2026-05-15T20:03:19.867Z",
   "id": "uWNPk5KWMgTbJtlc",
@@ -32,11 +32,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -126,11 +126,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -157,11 +157,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -333,11 +333,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",

@@ -127,18 +127,18 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/crisis_events",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/crisis_events",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $vars.SUPABASE_SERVICE_KEY }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",

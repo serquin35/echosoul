@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "EchoSoul — proactividad: daily-checkin",
   "nodes": [
     {
@@ -39,11 +39,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -128,11 +128,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -161,11 +161,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -250,11 +250,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -433,11 +433,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoulSupabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoulSupabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",

@@ -1,4 +1,4 @@
-{
+﻿{
   "updatedAt": "2026-05-15T20:02:05.696Z",
   "createdAt": "2026-05-15T19:57:02.399Z",
   "id": "WIwcWkTL1W6G3mj1",
@@ -35,11 +35,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -123,11 +123,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -154,11 +154,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -242,11 +242,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
@@ -418,11 +418,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
             },
             {
               "name": "Content-Type",
