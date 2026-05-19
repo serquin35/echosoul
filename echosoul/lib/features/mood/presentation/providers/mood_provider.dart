@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/mood_entry_entity.dart';
 import '../../domain/repositories/mood_repository.dart';
 import '../../data/repositories/mood_repository_impl.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 final moodRepositoryProvider = Provider<MoodRepository>((ref) {
   return MoodRepositoryImpl(Supabase.instance.client);
@@ -11,6 +12,8 @@ final moodRepositoryProvider = Provider<MoodRepository>((ref) {
 class MoodNotifier extends AsyncNotifier<List<MoodEntryEntity>> {
   @override
   Future<List<MoodEntryEntity>> build() async {
+    // Invalida la lista si se cambia de cuenta
+    ref.watch(authStateChangesProvider);
     return ref.read(moodRepositoryProvider).getMoodHistory();
   }
 

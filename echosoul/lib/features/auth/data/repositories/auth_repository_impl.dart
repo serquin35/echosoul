@@ -187,6 +187,17 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> signOut() async {
     try {
+      if (!kIsWeb) {
+        try {
+          final googleSignIn = GoogleSignIn(
+            serverClientId: Env.googleWebClientId,
+          );
+          await googleSignIn.signOut();
+          debugPrint('AuthRepository: Google Native SignOut completed');
+        } catch (googleError) {
+          debugPrint('AuthRepository: Error during Google Native SignOut: $googleError');
+        }
+      }
       await _supabaseClient.auth.signOut();
     } catch (e) {
       throw AuthException(e.toString());

@@ -1,0 +1,623 @@
+{
+  "updatedAt": "2026-05-15T20:10:50.717Z",
+  "createdAt": "2026-05-15T20:08:15.823Z",
+  "id": "gKSJOiCyJdvpSHs9",
+  "name": "EchoSoul — proactividad: smart-nudge",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "da5814ca-a049-4977-addc-4143a426e75f",
+      "name": "Cron every 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&select=id,display_name,email,language,timezone,platform,fcm_token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8041ce8-c750-4733-a3e6-8c633b6f8ab1",
+      "name": "Fetch all users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -128,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins?created_at=gte.{{ new Date(Date.now()-172800000).toISOString() }}&select=user_id&limit=1000",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "607f4d17-8ce7-4c9f-8501-3181cc4a1a5a",
+      "name": "Fetch recent checkins",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        48,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/messages?created_at=gte.{{ new Date(Date.now()-86400000).toISOString() }}&select=user_id&limit=1000",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ed799240-e1e7-4edf-aeab-b7fb7e816bc5",
+      "name": "Fetch recently active",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst allUsers      = $('Fetch all users').all().map(i => i.json);\nconst recentCheckins = $('Fetch recent checkins').all().map(i => i.json);\nconst recentActive   = $('Fetch recently active').all().map(i => i.json);\n\nconst checkinUserIds = new Set(recentCheckins.map(c => c.user_id).filter(Boolean));\nconst activeUserIds  = new Set(recentActive.map(m => m.user_id).filter(Boolean));\n\nconst inactive = allUsers.filter(u =>\n  u.id &&\n  !checkinUserIds.has(u.id) &&\n  !activeUserIds.has(u.id)\n);\n\nif (inactive.length === 0) return [];\n\n// Máx 50 nudges por ciclo\nreturn inactive.slice(0, 50).map(u => ({ json: u }));\n"
+      },
+      "id": "b22427b9-5507-400d-bb33-9b4e8326c233",
+      "name": "Filter inactive users",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "8ece533b-5af4-46c4-9bf7-e6300711d022",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10669aab-2e70-40df-943b-ebb3a64ac08e",
+      "name": "IF has inactive",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        592,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "0c7e7c87-ffc8-480d-832e-6af4fe120687",
+      "name": "No inactive users",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        592,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ad517721-a020-441c-bacd-2a1e55e7e6d5",
+      "name": "Loop inactive",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        816,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_memories?user_id=eq.{{ $json.id }}&order=importance.desc&limit=8",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10cdaa48-b730-4fc2-8bc6-3a7997366b8b",
+      "name": "Fetch nudge context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst user    = $('Fetch nudge context').item.json;\nconst memories = $input.all().map(i => i.json);\nconst name    = user.display_name || 'tú';\nconst lang    = user.language || 'es';\nconst memText = memories.length ? memories.map(m => `- ${m.content}`).join('\\n') : '';\n\nconst systemPrompt = `Eres EchoSoul. Escribe un mensaje suave para ${name} que lleva un tiempo sin conectar.\n${memText ? `Contexto:\\n${memText}` : ''}\nReglas: máx 1-2 frases · sin presión · sin \"¿por qué no has vuelto?\" · cálido · idioma: ${lang}\nResponde SOLO con el mensaje.`;\n\nreturn [{ json: {\n  user_id:    user.id,\n  email:      user.email,\n  fcm_token:  user.fcm_token,\n  platform:   user.platform ?? 'web',\n  display_name: user.display_name,\n  systemPrompt\n}}];\n"
+      },
+      "id": "3ce6fe21-9a7d-4bce-bd71-f43528682925",
+      "name": "Build nudge prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:$json.systemPrompt},{role:'user',content:'Genera el mensaje de apoyo ahora.'}]}) }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi"
+      },
+      "id": "22498e7f-c102-428c-8ba9-4cb288f67b40",
+      "name": "Generate nudge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        128
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "KzFxOuQEjV23LyRC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const p=$input.first().json; const m=p.content?.[0]?.text??'EchoSoul te echa de menos 💙'; return [{json:{...p,generated_message:m}}];"
+      },
+      "id": "c292e48f-ce3b-4114-9702-7c4e75954c67",
+      "name": "Parse nudge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "864174cd-7cf4-441e-8eaa-b3d1c5e8a1e3",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "android",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1d525fff-db45-415a-91dc-928617cf3dcd",
+      "name": "IF android nudge",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fcm.googleapis.com/v1/projects/echosoul-one/messages:send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({message:{token:$json.fcm_token,notification:{title:'EchoSoul 💙',body:$json.generated_message},data:{type:'smart_nudge'}}}) }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi"
+      },
+      "id": "75be3e45-04fd-4f4a-8095-2eb0a9175c00",
+      "name": "Send FCM nudge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        0
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "0o4FmPorago01fiu",
+          "name": "Firebase EchoSoul Admin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=EchoSoul te está pensando 💙",
+        "message": "={{ '<div style=\"font-family:sans-serif;padding:24px;max-width:480px\">' + $json.generated_message + '</div>' }}",
+        "options": {}
+      },
+      "id": "3dde2d61-26c1-40c4-b402-45407c0651f4",
+      "name": "Send email nudge",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        208
+      ],
+      "webhookId": "30c02462-bc7c-4ca5-a6bd-d47ca110a97e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XI4mlfkFZGAD9dyL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,notes:$json.generated_message,triggered_by:'smart-nudge'}) }}",
+        "options": {}
+      },
+      "id": "5d2a5e0f-18f3-4c7b-a158-627179b464d0",
+      "name": "Log nudge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2224,
+        208
+      ]
+    }
+  ],
+  "connections": {
+    "Cron every 6h": {
+      "main": [
+        [
+          {
+            "node": "Fetch all users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch all users": {
+      "main": [
+        [
+          {
+            "node": "Fetch recent checkins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch recent checkins": {
+      "main": [
+        [
+          {
+            "node": "Fetch recently active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch recently active": {
+      "main": [
+        [
+          {
+            "node": "Filter inactive users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter inactive users": {
+      "main": [
+        [
+          {
+            "node": "IF has inactive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF has inactive": {
+      "main": [
+        [
+          {
+            "node": "Loop inactive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No inactive users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop inactive": {
+      "main": [
+        [
+          {
+            "node": "Fetch nudge context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch nudge context": {
+      "main": [
+        [
+          {
+            "node": "Build nudge prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build nudge prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate nudge": {
+      "main": [
+        [
+          {
+            "node": "Parse nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse nudge": {
+      "main": [
+        [
+          {
+            "node": "IF android nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF android nudge": {
+      "main": [
+        [
+          {
+            "node": "Send FCM nudge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send FCM nudge": {
+      "main": [
+        [
+          {
+            "node": "Log nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email nudge": {
+      "main": [
+        [
+          {
+            "node": "Log nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log nudge": {
+      "main": [
+        [
+          {
+            "node": "Loop inactive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a467d4c9-5b85-4e12-a812-6706cd41b866",
+  "activeVersionId": null,
+  "versionCounter": 31,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-15T20:08:15.823Z",
+      "createdAt": "2026-05-15T20:08:15.823Z",
+      "role": "workflow:owner",
+      "workflowId": "gKSJOiCyJdvpSHs9",
+      "projectId": "qo7vPQhyAzkTS54A",
+      "project": {
+        "updatedAt": "2026-01-12T16:49:52.207Z",
+        "createdAt": "2025-11-29T20:35:10.779Z",
+        "id": "qo7vPQhyAzkTS54A",
+        "name": "SERGIO  serquin16@gmail.com <serquin16@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "45809c68-e7c7-48f2-a548-8de836a401cb"
+      }
+    }
+  ],
+  "tags": []
+}

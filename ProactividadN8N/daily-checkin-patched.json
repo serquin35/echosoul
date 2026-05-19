@@ -1,0 +1,685 @@
+{
+  "updatedAt": "2026-05-15T20:02:05.696Z",
+  "createdAt": "2026-05-15T19:57:02.399Z",
+  "id": "WIwcWkTL1W6G3mj1",
+  "name": "EchoSoul — proactividad: daily-checkin",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "16c7123d-2a56-48e7-99a3-01d2677a5ef8",
+      "name": "Cron 9AM daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -784,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&select=id,display_name,email,language,timezone,platform,fcm_token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1540e2c8-da30-4a1a-b828-75320da6f8c8",
+      "name": "Fetch active users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -592,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "ebf47e50-2a73-4534-b963-a6891c92048b",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b53d20f4-4984-4e6b-9338-4c92e970d81f",
+      "name": "IF has users",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        368
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5c593317-2d66-4c58-80e6-e8cd236e7529",
+      "name": "No users today",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c30b1e45-661b-4883-8f10-f7887f66d3bb",
+      "name": "Loop users",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_preferences?user_id=eq.{{ $json.id }}&select=safe_hours_start,safe_hours_end,proactivity_level&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88c776ff-4ec5-46af-9b5e-d3363c58e2b7",
+      "name": "Fetch user preferences",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins?user_id=eq.{{ $('Fetch active users').item.json.id }}&triggered_by=eq.daily-checkin&created_at=gte.{{ new Date().toISOString().split('T')[0] }}&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "34a515ca-f9df-4986-bd97-962ae7d12406",
+      "name": "Fetch today checkins",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst user   = $('Fetch active users').item.json;\nconst prefs  = $('Fetch user preferences').item.json ?? {};\nconst today_checkins = $input.all();   // output de Fetch today checkins\n\n// 1. proactivity_level = 0 → usuario no quiere contacto proactivo\nif ((prefs.proactivity_level ?? 3) === 0) {\n  return [{ json: { ...user, skip: true, reason: 'proactivity_disabled' } }];\n}\n\n// 2. Ya recibió contacto hoy → skip\nif (today_checkins.length > 0 && today_checkins[0].json && today_checkins[0].json.id) {\n  return [{ json: { ...user, skip: true, reason: 'already_contacted_today' } }];\n}\n\n// 3. Verificar safe_hours (hora local del usuario)\nconst tz       = user.timezone ?? 'Europe/Madrid';\nconst localHour = parseInt(\n  new Intl.DateTimeFormat('en', { timeZone: tz, hour: 'numeric', hour12: false }).format(new Date()), 10\n);\nconst safeStart = prefs.safe_hours_start ? parseInt(String(prefs.safe_hours_start).split(':')[0], 10) : 8;\nconst safeEnd   = prefs.safe_hours_end   ? parseInt(String(prefs.safe_hours_end).split(':')[0],   10) : 22;\n\nif (localHour < safeStart || localHour >= safeEnd) {\n  return [{ json: { ...user, skip: true, reason: 'outside_safe_hours' } }];\n}\n\nreturn [{ json: {\n  ...user,\n  skip:       false,\n  prefs:      prefs,\n  safeStart,\n  safeEnd\n}}];\n"
+      },
+      "id": "d0dd4b1b-4870-4eec-8f5a-f78780745fa1",
+      "name": "Check conditions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "59f20e79-c137-4a84-9f4c-06258d671836",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a333352a-dca4-41ce-9fa2-380abd41a2f4",
+      "name": "IF skip",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        336
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "63652252-d095-44cd-8b2d-9a254f23dcb9",
+      "name": "Skip user",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_memories?user_id=eq.{{ $('Fetch active users').item.json.id }}&order=importance.desc&limit=8",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "879a8bcb-533c-46ad-b965-bcf8819791ac",
+      "name": "Fetch memories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst user    = $('Check conditions').item.json;\nconst memories = $input.all().map(i => i.json);\nconst name    = user.display_name || 'tú';\nconst lang    = user.language || 'es';\nconst memText = memories.length\n  ? memories.map(m => `- ${m.content}`).join('\\n')\n  : '';\n\nconst systemPrompt = `Eres EchoSoul, una compañía empática.\nEscribe UN mensaje corto de check-in matutino para ${name}.\n${memText ? `Lo que sabes de él/ella:\\n${memText}` : ''}\nReglas: máx 2 frases · cálido y personal · sin preguntas directas · idioma: ${lang}\nResponde SOLO con el mensaje, sin comillas ni explicación.`;\n\nreturn [{ json: {\n  user_id:    user.id,\n  email:      user.email,\n  fcm_token:  user.fcm_token,\n  platform:   user.platform ?? 'web',\n  display_name: user.display_name,\n  systemPrompt\n}}];\n"
+      },
+      "id": "c92a43d4-9a1c-4b6c-bc69-ba6c48d38a2e",
+      "name": "Build checkin prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({model:'gpt-4o-mini',messages:[{role:'system',content:$json.systemPrompt},{role:'user',content:'Genera el mensaje de apoyo ahora.'}]}) }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi"
+      },
+      "id": "fc44a433-40d2-47ce-8a71-02defa6ec4f6",
+      "name": "Generate checkin message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1072,
+        368
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "KzFxOuQEjV23LyRC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst prev = $('Generate checkin message').item.json;\nconst msg  = prev.content?.[0]?.text ?? 'Hola, EchoSoul está aquí contigo hoy 💙';\nreturn [{ json: { ...prev, generated_message: msg } }];\n"
+      },
+      "id": "43823307-aff7-4f93-8899-58e1afa974c2",
+      "name": "Parse message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b18c02b5-d926-4250-9d23-b757f62505ef",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "android",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fbe43cc3-131c-4215-85f8-d3a86fc59b72",
+      "name": "IF android",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fcm.googleapis.com/v1/projects/echosoul-one/messages:send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({message:{token:$json.fcm_token,notification:{title:'EchoSoul 💙',body:$json.generated_message},data:{type:'daily_checkin'}}}) }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi"
+      },
+      "id": "faefa54f-33ee-41d9-b40f-b88e1b72ea37",
+      "name": "Send FCM checkin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        288
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "0o4FmPorago01fiu",
+          "name": "Firebase EchoSoul Admin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=EchoSoul está aquí contigo hoy 💙",
+        "message": "={{ '<div style=\"font-family:sans-serif;padding:24px;max-width:480px\">' + $json.generated_message + '</div>' }}",
+        "options": {}
+      },
+      "id": "de6c6d30-46ad-4b4b-9c91-215854434ba0",
+      "name": "Send email checkin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        464
+      ],
+      "webhookId": "3859de4d-c822-4e00-8ca8-82ef91560ca1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XI4mlfkFZGAD9dyL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.EchoSoul-supabase.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,notes:$json.generated_message,triggered_by:'daily-checkin'}) }}",
+        "options": {}
+      },
+      "id": "4da9b71d-aafc-4508-b110-c7281d71fd61",
+      "name": "Log checkin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1808,
+        464
+      ]
+    }
+  ],
+  "connections": {
+    "Cron 9AM daily": {
+      "main": [
+        [
+          {
+            "node": "Fetch active users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch active users": {
+      "main": [
+        [
+          {
+            "node": "IF has users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF has users": {
+      "main": [
+        [
+          {
+            "node": "Loop users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No users today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop users": {
+      "main": [
+        [
+          {
+            "node": "Fetch user preferences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch user preferences": {
+      "main": [
+        [
+          {
+            "node": "Fetch today checkins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch today checkins": {
+      "main": [
+        [
+          {
+            "node": "Check conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check conditions": {
+      "main": [
+        [
+          {
+            "node": "IF skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF skip": {
+      "main": [
+        [
+          {
+            "node": "Skip user",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch memories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch memories": {
+      "main": [
+        [
+          {
+            "node": "Build checkin prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build checkin prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate checkin message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate checkin message": {
+      "main": [
+        [
+          {
+            "node": "Parse message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse message": {
+      "main": [
+        [
+          {
+            "node": "IF android",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF android": {
+      "main": [
+        [
+          {
+            "node": "Send FCM checkin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send FCM checkin": {
+      "main": [
+        [
+          {
+            "node": "Log checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email checkin": {
+      "main": [
+        [
+          {
+            "node": "Log checkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log checkin": {
+      "main": [
+        [
+          {
+            "node": "Loop users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "5a2d36a5-2748-4aae-b084-5eae44f15184",
+  "activeVersionId": null,
+  "versionCounter": 35,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-15T19:57:02.399Z",
+      "createdAt": "2026-05-15T19:57:02.399Z",
+      "role": "workflow:owner",
+      "workflowId": "WIwcWkTL1W6G3mj1",
+      "projectId": "qo7vPQhyAzkTS54A",
+      "project": {
+        "updatedAt": "2026-01-12T16:49:52.207Z",
+        "createdAt": "2025-11-29T20:35:10.779Z",
+        "id": "qo7vPQhyAzkTS54A",
+        "name": "SERGIO  serquin16@gmail.com <serquin16@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "45809c68-e7c7-48f2-a548-8de836a401cb"
+      }
+    }
+  ],
+  "tags": []
+}

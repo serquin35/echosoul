@@ -5,6 +5,7 @@ import '../../../../core/config/env.dart';
 import '../../data/repositories/n8n_chat_repository_impl.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Infrastructure providers
@@ -24,6 +25,7 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 final chatSessionIdProvider = Provider<String>((ref) {
+  ref.watch(authStateChangesProvider);
   final uid = Supabase.instance.client.auth.currentUser?.id;
   final ts = DateTime.now().millisecondsSinceEpoch;
   return uid != null ? '${uid}_$ts' : 'anon_$ts';
@@ -60,7 +62,10 @@ class ChatState {
 
 class ChatNotifier extends Notifier<ChatState> {
   @override
-  ChatState build() => const ChatState();
+  ChatState build() {
+    ref.watch(authStateChangesProvider);
+    return const ChatState();
+  }
 
   /// Sends the user's [text] and appends both messages to the state.
   Future<void> sendMessage(String text) async {

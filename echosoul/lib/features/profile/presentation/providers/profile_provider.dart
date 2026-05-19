@@ -22,6 +22,8 @@ class ProfileNotifier extends AsyncNotifier<ProfileEntity> {
 
   @override
   Future<ProfileEntity> build() async {
+    // Escucha cambios en la autenticación para limpiar la caché al cambiar de usuario
+    ref.watch(authStateChangesProvider);
     return ref.read(profileRepositoryProvider).getProfile();
   }
 

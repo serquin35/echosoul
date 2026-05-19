@@ -84,7 +84,6 @@ git push → GitHub Actions → flutter build web → Vercel (CDN)
 | `chat-proxy` | `POST /webhook/chat` | GPT-4o | ✅ |
 | `crisis-detector` | Interno desde chat-proxy | Claude Haiku | ✅ |
 | `memory-extractor` | Fire&forget desde chat-proxy | GPT-4o-mini | ✅ |
-| `buenos-dias` | *(sin conectar al cron aún)* | — | ⚠️ Creado, inactivo |
 
 ### Onboarding (`/onboardingN8N/`)
 
@@ -228,7 +227,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 2 | Registro Google Sign-In | ✅ |
 | 3 | Chat IA fluido con memoria | ✅ |
 | 4 | Memoria a largo plazo | ✅ |
-| 5 | Buenos días / check-ins proactivos (FCM E2E ✅) | ⚠️ Falta conectar `buenos-dias` cron |
+| 5 | Buenos días / check-ins proactivos (FCM E2E ✅) | ✅ (`daily-checkin`) |
 | 6 | Llamadas de voz proactivas | 🔲 |
 | 7 | Mood tracker funcional | ✅ |
 | 8 | Disclaimers éticos visibles | ✅ |
@@ -257,7 +256,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
-| **H6** | Conectar workflow `buenos-dias` al cron | El JSON existe, solo activar en n8n y enlazar trigger | 🟢 Bajo |
+| ~~**H6**~~ | ~~Conectar workflow `buenos-dias` al cron~~ | ~~✅ Sustituido por `daily-checkin`~~ | ✅ |
 | ~~**H7**~~ | ~~Test E2E notificaciones push reales~~ | ~~✅ COMPLETADO — daily-checkin + smart-nudge + mood-insights en Xiaomi~~ | ✅ |
 | **H8** | Opción "pausar compañero" | UI toggle en Profile + flag en `profiles` + n8n skip si pausa activa | 🟡 Medio |
 | ~~**H9**~~ | ~~Eliminar cuenta desde la app (GDPR)~~ | ~~✅ COMPLETADO — Edge Function + cascade deletes~~ | ✅ |
@@ -290,7 +289,6 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 | Ítem | Urgencia |
 |------|---------|
-| `buenos-dias.json` creado pero sin activar en n8n | 🔴 Alta |
 | FCM token sin actualizar en re-login (token caduca al reinstalar) | 🟡 Media |
 | Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
 | Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
@@ -315,6 +313,45 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 4. **Wrappers siempre** — Repositorios entre UI y APIs externas
 5. **`EsPlatform`** — Nunca `kIsWeb` directamente en features
 
+---
+
+## 🌐 ARQUITECTURA MULTI-PLATAFORMA
+
+EchoSoul opera con **una sola base de código Flutter** y **un único backend (Supabase + n8n)**, pero presenta **dos experiencias diferenciadas**:
+
+| Dimensión | Android (Play Store) | Web (Vercel) |
+|---|---|---|
+| Propósito | Compañía íntima diaria | Adquisición, onboarding, billing |
+| Notificaciones | FCM Push nativas | Email fallback |
+| Voz proactiva | ✅ Retell / Vapi | ❌ No disponible |
+| Modo offline | ✅ Cache local (Hive) | ❌ No |
+| Pagos | Google Play Billing | Paddle (web) |
+| Navegación | Bottom Navigation Bar | Sidebar |
+
+**Detección de Plataforma en Código:**
+Nunca uses `kIsWeb` directamente en código de feature — usa siempre `EsPlatform` (`EsPlatform.isWeb`, `EsPlatform.supportsVoiceCalls`).
+
+---
+
+## ⚙️ REQUERIMIENTOS NO FUNCIONALES
+
+- **Usabilidad:** Mobile-first, botones grandes, interfaz cálida y minimalista.
+- **Rendimiento:** Respuestas rápidas, llamadas fluidas.
+- **Privacidad:** Cumplir GDPR/CCPA. Datos sensibles protegidos.
+- **Ética:** Transparencia total sobre el uso de IA.
+- **Offline:** Chat básico con sincronización posterior.
+- **Accesibilidad:** Soporte TalkBack / VoiceOver.
+
+---
+
+## 🔑 CREDENCIALES ANDROID (Keystore)
+
+Para compilar el App Bundle (.aab) firmado, las credenciales están configuradas en `echosoul/android/key.properties`:
+- **Contraseña de Keystore y Key:** `echosoul_password_123`
+- **Alias:** `upload`
+- **Archivo Keystore:** `upload-keystore.jks` (Generado vía `keytool` y excluido en `.gitignore`)
+
+---
 ## 🛠️ GUÍA DE DEBUGGING — REGLAS APRENDIDAS
 
 | Situación | Herramienta correcta | Trampa común |
@@ -347,14 +384,9 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Archivo | Propósito | Rol |
 |---------|-----------|-----|
 | `guia/ECHOSOUL_MASTER_PLAN.md` | **Este archivo** — Estado global, fases, workflows, DB | 🟢 Fuente de verdad |
-| `guia/Arquitectura Multi-Plataforma.md` | Decisiones Android vs Web, CI/CD, navegación | 📖 Referencia |
-| `guia/Especificación de Requerimientos.md` | RF originales, criterios MVP | 📖 Referencia (no modificar) |
-| `guia/Buenas Practicas.md` | Principios de arquitectura y calidad | 📖 Referencia |
-| `flujosN8N/echosoul-n8n-setup.md` | Guía instalación Chat & IA workflows | 📖 Referencia técnica |
-| `ProactividadN8N/echosoul-proactividad-setup.md` | Guía workflows proactividad | 📖 Referencia técnica |
-| `onboardingN8N/echosoul-onboarding-setup.md` | Guía workflows onboarding + drip | 📖 Referencia técnica |
+| `guia/N8N_SETUP_COMPLETO.md` | Guía unificada de instalación de workflows (Chat, Onboarding, Proactividad) | 📖 Referencia técnica |
 | `onboardingN8N/walkthrough.md` | Historial de hitos completados | 📖 Histórico |
 
 ---
 
-*Última actualización: 17 Mayo 2026 — Próxima revisión: tras completar H2 (Build AAB Play Store) + H6 (Conectar `buenos-dias` cron)*
+*Última actualización: 19 Mayo 2026*

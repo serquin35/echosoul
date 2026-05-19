@@ -1,7 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
+
 final companionNameProvider = FutureProvider<String>((ref) async {
+  // Limpia la caché si cambia el usuario autenticado
+  ref.watch(authStateChangesProvider);
+
   final supabase = Supabase.instance.client;
   final user = supabase.auth.currentUser;
   
