@@ -1,0 +1,405 @@
+{
+  "name": "EchoSoul — billing: google-play-rtdn",
+  "nodes": [
+    {
+      "id": "4e7397d5-9114-48f7-af3c-ba78fd1a3236",
+      "name": "Webhook Google Play",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "path": "google-play",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "1795b349-594f-4454-92bd-ac9d329479ca",
+      "name": "Decode Pub/Sub message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// Google Play RTDN viene via Pub/Sub\n// El payload es: { message: { data: \"base64string\", messageId: \"...\", publishTime: \"...\" }, subscription: \"...\" }\nconst pubsubMsg = $json.body?.message ?? $json.body;\nconst encoded   = pubsubMsg.data ?? '';\n\nlet notification = {};\ntry {\n  const decoded = Buffer.from(encoded, 'base64').toString('utf-8');\n  notification  = JSON.parse(decoded);\n} catch(e) {\n  return [{ json: { skip: true, reason: 'decode_failed', raw: encoded } }];\n}\n\n// Estructura RTDN: { version, packageName, eventTimeMillis, subscriptionNotification | testNotification }\nconst subNotif = notification.subscriptionNotification;\nif (!subNotif) {\n  // Test notification o tipo no soportado\n  return [{ json: { skip: true, reason: 'not_subscription_notification' } }];\n}\n\n// notificationType values:\n// 1=PURCHASED, 2=RENEWED, 3=CANCELED, 4=PURCHASED(trial), 5=ON_HOLD\n// 6=IN_GRACE_PERIOD, 7=RESTARTED, 8=PRICE_CHANGE, 9=DEFERRED\n// 10=PAUSED, 11=PAUSE_SCHEDULE_CHANGED, 12=REVOKED, 13=EXPIRED\n\nconst type = subNotif.notificationType;\nconst ACTIVE_TYPES   = [1, 2, 4, 6, 7];  // premium/grace\nconst INACTIVE_TYPES = [3, 12, 13];        // free\nconst HOLD_TYPES     = [5, 10];            // free (temporalmente)\n\nlet status = 'active';\nlet plan   = 'premium';\nlet limit  = 999;\n\nif (INACTIVE_TYPES.includes(type)) { status = 'canceled'; plan = 'free'; limit = 20; }\nif (HOLD_TYPES.includes(type))     { status = 'paused';   plan = 'free'; limit = 20; }\n\nreturn [{ json: {\n  notification_type:  type,\n  purchase_token:     subNotif.purchaseToken,\n  subscription_id:    subNotif.subscriptionId,\n  package_name:       notification.packageName,\n  status,\n  plan,\n  daily_limit: limit,\n  provider:    'google_play',\n  raw_event:   notification,\n  // NOTA: user_id debe buscarse en Supabase usando el purchase_token\n  // guardado previamente cuando el usuario inició la compra desde la app\n  needs_user_lookup: true\n}}];\n"
+      }
+    },
+    {
+      "id": "882f7b9a-6796-45a0-9f26-aa9c7b025d59",
+      "name": "IF skip GP",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "80e33e40-8b84-4d35-be91-98bcebbf87c8",
+              "leftValue": "={{ $json.skip ?? false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "3fc8e92b-972f-442d-9f89-d839f6c48cc9",
+      "name": "Respond 200 GP skip",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        700
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"skipped\"}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "70b4b3dc-2ef5-4092-a8ed-8a1efd0dbd1e",
+      "name": "Lookup user by token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions?provider=eq.google_play&provider_sub_id=eq.{{ $json.purchase_token }}&select=user_id&limit=1",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a7999582-155c-4f80-99a1-6ab251803fb1",
+      "name": "Resolve user_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// Este nodo busca el user_id usando el purchase_token\n// que la app Flutter debe haber guardado al iniciar la compra\n// La app debe llamar a Supabase con: { user_id, purchase_token } antes de redirigir a Google Play\n\nconst gp = $('Decode Pub/Sub message').first().json;\n\nif (gp.skip) return [{ json: gp }];\n\n// Busca en subscriptions si ya existe este purchase_token\nconst existing = $input.all().map(i => i.json);\nconst match    = existing.find(s => s.provider_sub_id === gp.purchase_token);\n\nconst userId = match?.user_id ?? null;\nif (!userId) {\n  return [{ json: { skip: true, reason: 'user_not_found_for_token', token: gp.purchase_token } }];\n}\n\nreturn [{ json: { ...gp, user_id: userId } }];\n"
+      }
+    },
+    {
+      "id": "c0317094-2cc8-4b58-b2fa-0e9bd9211fda",
+      "name": "IF user found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        1100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0ef5ac96-24a3-4dcb-8fc7-a8a63046a502",
+              "leftValue": "={{ $json.skip ?? false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "d4bbc8b7-d16a-4969-a324-70f79fd4a031",
+      "name": "Respond 200 GP no user",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        1300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"user_not_found\"}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "ea1d61d4-082d-47ae-8fe3-1098ec4773f5",
+      "name": "Upsert GP subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({user_id:$json.user_id,provider:'google_play',provider_sub_id:$json.purchase_token,status:$json.status,raw_event:$json.raw_event}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "da2669d0-1e3d-4637-b066-48ec7eea22bc",
+      "name": "Update user plan GP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1500
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({plan:$json.plan,daily_limit:$json.daily_limit,updated_at:new Date().toISOString()}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "0706d00a-a334-4511-b24c-02f0f32eed04",
+      "name": "Respond 200 GP ok",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        1700
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"ok\"}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "2fa99d08-57a1-4dfe-a565-a351d5f2ef0f",
+      "name": "Note-1601",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        100
+      ],
+      "parameters": {
+        "content": "## Configurar en Google Play\nPlay Console → Monetización → Suscripciones\n→ Configuración de Pub/Sub\n\n1. Crea topic en Google Cloud Pub/Sub\n2. Crea suscripción tipo PUSH\n   → URL: https://n8n.cheosdesign.info/webhook/google-play\n3. Vincula el topic en Play Console\n\nNo activar hasta que el AAB esté publicado.",
+        "height": 260,
+        "width": 360,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Google Play": {
+      "main": [
+        [
+          {
+            "node": "Decode Pub/Sub message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode Pub/Sub message": {
+      "main": [
+        [
+          {
+            "node": "IF skip GP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF skip GP": {
+      "main": [
+        [
+          {
+            "node": "Lookup user by token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 GP skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup user by token": {
+      "main": [
+        [
+          {
+            "node": "Resolve user_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve user_id": {
+      "main": [
+        [
+          {
+            "node": "IF user found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF user found": {
+      "main": [
+        [
+          {
+            "node": "Upsert GP subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 GP no user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert GP subscription": {
+      "main": [
+        [
+          {
+            "node": "Update user plan GP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update user plan GP": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 GP ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "39dc3aeb-141f-4ced-88fb-1252a4814b46",
+  "meta": {
+    "instanceId": "echosoul-local"
+  }
+}

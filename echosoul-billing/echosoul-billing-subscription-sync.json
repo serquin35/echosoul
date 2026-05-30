@@ -1,0 +1,308 @@
+{
+  "name": "EchoSoul — billing: subscription-sync",
+  "nodes": [
+    {
+      "id": "00a06f35-7825-491f-916b-3638f0c788f0",
+      "name": "Cron 3AM daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "af61a753-a677-4dc0-ab6b-c514a8cab494",
+      "name": "Fetch Paddle active subs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.paddle.com/subscriptions?status=active&per_page=200",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_PADDLE_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9dd29510-755a-4678-826a-975f4cf08cfd",
+      "name": "Fetch Supabase premium users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?plan=eq.premium&select=user_id",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f000e84f-ad5d-451c-8455-fac75a60ae30",
+      "name": "Find discrepancies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst paddleSubs = $('Fetch Paddle active subs').all().map(i => i.json);\nconst supaUsers  = $('Fetch Supabase premium users').all().map(i => i.json);\n\n// Paddle Billing v2 devuelve { data: [...] }\nconst paddleActive = (paddleSubs[0]?.data ?? []);\nconst paddleUserIds = new Set(\n  paddleActive\n    .map(s => s.custom_data?.user_id)\n    .filter(Boolean)\n);\n\nconst supaUserIds = new Set(supaUsers.map(u => u.user_id).filter(Boolean));\n\nconst corrections = [];\n\n// 1. En Supabase como premium pero NO activo en Paddle → degradar\nfor (const userId of supaUserIds) {\n  if (!paddleUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'downgrade', plan: 'free', daily_limit: 20 });\n  }\n}\n\n// 2. Activo en Paddle pero en Supabase como free → promover (webhook perdido)\nfor (const userId of paddleUserIds) {\n  if (!supaUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'upgrade', plan: 'premium', daily_limit: 999 });\n  }\n}\n\nif (corrections.length === 0) return [];\n\nreturn corrections.map(c => ({ json: c }));\n"
+      }
+    },
+    {
+      "id": "d34665e2-4967-4170-87b6-4f617fc30cf8",
+      "name": "IF has corrections",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "15544a77-9ec2-423f-9dd8-650a694d815b",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "2e7efdfe-3584-46c7-ac21-4b48662f3ba6",
+      "name": "No discrepancies",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        200,
+        1100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "56762e89-bdf6-4640-94cf-0ebcb4c77b74",
+      "name": "Loop corrections",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        500,
+        1100
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "b121320e-362c-4387-90b1-694198dc8a19",
+      "name": "Apply correction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        1300
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({plan:$json.plan,daily_limit:$json.daily_limit,updated_at:new Date().toISOString()}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "8f1ca15a-d354-4d2b-b27b-0481f60bfb70",
+      "name": "Note-c58d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        100
+      ],
+      "parameters": {
+        "content": "## Safety net de billing\nEste cron corre a las 3AM y reconcilia\nPaddle vs Supabase. Protege contra:\n\n- Webhooks perdidos por downtime de n8n\n- Cancelaciones no procesadas\n- Pagos exitosos no reflejados\n\nReemplaza `YOUR_PADDLE_API_KEY` con\ntu API key de Paddle Billing v2.",
+        "height": 240,
+        "width": 340,
+        "color": 3
+      }
+    }
+  ],
+  "connections": {
+    "Cron 3AM daily": {
+      "main": [
+        [
+          {
+            "node": "Fetch Paddle active subs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Paddle active subs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Supabase premium users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Supabase premium users": {
+      "main": [
+        [
+          {
+            "node": "Find discrepancies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find discrepancies": {
+      "main": [
+        [
+          {
+            "node": "IF has corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF has corrections": {
+      "main": [
+        [
+          {
+            "node": "Loop corrections",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No discrepancies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop corrections": {
+      "main": [
+        [
+          {
+            "node": "Apply correction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply correction": {
+      "main": [
+        [
+          {
+            "node": "Loop corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "888743ca-31aa-47d8-8141-848486931843",
+  "meta": {
+    "instanceId": "echosoul-local"
+  }
+}
