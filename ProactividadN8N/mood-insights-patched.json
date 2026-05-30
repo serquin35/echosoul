@@ -1,4 +1,4 @@
-﻿{
+{
   "updatedAt": "2026-05-15T20:07:37.480Z",
   "createdAt": "2026-05-15T20:03:19.867Z",
   "id": "uWNPk5KWMgTbJtlc",
@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?id=eq.{{ $json.user_id }}&select=id,display_name,email,language,platform,fcm_token&limit=1",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?id=eq.{{ $json.user_id }}&is_paused=eq.false&select=id,display_name,email,language,platform,fcm_token&limit=1",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
