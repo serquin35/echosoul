@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "EchoSoul — proactividad: daily-checkin",
   "nodes": [
     {
@@ -32,7 +32,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&select=id,display_name,email,language,timezone,platform,fcm_token",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&is_paused=eq.false&select=id,display_name,email,language,timezone,platform,fcm_token",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {

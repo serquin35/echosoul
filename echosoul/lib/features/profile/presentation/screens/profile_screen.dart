@@ -5,13 +5,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
+import '../../../../core/router/route_names.dart' as routes;
+import '../../../billing/presentation/providers/billing_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_section_card.dart';
 import '../widgets/profile_edit_sheet.dart';
 import '../widgets/profile_language_sheet.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/router/route_names.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -37,6 +38,11 @@ class ProfileScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () => ref.refresh(profileProvider),
                 child: const Text('Reintentar', style: TextStyle(color: EsColors.primaryBlue)),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => ref.read(profileProvider.notifier).signOut(),
+                child: const Text('Cerrar sesión', style: TextStyle(color: EsColors.warning)),
               ),
             ],
           ),
@@ -113,6 +119,19 @@ class ProfileScreen extends ConsumerWidget {
                                   .read(profileProvider.notifier)
                                   .updateField(profile.copyWith(companionName: value)),
                             ),
+                          ),
+                          SwitchListTile(
+                            title: const Text('Pausar compañero', style: TextStyle(color: EsColors.textPrimaryDark, fontSize: 15)),
+                            subtitle: const Text('Silencia temporalmente notificaciones y check-ins proactivos', style: TextStyle(color: EsColors.textSecondaryDark, fontSize: 12)),
+                            secondary: const Icon(Icons.snooze_outlined, color: EsColors.warning, size: 22),
+                            value: profile.isPaused,
+                            activeColor: EsColors.warning,
+                            inactiveTrackColor: EsColors.surfaceDark,
+                            onChanged: (bool value) {
+                              ref.read(profileProvider.notifier).updateField(
+                                    profile.copyWith(isPaused: value),
+                                  );
+                            },
                           ),
                         ],
                       ),
@@ -195,9 +214,65 @@ class ProfileScreen extends ConsumerWidget {
                             label: 'Avisos Legales y Ética',
                             value: 'Términos, Privacidad y Compromiso IA',
                             iconColor: EsColors.primaryBlue,
-                            onTap: () => context.push(RouteNames.legal),
+                            onTap: () => context.push(routes.RouteNames.legal),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: EsSpacing.md),
+
+                      // Sección: Plan Premium
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final billingAsync = ref.watch(billingProvider);
+                          return billingAsync.when(
+                            loading: () => ProfileSectionCard(
+                              title: 'Plan',
+                              children: [
+                                _ProfileTile(
+                                  icon: Icons.workspace_premium,
+                                  label: 'Estado del plan',
+                                  value: 'Cargando...',
+                                  iconColor: EsColors.primaryBlue,
+                                  isEditable: false,
+                                ),
+                              ],
+                            ),
+                            error: (_, __) => const SizedBox.shrink(),
+                            data: (billing) => ProfileSectionCard(
+                              title: 'Plan',
+                              children: [
+                                _ProfileTile(
+                                  icon: Icons.workspace_premium,
+                                  label: 'Estado del plan',
+                                  value: billing.isPremium ? 'Premium' : 'Gratuito',
+                                  iconColor: billing.isPremium
+                                      ? EsColors.warning
+                                      : EsColors.primaryBlue,
+                                  isEditable: false,
+                                ),
+                                if (billing.isFree) ...[
+                                  _ProfileTile(
+                                    icon: Icons.forum_outlined,
+                                    label: 'Mensajes hoy',
+                                    value: '${billing.messagesUsed} / ${billing.dailyLimit}',
+                                    iconColor: billing.remainingMessages <= 5
+                                        ? EsColors.warning
+                                        : EsColors.calm,
+                                    isEditable: false,
+                                  ),
+                                  _ProfileTile(
+                                    icon: Icons.arrow_circle_up_outlined,
+                                    label: '',
+                                    value: 'Actualizar a Premium',
+                                    iconColor: EsColors.primaryBlue,
+                                    valueColor: EsColors.primaryBlue,
+                                    onTap: () => context.push(routes.RouteNames.paywall),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: EsSpacing.md),
                       ProfileSectionCard(

@@ -4,6 +4,7 @@
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/cookies", "destination": "/cookies.html" },
+    { "source": "/upgrade", "destination": "/upgrade.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

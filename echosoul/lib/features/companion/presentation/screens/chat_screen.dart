@@ -8,6 +8,7 @@ import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/utils/es_platform.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../billing/presentation/providers/billing_provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/companion_data_provider.dart';
 import '../widgets/chat_message_bubble.dart';
@@ -530,9 +531,29 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
   Future<void> _handleSend() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
+    final billing = await ref.read(billingProvider.future);
+    if (!billing.canSendMessage) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Has alcanzado el límite diario de mensajes gratuitos.'),
+            backgroundColor: EsColors.warning,
+            action: SnackBarAction(
+              label: 'Premium',
+              textColor: Colors.white,
+              onPressed: () => context.push(RouteNames.paywall),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     _controller.clear();
     _focusNode.requestFocus();
     await ref.read(chatProvider.notifier).sendMessage(text);
+    await ref.read(billingProvider.notifier).incrementMessagesUsed();
   }
 
   @override

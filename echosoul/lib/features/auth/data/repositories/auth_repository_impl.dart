@@ -86,6 +86,15 @@ class AuthRepositoryImpl implements AuthRepository {
     final googleSignIn = GoogleSignIn(
       serverClientId: Env.googleWebClientId,
     );
+    
+    // Forzar que siempre muestre el selector de cuentas cerrando la sesión previa
+    try {
+      await googleSignIn.signOut();
+      await googleSignIn.disconnect();
+    } catch (_) {
+      // Ignorar errores al intentar cerrar sesión si no había ninguna
+    }
+    
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) throw const AuthException('Inicio con Google cancelado.');
 

@@ -20,6 +20,7 @@ import '../../features/companion/presentation/screens/companion_home_screen.dart
 import '../../features/companion/presentation/screens/chat_screen.dart';
 import '../../features/companion/presentation/screens/voice_call_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/billing/presentation/screens/paywall_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,6 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isSplash = path == RouteNames.splash;
       final isOnboarding = path == RouteNames.onboarding;
       final isLegal = path == RouteNames.legal;
+      final isPaywall = path == RouteNames.paywall;
       
       // 1. Access auth state SYNCHRONOUSLY
       final auth = Supabase.instance.client.auth;
@@ -72,7 +74,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isRecovery = uri.fragment.contains('type=recovery') || 
                          uri.queryParameters['type'] == 'recovery';
                          
-      if (isResettingPassword || isRecovery || isLegal) {
+      if (isResettingPassword || isRecovery || isLegal || isPaywall) {
         debugPrint('AUTH ROUTER: Public/Recovery path allowed.');
         if (isRecovery && !isResettingPassword) {
           debugPrint('AUTH ROUTER: Recovery detected -> Redirecting to RESET PASSWORD');
@@ -182,6 +184,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.resetPassword,
         name: RouteNames.resetPassword,
         builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.paywall,
+        name: RouteNames.paywall,
+        builder: (context, state) => const PaywallScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

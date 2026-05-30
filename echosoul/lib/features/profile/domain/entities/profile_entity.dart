@@ -9,6 +9,7 @@ class ProfileEntity {
   final String? crisisContactName;
   final String? crisisContactPhone;
   final String preferredLanguage; // 'es' | 'en'
+  final bool isPaused;
 
   const ProfileEntity({
     required this.id,
@@ -19,6 +20,7 @@ class ProfileEntity {
     this.crisisContactName,
     this.crisisContactPhone,
     this.preferredLanguage = 'es',
+    this.isPaused = false,
   });
 
   ProfileEntity copyWith({
@@ -29,6 +31,7 @@ class ProfileEntity {
     String? crisisContactName,
     String? crisisContactPhone,
     String? preferredLanguage,
+    bool? isPaused,
   }) {
     return ProfileEntity(
       id: id,
@@ -39,6 +42,7 @@ class ProfileEntity {
       crisisContactName: crisisContactName ?? this.crisisContactName,
       crisisContactPhone: crisisContactPhone ?? this.crisisContactPhone,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      isPaused: isPaused ?? this.isPaused,
     );
   }
 }

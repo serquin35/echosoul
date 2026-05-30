@@ -1,4 +1,4 @@
-﻿{
+{
   "updatedAt": "2026-05-15T20:10:50.717Z",
   "createdAt": "2026-05-15T20:08:15.823Z",
   "id": "gKSJOiCyJdvpSHs9",
@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&select=id,display_name,email,language,timezone,platform,fcm_token",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles?onboarding_completed=eq.true&is_paused=eq.false&select=id,display_name,email,language,timezone,platform,fcm_token",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

@@ -12,4 +12,5 @@ abstract class RouteNames {
   static const companionSettings = '/profile/companion';
   static const legal        = '/legal';
   static const resetPassword = '/reset-password';
+  static const paywall       = '/paywall';
 }

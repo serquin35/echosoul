@@ -29,6 +29,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         'id': user.id,
         'display_name': defaultName,
         'onboarding_completed': false,
+        'is_paused': false,
         'created_at': DateTime.now().toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
@@ -54,6 +55,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       crisisContactName: profileData['crisis_contact_name'] as String?,
       crisisContactPhone: profileData['crisis_contact_phone'] as String?,
       preferredLanguage: 'es',
+      isPaused: profileData['is_paused'] as bool? ?? false,
     );
   }
 
@@ -69,6 +71,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         'avatar_url': profile.avatarUrl,
         'crisis_contact_name': profile.crisisContactName,
         'crisis_contact_phone': profile.crisisContactPhone,
+        'is_paused': profile.isPaused,
       }).eq('id', user.id).then((_) {}),
       _client.from('companion_settings').upsert({
         'user_id': user.id,
