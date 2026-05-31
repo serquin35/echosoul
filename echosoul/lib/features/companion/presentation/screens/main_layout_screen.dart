@@ -5,6 +5,7 @@ import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/es_platform.dart';
+import '../../../../shared/design_system/atoms/es_interactive.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Master layout shell. Renders:
@@ -229,7 +230,10 @@ class _EsSidebar extends ConsumerWidget {
             // ── Upgrade Banner ────────────────────────────
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Container(
+              child: EsInteractive(
+                onTap: () => context.push(RouteNames.paywall),
+                hoverScale: 1.02,
+                child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -270,6 +274,7 @@ class _EsSidebar extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
 
             // ── User Avatar + Signout ─────────────────────
             const Divider(color: EsColors.divider, height: 1),
