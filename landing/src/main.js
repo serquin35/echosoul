@@ -83,7 +83,7 @@ document.addEventListener('click', (e) => {
     // If we are on localhost, redirect to the production URL for testing
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       e.preventDefault();
-      const productionUrl = 'https://echosoul-one.vercel.app';
+      const productionUrl = 'https://echosoul.dev';
       window.location.href = productionUrl + target.getAttribute('href');
     }
   }

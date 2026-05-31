@@ -29,7 +29,7 @@
 | IA conversacional | GPT-4o (chat) · GPT-4o-mini (memoria) · Claude Haiku (crisis) | ✅ En n8n |
 | Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ✅ FCM E2E validado en dispositivo físico |
 | Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
-| Web deploy | Vercel via GitHub Actions (`echosoul-one.vercel.app`) | ✅ Activo |
+| Web deploy | Vercel via GitHub Actions (`echosoul.dev`) | ✅ Activo |
 | Android deploy | Google Play Console | 🔲 Pendiente |
 | Pagos | Google Play Billing (Android) · Paddle (Web) | 🔲 Pendiente |
 
@@ -116,7 +116,7 @@ git push → GitHub Actions → flutter build web → Vercel (CDN)
 | `SUPABASE_SERVICE_KEY` | Service Role Key |
 | `CLAUDE_API_KEY` | API Key Anthropic |
 | `N8N_BASE_URL` | `https://n8n.cheosdesign.info` |
-| `APP_URL` | `https://echosoul-one.vercel.app` |
+| `APP_URL` | `https://echosoul.dev` |
 | `FCM_PROJECT_ID` | `echosoul-f2b89` |
 | `FCM_SERVER_KEY` | Firebase Cloud Messaging Server Key |
 | `ADMIN_ALERT_WEBHOOK` | Slack Incoming Webhook (alertas crisis HIGH) |
@@ -126,7 +126,7 @@ git push → GitHub Actions → flutter build web → Vercel (CDN)
 ```env
 SUPABASE_URL=https://pleeiqlldiwipaxqoumu.supabase.co
 SUPABASE_ANON_KEY=eyJh...
-AUTH_REDIRECT_URL=https://echosoul-one.vercel.app/reset-password
+AUTH_REDIRECT_URL=https://echosoul.dev/reset-password
 N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 ```
 

@@ -71,17 +71,17 @@ class LegalScreen extends StatelessWidget {
                     _LegalActionTile(
                       icon: Icons.description_outlined,
                       label: 'Términos y Condiciones',
-                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/terms'),
+                      onTap: () => _launchUrl('https://echosoul.dev/terms'),
                     ),
                     _LegalActionTile(
                       icon: Icons.privacy_tip_outlined,
                       label: 'Política de Privacidad',
-                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/privacy'),
+                      onTap: () => _launchUrl('https://echosoul.dev/privacy'),
                     ),
                     _LegalActionTile(
                       icon: Icons.cookie_outlined,
                       label: 'Política de Cookies',
-                      onTap: () => _launchUrl('https://echosoul-one.vercel.app/cookies'),
+                      onTap: () => _launchUrl('https://echosoul.dev/cookies'),
                     ),
                   ],
                 ),
