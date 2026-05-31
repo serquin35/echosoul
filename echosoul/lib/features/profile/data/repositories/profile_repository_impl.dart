@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/profile_entity.dart';
@@ -145,5 +146,23 @@ class ProfileRepositoryImpl implements ProfileRepository {
     
     // Cerramos sesión localmente
     await _client.auth.signOut();
+  }
+
+  @override
+  Future<String> exportUserData() async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado.');
+
+    try {
+      final response = await _client.rpc('get_my_gdpr_data');
+      if (response == null) {
+        throw Exception('No se devolvieron datos para este usuario.');
+      }
+      // response es un objeto o lista JSON. Lo convertimos a string formateado (indentado).
+      const encoder = JsonEncoder.withIndent('  ');
+      return encoder.convert(response);
+    } catch (e) {
+      throw Exception('Error de red al exportar los datos: $e');
+    }
   }
 }

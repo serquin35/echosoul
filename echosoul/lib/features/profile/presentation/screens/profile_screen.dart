@@ -1,7 +1,12 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:convert';
+import 'package:universal_html/html.dart' as html;
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -12,6 +17,7 @@ import '../widgets/profile_section_card.dart';
 import '../widgets/profile_edit_sheet.dart';
 import '../widgets/profile_language_sheet.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
+import '../../../../core/utils/es_platform.dart';
 import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -287,6 +293,14 @@ class ProfileScreen extends ConsumerWidget {
                             onTap: () => _confirmSignOut(context, ref),
                           ),
                           _ProfileTile(
+                            icon: Icons.download_outlined,
+                            label: 'Exportar mis datos (GDPR)',
+                            value: '',
+                            isEditable: false,
+                            iconColor: EsColors.primaryBlue,
+                            onTap: () => _handleExportData(context, ref),
+                          ),
+                          _ProfileTile(
                             icon: Icons.delete_forever_outlined,
                             label: 'Eliminar cuenta',
                             value: '',
@@ -381,6 +395,78 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _handleExportData(BuildContext context, WidgetRef ref) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(
+        child: Card(
+          color: EsColors.surfaceDark,
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: EsColors.primaryBlue),
+                SizedBox(height: 16),
+                Text(
+                  'Preparando tu archivo de datos...',
+                  style: TextStyle(color: EsColors.textPrimaryDark),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final jsonData = await ref.read(profileProvider.notifier).exportUserData();
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Cierra el loading dialog
+
+      if (EsPlatform.isWeb) {
+        // En Web, creamos un archivo virtual y lo descargamos
+        final bytes = utf8.encode(jsonData);
+        final blob = html.Blob([bytes], 'application/json');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.document.createElement('a') as html.AnchorElement
+          ..href = url
+          ..style.display = 'none'
+          ..download = 'echosoul_mis_datos.json';
+        html.document.body?.children.add(anchor);
+        anchor.click();
+        html.document.body?.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Descarga del archivo de datos iniciada.'),
+            backgroundColor: EsColors.success,
+          ),
+        );
+      } else {
+        // En móviles, guardamos el archivo temporalmente y lo compartimos
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/echosoul_mis_datos.json');
+        await file.writeAsString(jsonData);
+
+        final xFile = XFile(file.path, mimeType: 'application/json');
+        await Share.shareXFiles([xFile], subject: 'Mis datos exportados de EchoSoul');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // Asegura cerrar el loading en caso de error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al exportar datos: $e'),
+            backgroundColor: EsColors.distress,
+          ),
+        );
+      }
+    }
   }
 }
 

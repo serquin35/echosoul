@@ -83,6 +83,11 @@ class ProfileNotifier extends AsyncNotifier<ProfileEntity> {
     // No necesitamos invalidar nada aquí ya que la sesión se cerrará
     // y el AppRouter redirigirá al Login.
   }
+
+  /// Exporta todos los datos personales del usuario bajo GDPR.
+  Future<String> exportUserData() async {
+    return ref.read(profileRepositoryProvider).exportUserData();
+  }
 }
 
 // Provider que expone el notifier

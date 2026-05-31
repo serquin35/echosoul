@@ -17,4 +17,8 @@ abstract class ProfileRepository {
 
   /// Elimina la cuenta del usuario permanentemente.
   Future<void> deleteAccount();
+
+  /// Exporta todos los datos personales del usuario bajo la directiva GDPR.
+  /// Retorna la cadena JSON con todos sus datos.
+  Future<String> exportUserData();
 }

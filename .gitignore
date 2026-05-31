@@ -41,3 +41,4 @@ build/
 *firebase-adminsdk*.json
 onboarding/*firebase*.json
 **/google-services.json
+scratch/

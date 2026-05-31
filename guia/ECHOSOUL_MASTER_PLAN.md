@@ -202,7 +202,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] `crisis_events` anonimizado (hash, sin texto)
 - [x] Crisis: teléfonos de emergencia reales por país (ES: 024, 112)
 - [x] Opción "pausar compañero" (UI + lógica n8n)
-- [ ] GDPR: exportar datos del usuario desde la app
+- [x] GDPR: exportar datos del usuario desde la app
 - [x] GDPR: eliminar cuenta + todos los datos desde la app
 - [ ] Data Safety Form Play Store
 - [ ] Límites diarios de interacción configurables
@@ -267,7 +267,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 |---|------|-------------|---------|
 | **H10** | Voz proactiva (Retell/Vapi) | Integrar SDK + definir pricing por llamada | 🔴 Alto |
 | **H11** | Monetización (Play Billing + Paddle) | Paywall UI + lógica free/premium + webhook Supabase | 🔴 Alto |
-| **H12** | Exportar datos GDPR | Edge Function o n8n endpoint → ZIP JSON de datos del usuario | 🟡 Medio |
+| ~~**H12**~~ | ~~Exportar datos GDPR~~ | ~~✅ COMPLETADO — Función SQL / RPC + Share nativo~~ | ✅ |
 | **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
 | **H14** | Fuentes Inter en Flutter | Descomentar sección `fonts` en `pubspec.yaml` + añadir TTF | 🟢 Bajo |
 

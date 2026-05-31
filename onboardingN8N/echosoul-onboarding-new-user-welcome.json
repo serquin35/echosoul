@@ -1,85 +1,128 @@
 {
-  "name": "EchoSoul — onboarding: new-user-welcome",
+  "updatedAt": "2026-05-31T09:00:03.865Z",
+  "createdAt": "2026-05-14T07:51:40.456Z",
+  "id": "BwikAXpsQCS3u9xI",
+  "name": "NewUser-welcome",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
-      "id": "cb31fd8b-c33d-4f87-a717-c4a063f890fd",
-      "name": "Webhook New User",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [
-        500,
-        100
-      ],
       "parameters": {
-        "path": "new-user",
         "httpMethod": "POST",
+        "path": "new-user",
         "responseMode": "responseNode",
         "options": {}
-      }
+      },
+      "id": "6152c3b2-357e-42df-8bc3-01d761c39c06",
+      "name": "Webhook New User",
+      "position": [
+        112,
+        192
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "webhookId": "d53796fe-baee-4dd0-9f3a-8c8dbe78647a",
+      "onError": "continueRegularOutput"
     },
     {
-      "id": "f097f2f2-8ab6-4669-b487-7aba7535bb25",
-      "name": "Create user profile",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "user_id",
+              "name": "user_id",
+              "value": "={{ $json.body.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "display_name",
+              "name": "display_name",
+              "value": "={{ $json.body.display_name || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "platform",
+              "name": "platform",
+              "value": "={{ $json.body.platform || 'web' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c317d2d4-193f-41a1-b1ef-47abd6fa6b00",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        500,
-        300
-      ],
+        304,
+        192
+      ]
+    },
+    {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_profiles",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/profiles",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
             },
             {
               "name": "Content-Type",
               "value": "application/json"
             },
             {
-              "name": "Prefer",
-              "value": "resolution=merge-duplicates,return=representation"
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
             }
           ]
         },
         "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({user_id:    $json.user_id,display_name: $json.display_name ?? '',email:      $json.email,platform:   $json.platform ?? 'web',fcm_token:  $json.fcm_token ?? null,timezone:   $json.timezone  ?? 'Europe/Madrid'}) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"id\": $json.user_id,\n  \"email\": $json.email,\n  \"platform\": $json.platform,\n  \"display_name\": $json.display_name,\n  \"timezone\": \"Europe/Madrid\",\n  \"language\": \"es\",\n  \"onboarding_completed\": false,\n  \"avatar_url\": null\n}\n}}",
         "options": {}
-      }
+      },
+      "id": "35ee9e4d-e569-49f6-9b8a-4812d434aac2",
+      "name": "Create user profile",
+      "position": [
+        496,
+        192
+      ],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OJfBPZ3oav1nvDyb",
+          "name": "EchoSoul-supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
-      "id": "d5482b6d-2452-4d33-ac68-0494c51284c0",
-      "name": "Create user plan",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        500,
-        500
-      ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_plans",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
@@ -87,131 +130,169 @@
             {
               "name": "Prefer",
               "value": "return=representation"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
             }
           ]
         },
         "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({user_id:     $('Webhook New User').first().json.user_id,plan:        'free',daily_limit: 20}) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"user_id\": $json.id || $json.user_id,\n  \"plan\": \"free\",\n  \"daily_limit\": 50,\n  \"updated_at\": new Date().toISOString()\n}\n}}",
         "options": {}
-      }
+      },
+      "id": "f5e47c86-f00d-442a-a7fd-c89785d3f06e",
+      "name": "Create user plan",
+      "position": [
+        704,
+        192
+      ],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OJfBPZ3oav1nvDyb",
+          "name": "EchoSoul-supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
-      "id": "154349e9-b2af-41fe-ba60-17056c4ae2ec",
-      "name": "Create onboarding record",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        500,
-        700
-      ],
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/user_onboarding",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_onboarding",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
-            },
             {
               "name": "Content-Type",
               "value": "application/json"
             },
             {
               "name": "Prefer",
-              "value": "resolution=merge-duplicates,return=representation"
+              "value": "return=representation"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
             }
           ]
         },
         "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({user_id:      $('Webhook New User').first().json.user_id,step:         1,platform:     $('Webhook New User').first().json.platform ?? 'web',next_step_at: new Date(Date.now()+86400000).toISOString(),completed:    false}) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"user_id\": $json.user_id || $json.id,\n  \"step\": 1,\n  \"completed\": false\n}\n}}",
         "options": {}
-      }
+      },
+      "id": "b3281bde-dfa5-4096-9065-07d004855196",
+      "name": "Create onboarding record",
+      "position": [
+        896,
+        192
+      ],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OJfBPZ3oav1nvDyb",
+          "name": "EchoSoul-supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
-      "id": "dddc1d83-0c2b-4253-8a51-1d610e2cc5e3",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Normalize Payload').first().json.email }}"
+            },
+            {
+              "id": "subject",
+              "name": "subject",
+              "type": "string",
+              "value": "=Hola {{ $('Normalize Payload').first().json.display_name || 'tú' }}, EchoSoul ya está aquí 👋"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "type": "string",
+              "value": "=<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f9fafb;font-family:sans-serif;\">\n  <tr>\n    <td align=\"center\" style=\"padding:40px 20px;\">\n      <div style=\"max-width:500px;background-color:#0f1115;border-radius:24px;padding:48px 32px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.1);\">\n        <div style=\"font-size:32px;margin-bottom:24px;\">✨</div>\n        <h2 style=\"color:#f4f4f5;font-size:22px;font-weight:600;margin:0 0 16px 0;\">\n          Hola {{ $('Normalize Payload').first().json.display_name || 'tú' }} 👋\n        </h2>\n        <p style=\"color:#e4e4e7;font-size:16px;line-height:1.6;margin:0 0 16px 0;\">\n          Bienvenido/a a <strong>EchoSoul</strong>. Soy tu compañía personal — estoy aquí para escucharte, acompañarte y recordar lo que importa.\n        </p>\n        <p style=\"color:#a1a1aa;font-size:15px;line-height:1.6;margin:0 0 24px 0;\">\n          Empieza con un simple <em>\"hola\"</em> y yo haré el resto.\n        </p>\n        <a href=\"https://echosoul.dev/chat\" style=\"display:inline-block;background-color:#4f46e5;color:#ffffff;padding:14px 28px;border-radius:30px;text-decoration:none;font-weight:600;font-size:14px;margin-top:16px;\">\n          Abrir EchoSoul →\n        </a>\n        <div style=\"margin-top:40px;color:#52525b;font-size:12px;line-height:1.6;\">\n          En los próximos días te enviaré consejos para sacarle el máximo partido.<br>\n          Estás recibiendo esto porque eres parte de EchoSoul.<br>\n          Siempre aquí para escucharte.\n        </div>\n      </div>\n    </td>\n  </tr>\n</table>\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "54abd0b2-604f-4be6-a70a-f1a56c03a507",
       "name": "Build welcome email",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        500,
-        900
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "\nconst data = $json;\nconst name = data.display_name || 'tú';\nconst appUrl = $env.APP_URL ?? 'https://echosoul.app';\n\nconst subject = `Hola ${name}, EchoSoul ya está aquí 👋`;\n\nconst body = `<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px\">\n  <h2 style=\"font-size:22px;font-weight:500;color:#1a1a1a;margin:0 0 16px\">\n    Hola ${name} 👋\n  </h2>\n  <p style=\"color:#555;line-height:1.7;margin:0 0 16px\">\n    Bienvenido/a a <strong>EchoSoul</strong>. Soy tu compañía personal —\n    estoy aquí para escucharte, acompañarte y recordar lo que importa.\n  </p>\n  <p style=\"color:#555;line-height:1.7;margin:0 0 24px\">\n    Empieza con un simple <em>\"hola\"</em> y yo haré el resto.\n  </p>\n  <a href=\"${appUrl}/chat\"\n     style=\"display:inline-block;background:#534AB7;color:#fff;padding:13px 28px;\n            border-radius:8px;text-decoration:none;font-size:15px;font-weight:500\">\n    Abrir EchoSoul →\n  </a>\n  <p style=\"color:#aaa;font-size:12px;margin-top:40px;line-height:1.5\">\n    En los próximos días te enviaré consejos para sacarle el máximo partido.\n    Puedes darte de baja desde tu perfil en cualquier momento.\n  </p>\n</div>`;\n\nreturn [{ json: { ...data, subject, body } }];\n"
-      }
+        1072,
+        192
+      ]
     },
     {
-      "id": "8edea55d-abe6-468b-9918-14792b0fde27",
-      "name": "Send welcome email",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
-      "position": [
-        500,
-        1100
-      ],
       "parameters": {
-        "resource": "message",
-        "operation": "send",
         "sendTo": "={{ $json.email }}",
         "subject": "={{ $json.subject }}",
-        "emailType": "html",
         "message": "={{ $json.body }}",
         "options": {}
       },
+      "id": "1d256307-9832-46e0-86c7-f51e4a57c8eb",
+      "name": "Send welcome email",
+      "position": [
+        1264,
+        192
+      ],
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "webhookId": "a396714d-2e7d-472f-a063-4d33a7af82d1",
       "credentials": {
         "gmailOAuth2": {
-          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "id": "XI4mlfkFZGAD9dyL",
           "name": "Gmail account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
-      "id": "5ce75122-d167-4ba0-9951-07a4e8a956e0",
-      "name": "Respond 200",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        500,
-        1300
-      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={\"status\":\"ok\",\"onboarding_started\":true}",
         "options": {
           "responseCode": 200
         }
-      }
-    },
-    {
-      "id": "e36eed73-6e21-45e1-8e30-e2d580aac095",
-      "name": "📌 Trigger desde Flutter",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
+      },
+      "id": "0fdb08c6-3da9-4532-96d9-7e4e2f2aeef2",
+      "name": "Respond 200",
       "position": [
-        860,
-        100
+        1456,
+        192
       ],
-      "parameters": {
-        "content": "## Cómo llamar este webhook\n```dart\nawait http.post(\n  Uri.parse('$n8nUrl/webhook/new-user'),\n  body: jsonEncode({\n    'user_id': user.id,\n    'email': user.email,\n    'display_name': name,\n    'platform': isWeb ? 'web' : 'android',\n    'fcm_token': await fcm.getToken(),\n  }),\n);\n```",
-        "height": 260,
-        "width": 360,
-        "color": 5
-      }
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5
     }
   ],
   "connections": {
     "Webhook New User": {
+      "main": [
+        [
+          {
+            "node": "Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Payload": {
       "main": [
         [
           {
@@ -278,12 +359,37 @@
       ]
     }
   },
-  "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
-  "id": "d680458c-751d-4e17-aa99-f062f33cdb7f",
+  "staticData": null,
   "meta": {
-    "instanceId": "echosoul-local"
-  }
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0c206560-e1e4-49a5-bb54-98d2f2bb4979",
+  "activeVersionId": "0c206560-e1e4-49a5-bb54-98d2f2bb4979",
+  "versionCounter": 194,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-14T07:51:40.456Z",
+      "createdAt": "2026-05-14T07:51:40.456Z",
+      "role": "workflow:owner",
+      "workflowId": "BwikAXpsQCS3u9xI",
+      "projectId": "qo7vPQhyAzkTS54A",
+      "project": {
+        "updatedAt": "2026-01-12T16:49:52.207Z",
+        "createdAt": "2025-11-29T20:35:10.779Z",
+        "id": "qo7vPQhyAzkTS54A",
+        "name": "SERGIO  serquin16@gmail.com <serquin16@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "45809c68-e7c7-48f2-a548-8de836a401cb"
+      }
+    }
+  ],
+  "tags": []
 }
