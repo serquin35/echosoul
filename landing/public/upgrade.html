@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EchoSoul Premium — Desbloquea tu Companion</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Actualiza a EchoSoul Premium para chatear sin límites con tu companion virtual, habilitar memoria a largo plazo y recibir check-ins de voz proactivos.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="./legal-style.css">
+  
+  <!-- Paddle.js SDK -->
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+
+  <style>
+    /* Estilos específicos para la sección de Upgrade (Checkout) */
+    .premium-badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #22d3ee 100%);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #0b0f19;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+    }
+
+    .pricing-section {
+      text-align: center;
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+    }
+
+    .price {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .price-period {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .feature-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      text-align: left;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .feature-icon {
+      color: var(--neon-cyan);
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    .feature-text strong {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 0.15rem;
+    }
+
+    .feature-text span {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    /* Premium Animated Button */
+    .pay-button {
+      display: block;
+      width: 100%;
+      padding: 1.1rem;
+      background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+      text-align: center;
+    }
+
+    .pay-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(34, 211, 238, 0.5);
+      filter: brightness(1.1);
+    }
+
+    .pay-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .pay-button:disabled {
+      background: #1e293b;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      border: 1px solid var(--divider);
+    }
+
+    .status-card {
+      display: none;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .status-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-success {
+      color: #10b981;
+    }
+
+    .status-error {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="legal-container">
+    <a href="https://echosoul.one/app/" class="back-btn" id="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Volver a la App
+    </a>
+
+    <!-- Checkout Card -->
+    <div class="legal-card" id="checkout-card">
+      <div style="text-align: center;">
+        <span class="premium-badge">EchoSoul Premium</span>
+        <h1>Libera a tu Companion</h1>
+        <p style="margin-bottom: 1.5rem;">Conversa sin barreras con el asistente de IA empática que te comprende.</p>
+      </div>
+
+      <div class="pricing-section">
+        <div class="price">$9.99<span class="price-period">/mes</span></div>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-secondary);">Cancela en cualquier momento desde tu perfil.</p>
+      </div>
+
+      <h2>Beneficios Premium</h2>
+      
+      <div class="feature-grid">
+        <div class="feature-item">
+          <span class="feature-icon">✦</span>
+          <div class="feature-text">
+            <strong>Mensajes Diarios Ilimitados</strong>
+            <span>Conversa sin restricciones de límite diario de mensajes (límite de 20 en la cuenta gratis).</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">✦</span>
+          <div class="feature-text">
+            <strong>Memoria a Largo Plazo</strong>
+            <span>Tu Companion recordará detalles de charlas previas para crear un lazo auténtico y personalizado.</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">✦</span>
+          <div class="feature-text">
+            <strong>Interacciones Proactivas completas</strong>
+            <span>Mensajes de buenos días, análisis de estado de ánimo e insights semanales automáticos por correo/push.</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">✦</span>
+          <div class="feature-text">
+            <strong>Llamadas de Voz Integradas (Próximamente)</strong>
+            <span>Acceso anticipado a sesiones de voz fluida en tiempo real cuando necesites desahogarte de viva voz.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning if user_id is missing -->
+      <div class="alert-box" id="user-warning" style="display: none;">
+        <p><strong>⚠️ Identificación Requerida:</strong> No hemos podido detectar tu identificador de usuario. Por favor, abre la aplicación de EchoSoul, navega a la sección Premium e inicia el pago desde allí para que podamos vincular tu cuenta.</p>
+      </div>
+
+      <!-- Checkout CTA -->
+      <div style="margin-top: 2.5rem;">
+        <button class="pay-button" id="pay-button" disabled>Iniciar Suscripción</button>
+      </div>
+    </div>
+
+    <!-- Success View -->
+    <div class="legal-card status-card" id="success-card">
+      <div class="status-icon status-success">✓</div>
+      <h1>¡Suscripción Completada!</h1>
+      <p style="margin-top: 1rem; margin-bottom: 2rem;">¡Gracias por apoyar EchoSoul! Tu cuenta premium está siendo activada en estos momentos. Los cambios se aplicarán en tu aplicación automáticamente.</p>
+      <a href="https://echosoul.one/app/" class="pay-button" style="text-decoration: none;">Ir a EchoSoul</a>
+    </div>
+
+    <!-- Error View -->
+    <div class="legal-card status-card" id="error-card">
+      <div class="status-icon status-error">✗</div>
+      <h1>Hubo un problema</h1>
+      <p id="error-message" style="margin-top: 1rem; margin-bottom: 2rem;">No pudimos completar tu solicitud de pago. Por favor intenta de nuevo.</p>
+      <button class="pay-button" onclick="location.reload();">Reintentar</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="legal-footer">
+      <p>© 2026 EchoSoul. Todos los derechos reservados.</p>
+      <p>
+        <a href="./privacy" target="_blank">Privacidad</a> | 
+        <a href="./terms" target="_blank">Términos de Servicio</a> | 
+        <a href="./cookies" target="_blank">Cookies</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // CONFIGURACIÓN DE PADDLE
+    // ⚠️ REEMPLAZA estos valores cuando tengas tu cuenta de Paddle:
+    const PADDLE_SANDBOX = true; // Cambiar a false en producción
+    const PADDLE_CLIENT_TOKEN = 'sp_clt_5e2df45a2789ffae'; // ← Pon tu Client Token aquí
+    const PADDLE_PRICE_ID = 'pri_01h...'; // ← Pon tu Price ID aquí
+    const APP_HOME_URL = 'https://echosoul.one/app/';
+
+    // Obtener user_id desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+    const payButton = document.getElementById('pay-button');
+    const warningBox = document.getElementById('user-warning');
+    
+    // Si viene de la app, podemos personalizar el botón de volver
+    const redirectUrl = urlParams.get('redirect_url');
+    if (redirectUrl) {
+      document.getElementById('back-btn').setAttribute('href', redirectUrl);
+    }
+
+    if (!userId) {
+      warningBox.style.display = 'block';
+      payButton.disabled = true;
+      payButton.textContent = 'Requiere iniciar sesión';
+    } else {
+      payButton.disabled = false;
+      
+      // Configurar Paddle
+      try {
+        if (PADDLE_SANDBOX) {
+          Paddle.Environment.set('sandbox');
+        }
+        
+        Paddle.Initialize({ 
+          token: PADDLE_CLIENT_TOKEN,
+          eventCallback: function(event) {
+            if (event.name === 'checkout.completed') {
+              showCard('success-card');
+            }
+          }
+        });
+
+        payButton.addEventListener('click', function() {
+          Paddle.Checkout.open({
+            settings: {
+              displayMode: 'overlay',
+              theme: 'dark',
+              locale: 'es'
+            },
+            items: [
+              {
+                priceId: PADDLE_PRICE_ID,
+                quantity: 1
+              }
+            ],
+            customData: {
+              user_id: userId
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error('Error al inicializar Paddle:', err);
+        payButton.addEventListener('click', function() {
+          alert('Error al conectar con la pasarela de pagos. Por favor, recarga la página o inténtalo más tarde.');
+        });
+      }
+    }
+
+    function showCard(cardId) {
+      document.getElementById('checkout-card').style.display = 'none';
+      document.getElementById('success-card').style.display = 'none';
+      document.getElementById('error-card').style.display = 'none';
+      
+      document.getElementById(cardId).style.display = 'block';
+    }
+  </script>
+</body>
+</html>
