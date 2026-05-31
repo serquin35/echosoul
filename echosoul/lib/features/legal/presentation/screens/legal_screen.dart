@@ -7,6 +7,7 @@ import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/router/route_names.dart';
 import 'package:echosoul/features/profile/presentation/widgets/profile_section_card.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key});
@@ -16,7 +17,7 @@ class LegalScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: EsColors.backgroundDark,
       appBar: AppBar(
-        title: const Text('Avisos Legales y Ética', style: EsTypography.headlineMedium),
+        title: Text(S.of(context).legalNoticesLabel, style: EsTypography.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -44,21 +45,21 @@ class LegalScreen extends StatelessWidget {
             child: Column(
               children: [
                 // ── Ética de la IA ────────────────────────────────
-                const ProfileSectionCard(
-                  title: 'Nuestro Compromiso Ético',
-                  subtitle: 'Cómo usamos la Inteligencia Artificial',
+                ProfileSectionCard(
+                  title: S.of(context).legalEthicalCommitment,
+                  subtitle: S.of(context).legalHowWeUseAI,
                   children: [
                     _LegalTile(
-                      title: 'Acompañamiento, no Terapia',
-                      description: 'EchoSoul es un acompañante virtual diseñado para reducir la soledad. No sustituye el diagnóstico o tratamiento de un profesional de la salud mental.',
+                      title: S.of(context).legalCompanionNotTherapy,
+                      description: S.of(context).legalCompanionNotTherapyDesc,
                     ),
                     _LegalTile(
-                      title: 'Transparencia',
-                      description: 'Todas tus interacciones son generadas por modelos de IA. No estás hablando con un humano real.',
+                      title: S.of(context).legalTransparency,
+                      description: S.of(context).legalTransparencyDesc,
                     ),
                     _LegalTile(
-                      title: 'Prevención de Dependencia',
-                      description: 'Fomentamos el uso responsable. EchoSoul te recordará la importancia de tus conexiones humanas reales.',
+                      title: S.of(context).legalPreventDependency,
+                      description: S.of(context).legalPreventDependencyDesc,
                     ),
                   ],
                 ),
@@ -66,22 +67,22 @@ class LegalScreen extends StatelessWidget {
 
                 // ── Documentos Legales ────────────────────────────
                 ProfileSectionCard(
-                  title: 'Documentación Oficial',
+                  title: S.of(context).legalOfficialDocs,
                   children: [
                     _LegalActionTile(
                       icon: Icons.description_outlined,
-                      label: 'Términos y Condiciones',
-                      onTap: () => _launchUrl('https://echosoul.dev/terms'),
+                      label: S.of(context).legalTermsConditions,
+                      onTap: () => _launchLegalUrl(context, 'terms'),
                     ),
                     _LegalActionTile(
                       icon: Icons.privacy_tip_outlined,
-                      label: 'Política de Privacidad',
-                      onTap: () => _launchUrl('https://echosoul.dev/privacy'),
+                      label: S.of(context).legalPrivacyPolicy,
+                      onTap: () => _launchLegalUrl(context, 'privacy'),
                     ),
                     _LegalActionTile(
                       icon: Icons.cookie_outlined,
-                      label: 'Política de Cookies',
-                      onTap: () => _launchUrl('https://echosoul.dev/cookies'),
+                      label: S.of(context).legalCookiePolicy,
+                      onTap: () => _launchLegalUrl(context, 'cookies'),
                     ),
                   ],
                 ),
@@ -89,25 +90,25 @@ class LegalScreen extends StatelessWidget {
 
                 // ── Seguridad ─────────────────────────────────────
                 ProfileSectionCard(
-                  title: 'En caso de crisis',
+                  title: S.of(context).legalInCaseOfCrisis,
                   children: [
-                    const _LegalTile(
-                      title: 'Ayuda Inmediata (España)',
-                      description: 'Si sientes que estás en peligro, tienes pensamientos de hacerte daño o necesitas soporte emocional inmediato en España, por favor recurre a los siguientes recursos oficiales, públicos y gratuitos disponibles las 24 horas del día.',
+                    _LegalTile(
+                      title: S.of(context).legalImmediateHelp,
+                      description: S.of(context).legalImmediateHelpDesc,
                     ),
                     _LegalActionTile(
                       icon: Icons.emergency_outlined,
-                      label: 'Llamar a Emergencias (112)',
+                      label: S.of(context).legalCallEmergencies,
                       onTap: () => _launchUrl('tel:112'),
                     ),
                     _LegalActionTile(
                       icon: Icons.healing_outlined,
-                      label: 'Línea de Prevención del Suicidio (024)',
+                      label: S.of(context).legalSuicidePrevention,
                       onTap: () => _launchUrl('tel:024'),
                     ),
                     _LegalActionTile(
                       icon: Icons.favorite_outline,
-                      label: 'Teléfono de la Esperanza (717 003 717)',
+                      label: S.of(context).legalHopeLine,
                       onTap: () => _launchUrl('tel:717003717'),
                     ),
                   ],
@@ -115,7 +116,7 @@ class LegalScreen extends StatelessWidget {
                 const SizedBox(height: EsSpacing.xxl),
 
                 Text(
-                  'EchoSoul v1.0.0 — Mayo 2026',
+                  'EchoSoul v1.0.0 — May 2026',
                   style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
                 ),
                 const SizedBox(height: EsSpacing.xl),
@@ -125,6 +126,12 @@ class LegalScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _launchLegalUrl(BuildContext context, String page) {
+    final locale = Localizations.localeOf(context);
+    final suffix = locale.languageCode == 'es' ? '' : '-${locale.languageCode}';
+    _launchUrl('https://echosoul.dev/$page$suffix');
   }
 
   Future<void> _launchUrl(String url) async {

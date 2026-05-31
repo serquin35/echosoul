@@ -12,6 +12,7 @@ import '../../../billing/presentation/providers/billing_provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/companion_data_provider.dart';
 import '../widgets/chat_message_bubble.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class ChatScreen extends ConsumerWidget {
   const ChatScreen({super.key});
@@ -76,7 +77,7 @@ class _CrisisBanner extends StatelessWidget {
               const SizedBox(width: EsSpacing.sm),
               Expanded(
                 child: Text(
-                  'No estás solo. Si sientes que estás en peligro o necesitas hablar con alguien, por favor utiliza estos recursos gratuitos y confidenciales las 24 horas:',
+                  S.of(context).crisisDisclaimer,
                   style: EsTypography.bodyMedium.copyWith(
                     color: Colors.redAccent,
                     fontWeight: FontWeight.w600,
@@ -98,7 +99,7 @@ class _CrisisBanner extends StatelessWidget {
                 ),
                 _CrisisButton(
                   icon: Icons.healing_outlined,
-                  label: 'Prevención Suicidio (024)',
+                  label: S.of(context).suicidePreventionLine,
                   color: Colors.orangeAccent[700] ?? Colors.orangeAccent,
                   onPressed: () => _callNumber('024'),
                 ),
@@ -261,7 +262,7 @@ class _ChatHeader extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'En línea',
+                      S.of(context).online,
                       style: EsTypography.bodySmall.copyWith(
                         color: EsColors.neonCyan,
                         fontWeight: FontWeight.w500,
@@ -276,7 +277,7 @@ class _ChatHeader extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.info_outline,
                 color: EsColors.textSecondaryDark),
-            tooltip: 'Info del compañero',
+            tooltip: S.of(context).companionInfo,
             onPressed: () => _showCompanionInfo(context, companionName),
           ),
         ],
@@ -366,14 +367,14 @@ class _EmptyChat extends StatelessWidget {
           ),
           const SizedBox(height: EsSpacing.lg),
           Text(
-            'Comienza la conversación',
+            S.of(context).startConversation,
             style: EsTypography.headlineMedium.copyWith(
               color: EsColors.textPrimaryDark,
             ),
           ),
           const SizedBox(height: EsSpacing.sm),
           Text(
-            'Tu compañero está aquí para escucharte.',
+            S.of(context).companionHereToListen,
             style: EsTypography.bodyMedium.copyWith(
               color: EsColors.textSecondaryDark,
             ),
@@ -537,7 +538,7 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Has alcanzado el límite diario de mensajes gratuitos.'),
+            content: Text(S.of(context).dailyLimitReached),
             backgroundColor: EsColors.warning,
             action: SnackBarAction(
               label: 'Premium',
@@ -589,8 +590,8 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
                   ),
                   decoration: InputDecoration(
                     hintText: isTyping
-                        ? 'Esperando respuesta...'
-                        : 'Escribe un mensaje…',
+                        ? S.of(context).waitingForResponse
+                        : S.of(context).typeAMessage,
                     hintStyle: EsTypography.bodyMedium
                         .copyWith(color: EsColors.textSecondaryDark),
                     filled: true,
@@ -870,11 +871,11 @@ class _CompanionInfoContent extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: EsSpacing.sm),
                   Text(
-                    'Compañero Empático · EchoSoul',
+                    S.of(context).empathicCompanion,
                     style: EsTypography.bodyMedium.copyWith(
-                      color: EsColors.neonCyan,
+                      color: EsColors.textSecondaryDark,
                       fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
@@ -907,38 +908,34 @@ class _CompanionInfoContent extends StatelessWidget {
                   const SizedBox(height: EsSpacing.xl),
 
                   // ── Sección: Capacidades ──
-                  const _SectionLabel(label: 'Capacidades'),
+                  _SectionLabel(label: S.of(context).capabilitiesLabel),
                   const SizedBox(height: EsSpacing.sm),
-                  const _InfoFeatureRow(
-                    icon: Icons.memory_outlined,
+                  _InfoFeatureRow(
+                    icon: Icons.memory,
                     iconColor: EsColors.primaryBlue,
-                    title: 'Memoria Adaptativa',
-                    description:
-                        'Recuerda tus sueños, miedos y pasiones para ofrecerte un acompañamiento con contexto y profundidad real.',
+                    title: S.of(context).voiceMemoryMore,
+                    description: S.of(context).memoryCapability,
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  const _InfoFeatureRow(
+                  _InfoFeatureRow(
                     icon: Icons.favorite_border,
-                    iconColor: Color(0xFFFF6B9D),
-                    title: 'Apoyo Emocional 24/7',
-                    description:
-                        'Siempre disponible, libre de juicios y enfocado en tu bienestar. Un espacio para expresarte sin filtros.',
+                    iconColor: const Color(0xFFFF6B9D),
+                    title: S.of(context).emotionalSupportTitle,
+                    description: S.of(context).emotionalSupportDesc,
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  const _InfoFeatureRow(
+                  _InfoFeatureRow(
                     icon: Icons.notifications_active_outlined,
                     iconColor: EsColors.neonCyan,
-                    title: 'Check-ins Proactivos',
-                    description:
-                        'Buenos días personalizados, recordatorios y llamadas de voz para acompañarte en tu rutina diaria.',
+                    title: 'Proactividad',
+                    description: S.of(context).proactiveCapability,
                   ),
                   const SizedBox(height: EsSpacing.sm),
-                  const _InfoFeatureRow(
-                    icon: Icons.security_outlined,
-                    iconColor: Color(0xFF10B981),
-                    title: 'Cifrado y Privacidad',
-                    description:
-                        'Tus conversaciones están protegidas con cifrado extremo a extremo. Nunca se venderán ni compartirán.',
+                  _InfoFeatureRow(
+                    icon: Icons.lock_outline,
+                    iconColor: const Color(0xFF10B981),
+                    title: 'Privacidad',
+                    description: S.of(context).privacyCapability,
                   ),
                   const SizedBox(height: EsSpacing.xl),
 
@@ -964,11 +961,9 @@ class _CompanionInfoContent extends StatelessWidget {
                         const SizedBox(width: EsSpacing.sm),
                         Expanded(
                           child: Text(
-                            '$companionName es una IA, no un profesional de salud mental. '
-                            'No ofrece diagnósticos ni sustituye la terapia. '
-                            'En una crisis, busca ayuda profesional real.',
+                            S.of(context).ethicalDisclaimer,
                             style: EsTypography.bodySmall.copyWith(
-                              color: Colors.amber.withValues(alpha: 0.85),
+                              color: EsColors.textSecondaryDark,
                               height: 1.5,
                             ),
                           ),
@@ -979,11 +974,14 @@ class _CompanionInfoContent extends StatelessWidget {
                   const SizedBox(height: EsSpacing.lg),
 
                   // ── Botón Legal ──
-                  _LegalButton(
-                    onTap: () {
-                      Navigator.pop(context);
+                  TextButton.icon(
+                    onPressed: () {
+                      if (isDialog) Navigator.pop(context); // Cierra popup
                       context.push(RouteNames.legal);
                     },
+                    icon: const Icon(Icons.gavel_outlined, size: 16),
+                    label: Text(S.of(context).legalEthicalNotices),
+                    style: TextButton.styleFrom(),
                   ),
                   const SizedBox(height: EsSpacing.lg),
                 ],
@@ -1178,7 +1176,7 @@ class _LegalButton extends StatelessWidget {
             ),
             const SizedBox(width: EsSpacing.sm),
             Text(
-              'Avisos Legales y Éticos',
+              S.of(context).legalEthicalNotices,
               style: EsTypography.labelLarge.copyWith(
                 color: EsColors.textPrimaryDark,
                 fontWeight: FontWeight.w600,

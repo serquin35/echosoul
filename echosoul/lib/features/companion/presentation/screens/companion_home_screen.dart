@@ -8,6 +8,7 @@ import '../../../../shared/design_system/atoms/es_button.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/companion_data_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class CompanionHomeScreen extends ConsumerWidget {
   const CompanionHomeScreen({super.key});
@@ -16,10 +17,10 @@ class CompanionHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateChangesProvider);
     final user = authState.value;
-    final displayName = user?.displayName ?? 'Viajero';
+    final displayName = user?.displayName ?? S.of(context).traveler;
     
     final companionNameAsync = ref.watch(companionNameProvider);
-    final companionName = companionNameAsync.value ?? 'Echo';
+    final companionName = companionNameAsync.value ?? S.of(context).defaultCompanionName;
 
     return Scaffold(
       backgroundColor: EsColors.backgroundDark,
@@ -40,12 +41,12 @@ class CompanionHomeScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hola, $displayName',
+                            S.of(context).helloUser(displayName),
                             style: EsTypography.displayMedium.copyWith(color: EsColors.textPrimaryDark),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '¿Cómo te sientes hoy?',
+                            S.of(context).howAreYouFeeling,
                             style: EsTypography.bodyLarge.copyWith(color: EsColors.textSecondaryDark),
                           ),
                         ],
@@ -166,7 +167,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       Text(
-                                        'Siempre aquí para escucharte',
+                                        S.of(context).alwaysHereToListen,
                                         style: EsTypography.bodyMedium.copyWith(
                                           color: Colors.white.withOpacity(0.8),
                                         ),
@@ -178,7 +179,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 24),
                             EsButton(
-                              label: 'Iniciar Chat',
+                              label: S.of(context).startChatBtn,
                               onPressed: () => context.pushNamed(RouteNames.chat),
                               variant: EsButtonVariant.primary,
                               width: double.infinity,
@@ -193,7 +194,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                   
                   // Quick Actions
                   Text(
-                    'Acciones Rápidas',
+                    S.of(context).quickActions,
                     style: EsTypography.headlineMedium.copyWith(color: EsColors.textPrimaryDark),
                   ),
                   const SizedBox(height: 16),
@@ -212,7 +213,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                           },
                           child: _QuickActionCard(
                             icon: Icons.mood,
-                            label: 'Estado de\nÁnimo',
+                            label: S.of(context).moodStateSplit,
                             color: EsColors.calm,
                             onTap: () => context.pushNamed(RouteNames.mood),
                           ),
@@ -232,7 +233,7 @@ class CompanionHomeScreen extends ConsumerWidget {
                           },
                           child: _QuickActionCard(
                             icon: Icons.phone_in_talk,
-                            label: 'Llamada\nde Voz',
+                            label: S.of(context).voiceCallSplit,
                             color: EsColors.success,
                             onTap: () => context.pushNamed(RouteNames.voiceCall),
                           ),

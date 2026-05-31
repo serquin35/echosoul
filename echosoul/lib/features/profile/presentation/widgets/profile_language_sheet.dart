@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../providers/profile_provider.dart';
+
+import '../../../../l10n/app_localizations.dart';
 
 const _kLangKey = 'preferred_language';
 
@@ -14,14 +19,14 @@ Future<void> showLanguageSheet({required BuildContext context}) {
   );
 }
 
-class _LanguageSheet extends StatefulWidget {
+class _LanguageSheet extends ConsumerStatefulWidget {
   const _LanguageSheet();
 
   @override
-  State<_LanguageSheet> createState() => _LanguageSheetState();
+  ConsumerState<_LanguageSheet> createState() => _LanguageSheetState();
 }
 
-class _LanguageSheetState extends State<_LanguageSheet> {
+class _LanguageSheetState extends ConsumerState<_LanguageSheet> {
   String _selected = 'es';
 
   @override
@@ -36,10 +41,17 @@ class _LanguageSheetState extends State<_LanguageSheet> {
   }
 
   Future<void> _select(String code) async {
-    if (code != 'es') return; // Solo ES activo por ahora
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kLangKey, code);
+    if (code != 'es' && code != 'en') return; 
+    await ref.read(localeProvider.notifier).setLocale(code);
     setState(() => _selected = code);
+    
+    // Sincronizar con Supabase profile
+    final profileNotifier = ref.read(profileProvider.notifier);
+    final currentProfile = ref.read(profileProvider).value;
+    if (currentProfile != null) {
+      await profileNotifier.updateField(currentProfile.copyWith(preferredLanguage: code));
+    }
+    
     if (mounted) Navigator.pop(context);
   }
 
@@ -70,7 +82,7 @@ class _LanguageSheetState extends State<_LanguageSheet> {
               ),
             ),
             const SizedBox(height: EsSpacing.lg),
-            const Text('Idioma de la app', style: EsTypography.headlineMedium),
+            Text(S.of(context).languageSheetTitle, style: EsTypography.headlineMedium),
             const SizedBox(height: EsSpacing.md),
 
             // Español — activo
@@ -84,15 +96,14 @@ class _LanguageSheetState extends State<_LanguageSheet> {
             ),
             const SizedBox(height: EsSpacing.sm),
 
-            // English — próximamente
+            // English — activo
             _LanguageTile(
               flag: '🇬🇧',
               name: 'English',
               code: 'en',
-              isSelected: false,
-              isEnabled: false,
-              badge: 'Próximamente',
-              onTap: () {},
+              isSelected: _selected == 'en',
+              isEnabled: true,
+              onTap: () => _select('en'),
             ),
             const SizedBox(height: EsSpacing.sm),
 

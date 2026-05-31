@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -8,6 +10,7 @@ import '../../../../shared/design_system/atoms/es_button.dart';
 import '../providers/mood_provider.dart';
 import '../widgets/mood_selection_widget.dart';
 import '../widgets/mood_trend_chart.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class MoodTrackerScreen extends ConsumerStatefulWidget {
   const MoodTrackerScreen({super.key});
@@ -28,11 +31,11 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
 
   Future<void> _saveMood() async {
     final label = switch (_selectedScore) {
-      <= 2 => 'Muy mal',
-      <= 4 => 'Mal',
-      <= 6 => 'Neutral',
-      <= 8 => 'Bien',
-      _ => 'Muy bien',
+      <= 2 => S.of(context).moodVeryBad,
+      <= 4 => S.of(context).moodBad,
+      <= 6 => S.of(context).moodNeutral,
+      <= 8 => S.of(context).moodGood,
+      _ => S.of(context).moodVeryGood,
     };
 
     await ref.read(moodProvider.notifier).saveEntry(
@@ -48,7 +51,7 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Estado de ánimo guardado correctamente')),
+        SnackBar(content: Text(S.of(context).moodSaveSuccess)),
       );
       _notesController.clear();
       setState(() {
@@ -83,11 +86,17 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new,
                               color: EsColors.textPrimaryDark, size: 20),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.goNamed(RouteNames.companionHome);
+                            }
+                          },
                         ),
                         const SizedBox(width: EsSpacing.sm),
                         Text(
-                          '¿Cómo te sientes?',
+                          S.of(context).howAreYouFeeling,
                           style: EsTypography.headlineLarge.copyWith(
                             color: EsColors.textPrimaryDark,
                           ),
@@ -132,7 +141,7 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                         maxLines: 3,
                         style: EsTypography.bodyLarge,
                         decoration: InputDecoration(
-                          hintText: 'Añade una nota sobre cómo te sientes (opcional)...',
+                          hintText: S.of(context).moodAddNoteHint,
                           hintStyle: EsTypography.bodyMedium,
                           filled: true,
                           fillColor: EsColors.surfaceElevated,
@@ -144,7 +153,7 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                       ),
                       const SizedBox(height: EsSpacing.lg),
                       EsButton(
-                        label: 'Guardar estado',
+                        label: S.of(context).moodSaveStateBtn,
                         onPressed: _saveMood,
                         isLoading: moodHistory.isLoading,
                       ),
@@ -158,11 +167,11 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                 moodHistory.when(
                   data: (history) {
                     if (history.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: EsSpacing.xl),
+                          padding: const EdgeInsets.symmetric(vertical: EsSpacing.xl),
                           child: Text(
-                            'Aún no has registrado ningún estado.',
+                            S.of(context).moodNoHistory,
                             style: EsTypography.bodyMedium,
                           ),
                         ),
@@ -174,7 +183,7 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                       children: [
                         MoodTrendChart(entries: history),
                         const SizedBox(height: EsSpacing.xxl),
-                        const Text('Historial reciente', style: EsTypography.headlineMedium),
+                        Text(S.of(context).moodRecentHistory, style: EsTypography.headlineMedium),
                         const SizedBox(height: EsSpacing.md),
                         ListView.separated(
                           shrinkWrap: true,
@@ -229,7 +238,7 @@ class _MoodTrackerScreenState extends ConsumerState<MoodTrackerScreen> {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              entry.moodLabel ?? 'Sin etiqueta',
+                                              entry.moodLabel ?? S.of(context).moodNoLabel,
                                               style: EsTypography.labelLarge,
                                             ),
                                             Text(

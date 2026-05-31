@@ -7,6 +7,7 @@ import '../../../../core/router/route_names.dart';
 import '../../../../core/utils/es_platform.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Master layout shell. Renders:
 /// - [_WebSidebar] + content on web / wide screens
@@ -112,26 +113,26 @@ class _MobileLayout extends StatelessWidget {
           onTap: (i) => _onTap(i, context),
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Inicio',
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home),
+              label: S.of(context).navHome,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.mood_outlined),
-              activeIcon: Icon(Icons.mood),
-              label: 'Ánimo',
+              icon: const Icon(Icons.mood_outlined),
+              activeIcon: const Icon(Icons.mood),
+              label: S.of(context).navMood,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Perfil',
+              icon: const Icon(Icons.person_outline),
+              activeIcon: const Icon(Icons.person),
+              label: S.of(context).navProfile,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.shield_outlined),
-              activeIcon: Icon(Icons.shield),
-              label: 'Legal',
+              icon: const Icon(Icons.shield_outlined),
+              activeIcon: const Icon(Icons.shield),
+              label: S.of(context).navLegal,
             ),
           ],
         ),
@@ -191,7 +192,7 @@ class _EsSidebar extends ConsumerWidget {
             _SidebarItem(
               icon: Icons.home_outlined,
               activeIcon: Icons.home,
-              label: 'Inicio',
+              label: S.of(context).navHome,
               isActive: path.startsWith(RouteNames.companionHome) &&
                   !path.startsWith('${RouteNames.companionHome}/chat'),
               onTap: () => context.goNamed(RouteNames.companionHome),
@@ -199,28 +200,28 @@ class _EsSidebar extends ConsumerWidget {
             _SidebarItem(
               icon: Icons.chat_bubble_outline,
               activeIcon: Icons.chat_bubble,
-              label: 'Chat',
+              label: S.of(context).navChat,
               isActive: path.contains('/chat'),
               onTap: () => context.goNamed(RouteNames.chat),
             ),
             _SidebarItem(
               icon: Icons.mood_outlined,
               activeIcon: Icons.mood,
-              label: 'Estado de ánimo',
+              label: S.of(context).navMood,
               isActive: path.startsWith(RouteNames.mood),
               onTap: () => context.goNamed(RouteNames.mood),
             ),
             _SidebarItem(
               icon: Icons.person_outline,
               activeIcon: Icons.person,
-              label: 'Perfil',
+              label: S.of(context).navProfile,
               isActive: path.startsWith(RouteNames.profile),
               onTap: () => context.goNamed(RouteNames.profile),
             ),
             _SidebarItem(
               icon: Icons.gavel_outlined,
               activeIcon: Icons.gavel,
-              label: 'Legal',
+              label: S.of(context).navLegal,
               isActive: path.startsWith(RouteNames.legal),
               onTap: () => context.goNamed(RouteNames.legal),
             ),
@@ -257,7 +258,7 @@ class _EsSidebar extends ConsumerWidget {
                         color: EsColors.neonCyan, size: 20),
                     const SizedBox(height: 8),
                     Text(
-                      'Hazte Premium',
+                      S.of(context).becomePremium,
                       style: EsTypography.bodyMedium.copyWith(
                         color: EsColors.textPrimaryDark,
                         fontWeight: FontWeight.w700,
@@ -265,7 +266,7 @@ class _EsSidebar extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Voz, memoria ilimitada y más',
+                      S.of(context).premiumSubtitle,
                       style: EsTypography.bodySmall.copyWith(
                         color: EsColors.textSecondaryDark,
                       ),
@@ -297,7 +298,7 @@ class _EsSidebar extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      user?.displayName ?? 'Viajero',
+                      user?.displayName ?? S.of(context).traveler,
                       style: EsTypography.bodySmall.copyWith(
                         color: EsColors.textSecondaryDark,
                       ),
@@ -308,7 +309,7 @@ class _EsSidebar extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.logout,
                         color: EsColors.textSecondaryDark, size: 18),
-                    tooltip: 'Cerrar sesión',
+                    tooltip: S.of(context).signOut,
                     onPressed: () async {
                       await ref
                           .read(authControllerProvider.notifier)

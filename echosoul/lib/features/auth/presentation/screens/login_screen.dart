@@ -9,6 +9,7 @@ import '../../../../core/constants/es_typography.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../shared/design_system/atoms/es_button.dart';
 import '../providers/auth_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -80,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else if (next is AsyncData && next.value != null && previous?.value == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isLoginMode ? 'Sesión iniciada correctamente' : 'Cuenta creada con éxito'),
+            content: Text(_isLoginMode ? S.of(context).loginSuccessMessage : S.of(context).signupSuccessMessage),
             backgroundColor: EsColors.success,
           ),
         );
@@ -114,25 +115,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: EsSpacing.sm),
                       Text(
-                        _isLoginMode ? 'Nunca más sol@.' : 'Únete a nosotros.',
+                        _isLoginMode ? S.of(context).tagline : S.of(context).joinUs,
                         style: EsTypography.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: EsSpacing.xxl),
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          hintText: 'Correo electrónico',
-                          prefixIcon: Icon(Icons.email_outlined),
+                        decoration: InputDecoration(
+                          hintText: S.of(context).emailHint,
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Por favor ingresa tu correo';
+                            return S.of(context).emailRequired;
                           }
                           if (!value.contains('@') || !value.contains('.')) {
-                            return 'Ingresa un correo válido';
+                            return S.of(context).emailInvalid;
                           }
                           return null;
                         },
@@ -141,7 +142,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
-                          hintText: 'Contraseña',
+                          hintText: S.of(context).passwordHint,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -159,10 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onFieldSubmitted: (_) => _submitForm(),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Por favor ingresa tu contraseña';
+                            return S.of(context).passwordRequired;
                           }
                           if (!_isLoginMode && value.length < 6) {
-                            return 'La contraseña debe tener al menos 6 caracteres';
+                            return S.of(context).passwordMinLength;
                           }
                           return null;
                         },
@@ -175,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               _showForgotPasswordDialog();
                             },
                             child: Text(
-                              '¿Olvidaste tu contraseña?',
+                              S.of(context).forgotPassword,
                               style: EsTypography.caption.copyWith(
                                 color: EsColors.neonCyan,
                               ),
@@ -186,7 +187,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: EsSpacing.xl),
                       ],
                       EsButton(
-                        label: _isLoginMode ? 'Ingresar con Correo' : 'Crear Cuenta',
+                        label: _isLoginMode ? S.of(context).loginEmailBtn : S.of(context).createAccountBtn,
                         isLoading: isLoading,
                         onPressed: _submitForm,
                       ),
@@ -202,8 +203,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                         child: Text(
                           _isLoginMode 
-                              ? '¿No tienes cuenta? Regístrate' 
-                              : '¿Ya tienes cuenta? Inicia sesión',
+                              ? S.of(context).noAccountRegister 
+                              : S.of(context).haveAccountLogin,
                           style: EsTypography.bodyMedium.copyWith(
                             color: EsColors.textSecondaryDark,
                             decoration: TextDecoration.underline,
@@ -216,14 +217,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const Expanded(child: Divider()),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: EsSpacing.md),
-                            child: Text('O', style: EsTypography.caption),
+                            child: Text(S.of(context).orSeparator, style: EsTypography.caption),
                           ),
                           const Expanded(child: Divider()),
                         ],
                       ),
                       const SizedBox(height: EsSpacing.lg),
                       EsButton(
-                        label: 'Continuar con Google',
+                        label: S.of(context).loginGoogleBtn,
                         isLoading: isLoading,
                         variant: EsButtonVariant.secondary,
                         leadingIcon: Icons.g_mobiledata,
@@ -239,25 +240,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: EsColors.textSecondaryDark,
                           ),
                           children: [
-                            const TextSpan(text: 'Al continuar, aceptas nuestros '),
+                            TextSpan(text: S.of(context).termsPrefix),
                             TextSpan(
-                              text: 'Términos de Servicio',
+                              text: S.of(context).termsOfService,
                               style: const TextStyle(
                                 color: EsColors.neonCyan,
                                 decoration: TextDecoration.underline,
                               ),
                               recognizer: _termsRecognizer,
                             ),
-                            const TextSpan(text: ' y '),
+                            TextSpan(text: S.of(context).andText),
                             TextSpan(
-                              text: 'Políticas de Privacidad',
+                              text: S.of(context).privacyPolicy,
                               style: const TextStyle(
                                 color: EsColors.neonCyan,
                                 decoration: TextDecoration.underline,
                               ),
                               recognizer: _privacyRecognizer,
                             ),
-                            const TextSpan(text: '.'),
+                            TextSpan(text: S.of(context).period),
                           ],
                         ),
                       ),
@@ -292,17 +293,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: EsColors.surfaceDark,
-          title: const Text('Recuperar contraseña', style: EsTypography.headlineMedium),
+          title: Text(S.of(context).recoverPasswordTitle, style: EsTypography.headlineMedium),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Ingresa tu correo para recibir un enlace de recuperación.', style: EsTypography.bodyMedium),
+              Text(S.of(context).recoverPasswordSubtitle, style: EsTypography.bodyMedium),
               const SizedBox(height: EsSpacing.md),
               TextFormField(
                 controller: resetEmailController,
-                decoration: const InputDecoration(
-                  hintText: 'Correo electrónico',
-                  prefixIcon: Icon(Icons.email_outlined),
+                decoration: InputDecoration(
+                  hintText: S.of(context).emailHint,
+                  prefixIcon: const Icon(Icons.email_outlined),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -311,14 +312,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar', style: TextStyle(color: EsColors.textSecondaryDark)),
+              child: Text(S.of(context).cancel, style: const TextStyle(color: EsColors.textSecondaryDark)),
             ),
             TextButton(
               onPressed: () async {
                 final email = resetEmailController.text.trim();
                 if (email.isEmpty || !email.contains('@')) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ingresa un correo válido.'), backgroundColor: EsColors.distress),
+                    SnackBar(content: Text(S.of(context).validEmailRequired), backgroundColor: EsColors.distress),
                   );
                   return;
                 }
@@ -327,7 +328,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   await ref.read(authControllerProvider.notifier).resetPasswordForEmail(email);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Enlace de recuperación enviado.'), backgroundColor: EsColors.success),
+                      SnackBar(content: Text(S.of(context).recoveryLinkSent), backgroundColor: EsColors.success),
                     );
                   }
                 } catch (e) {
@@ -338,7 +339,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   }
                 }
               },
-              child: const Text('Enviar', style: TextStyle(color: EsColors.neonCyan)),
+              child: Text(S.of(context).sendBtn, style: const TextStyle(color: EsColors.neonCyan)),
             ),
           ],
         );

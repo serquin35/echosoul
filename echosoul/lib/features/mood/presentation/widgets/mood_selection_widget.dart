@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class MoodSelectionWidget extends StatelessWidget {
   final int selectedScore;
@@ -12,22 +13,25 @@ class MoodSelectionWidget extends StatelessWidget {
     required this.onScoreSelected,
   });
 
-  static const List<Map<String, dynamic>> _moods = [
-    {'emoji': '😭', 'score': 2, 'label': 'Muy mal'},
-    {'emoji': '😔', 'score': 4, 'label': 'Mal'},
-    {'emoji': '😐', 'score': 6, 'label': 'Neutral'},
-    {'emoji': '🙂', 'score': 8, 'label': 'Bien'},
-    {'emoji': '😁', 'score': 10, 'label': 'Muy bien'},
-  ];
+  List<Map<String, dynamic>> _getMoods(BuildContext context) {
+    return [
+      {'emoji': '😭', 'score': 2, 'label': S.of(context).moodVeryBad},
+      {'emoji': '😔', 'score': 4, 'label': S.of(context).moodBad},
+      {'emoji': '😐', 'score': 6, 'label': S.of(context).moodNeutral},
+      {'emoji': '🙂', 'score': 8, 'label': S.of(context).moodGood},
+      {'emoji': '😁', 'score': 10, 'label': S.of(context).moodVeryGood},
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final moods = _getMoods(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _moods.map((mood) {
+        children: moods.map((mood) {
           final isSelected = selectedScore == mood['score'];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),

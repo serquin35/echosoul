@@ -10,6 +10,9 @@ import 'core/theme/app_theme.dart';
 import 'core/config/env.dart';
 import 'core/services/fcm_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+import 'core/providers/locale_provider.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -21,6 +24,7 @@ void main() async {
   
       // Initialize date formatting for intl
       await initializeDateFormatting('es_ES', null);
+      await initializeDateFormatting('en_US', null);
       debugPrint('🚀 APP START: Date formatting initialized');
       
       await dotenv.load(fileName: ".env");
@@ -71,6 +75,7 @@ class EchoSoulApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final locale = ref.watch(localeProvider);
 
     // Note: Password recovery navigation is now handled entirely within app_router.dart's redirect logic.
     // This avoids race conditions between Riverpod listeners and GoRouter's state machine.
@@ -100,6 +105,17 @@ class EchoSoulApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
+      locale: locale,
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es'), // Español
+        Locale('en'), // English
+      ],
       routerConfig: router,
     );
   }

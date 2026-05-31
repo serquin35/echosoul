@@ -30,7 +30,7 @@
 | Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ✅ FCM E2E validado en dispositivo físico |
 | Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
 | Web deploy | Vercel via GitHub Actions (`echosoul.dev`) | ✅ Activo |
-| Android deploy | Google Play Console | 🔲 Pendiente |
+| Android deploy | Google Play Console | ✅ Prueba cerrada activa |
 | Pagos | Google Play Billing (Android) · Paddle (Web) | 🔲 Pendiente |
 
 ### Pipeline de datos
@@ -204,7 +204,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Opción "pausar compañero" (UI + lógica n8n)
 - [x] GDPR: exportar datos del usuario desde la app
 - [x] GDPR: eliminar cuenta + todos los datos desde la app
-- [ ] Data Safety Form Play Store
+- [x] Data Safety Form Play Store
 - [ ] Límites diarios de interacción configurables
 
 ### 🚀 FASE 5 — Post-MVP / Futuro [PENDIENTE]
@@ -234,9 +234,9 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 9 | Crisis con recursos reales (teléfonos) | ✅ |
 | 10 | Privacidad + T&C públicos | ✅ |
 | 11 | App firmada en Play Console | ✅ |
-| 12 | Data Safety Form completado | 🔲 |
+| 12 | Data Safety Form completado | ✅ |
 
-**10/12 completados — faltan 2 para poder publicar.**
+**11/12 completados — falta 1 (voz proactiva, opcional) para publicar.**
 
 ---
 
@@ -248,7 +248,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 |---|------|-------------|---------|
 | ~~**H1**~~ | ~~FCM real: `google-services.json` + token~~ | ~~✅ COMPLETADO~~ | ✅ |
 | ~~**H2**~~ | ~~Build AAB firmado + Play Console~~ | ~~✅ COMPLETADO~~ | ✅ |
-| **H3** | Data Safety Form Play Store | Completar formulario en Play Console | 🟢 Bajo |
+| ~~**H3**~~ | ~~Data Safety Form Play Store~~ | ~~✅ COMPLETADO~~ | ✅ |
 | ~~**H4**~~ | ~~Google Sign-In Android~~ | ~~✅ COMPLETADO — SHA-1 + flow nativo~~ | ✅ |
 | ~~**H5**~~ | ~~Crisis con teléfonos de emergencia reales~~ | ~~✅ COMPLETADO~~ | ✅ |
 

@@ -19,6 +19,7 @@ import '../widgets/profile_language_sheet.dart';
 import '../../../../shared/design_system/atoms/es_interactive.dart';
 import '../../../../core/utils/es_platform.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -39,16 +40,16 @@ class ProfileScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, color: EsColors.distress, size: 48),
               const SizedBox(height: 16),
-              Text('Error al cargar perfil', style: EsTypography.bodyLarge),
+              Text(S.of(context).errorLoadingProfile, style: EsTypography.bodyLarge),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => ref.refresh(profileProvider),
-                child: const Text('Reintentar', style: TextStyle(color: EsColors.primaryBlue)),
+                child: Text(S.of(context).retry, style: const TextStyle(color: EsColors.primaryBlue)),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => ref.read(profileProvider.notifier).signOut(),
-                child: const Text('Cerrar sesión', style: TextStyle(color: EsColors.warning)),
+                child: Text(S.of(context).signOut, style: const TextStyle(color: EsColors.warning)),
               ),
             ],
           ),
@@ -71,7 +72,7 @@ class ProfileScreen extends ConsumerWidget {
                       email: profile.email,
                     ),
                   ),
-                  title: const Text('Mi Perfil', style: EsTypography.headlineMedium),
+                  title: Text(S.of(context).profileTitle, style: EsTypography.headlineMedium),
                 ),
     
                 // ── Contenido en lista ───────────────────────
@@ -81,16 +82,16 @@ class ProfileScreen extends ConsumerWidget {
                     delegate: SliverChildListDelegate([
                       // Sección: Tu información
                       ProfileSectionCard(
-                        title: 'Tu información',
+                        title: S.of(context).yourInformation,
                         children: [
                           _ProfileTile(
                             icon: Icons.person_outline,
-                            label: 'Nombre',
+                            label: S.of(context).nameLabel,
                             value: profile.displayName,
                             onTap: () => showProfileEditSheet(
                               context: context,
-                              title: 'Tu nombre',
-                              hint: 'Como quieres que te llamemos',
+                              title: S.of(context).yourName,
+                              hint: S.of(context).nameHint,
                               initialValue: profile.displayName,
                               onSave: (value) => ref
                                   .read(profileProvider.notifier)
@@ -99,7 +100,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           _ProfileTile(
                             icon: Icons.email_outlined,
-                            label: 'Correo',
+                            label: S.of(context).emailLabel,
                             value: profile.email,
                             isEditable: false,
                           ),
@@ -109,17 +110,17 @@ class ProfileScreen extends ConsumerWidget {
     
                       // Sección: Tu Companion
                       ProfileSectionCard(
-                        title: 'Tu Companion',
+                        title: S.of(context).yourCompanion,
                         children: [
                           _ProfileTile(
                             icon: Icons.graphic_eq,
-                            label: 'Nombre del Companion',
+                            label: S.of(context).companionNameLabel,
                             value: profile.companionName,
                             iconColor: EsColors.neonCyan,
                             onTap: () => showProfileEditSheet(
                               context: context,
-                              title: 'Nombre del Companion',
-                              hint: 'Ej: Echo, Luna, Kai…',
+                              title: S.of(context).companionNameLabel,
+                              hint: S.of(context).companionNameHint,
                               initialValue: profile.companionName,
                               onSave: (value) => ref
                                   .read(profileProvider.notifier)
@@ -127,8 +128,8 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           SwitchListTile(
-                            title: const Text('Pausar compañero', style: TextStyle(color: EsColors.textPrimaryDark, fontSize: 15)),
-                            subtitle: const Text('Silencia temporalmente notificaciones y check-ins proactivos', style: TextStyle(color: EsColors.textSecondaryDark, fontSize: 12)),
+                            title: Text(S.of(context).pauseCompanion, style: const TextStyle(color: EsColors.textPrimaryDark, fontSize: 15)),
+                            subtitle: Text(S.of(context).pauseCompanionSubtitle, style: const TextStyle(color: EsColors.textSecondaryDark, fontSize: 12)),
                             secondary: const Icon(Icons.snooze_outlined, color: EsColors.warning, size: 22),
                             value: profile.isPaused,
                             activeColor: EsColors.warning,
@@ -145,12 +146,12 @@ class ProfileScreen extends ConsumerWidget {
     
                       // Sección: Idioma
                       ProfileSectionCard(
-                        title: 'Idioma',
+                        title: S.of(context).languageSectionTitle,
                         children: [
                           _ProfileTile(
                             icon: Icons.language,
-                            label: 'Idioma de la app',
-                            value: '🇪🇸 Español',
+                            label: S.of(context).appLanguageLabel,
+                            value: Localizations.localeOf(context).languageCode == 'en' ? '🇬🇧 English' : '🇪🇸 Español',
                             iconColor: EsColors.calm,
                             onTap: () => showLanguageSheet(context: context),
                           ),
@@ -160,23 +161,23 @@ class ProfileScreen extends ConsumerWidget {
     
                       // Sección: Contacto de emergencia
                       ProfileSectionCard(
-                        title: 'Contacto de emergencia',
-                        subtitle: 'EchoSoul te lo recordará si lo necesitas',
+                        title: S.of(context).emergencyContactSection,
+                        subtitle: S.of(context).emergencyContactSubtitle,
                         children: [
                           _ProfileTile(
                             icon: Icons.person_pin_outlined,
-                            label: 'Nombre del contacto',
+                            label: S.of(context).contactNameLabel,
                             value: profile.crisisContactName?.isNotEmpty == true
                                 ? profile.crisisContactName!
-                                : 'No configurado',
+                                : S.of(context).notConfigured,
                             valueColor: profile.crisisContactName?.isNotEmpty == true
                                 ? null
                                 : EsColors.textSecondaryDark,
                             iconColor: EsColors.distress,
                             onTap: () => showProfileEditSheet(
                               context: context,
-                              title: 'Nombre del contacto',
-                              hint: 'Nombre de alguien de confianza',
+                              title: S.of(context).contactNameLabel,
+                              hint: S.of(context).contactNameHint,
                               initialValue: profile.crisisContactName ?? '',
                               onSave: (value) => ref
                                   .read(profileProvider.notifier)
@@ -185,10 +186,10 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           _ProfileTile(
                             icon: Icons.phone_outlined,
-                            label: 'Teléfono',
+                            label: S.of(context).phoneLabel,
                             value: profile.crisisContactPhone?.isNotEmpty == true
                                 ? profile.crisisContactPhone!
-                                : 'No configurado',
+                                : S.of(context).notConfigured,
                             valueColor: profile.crisisContactPhone?.isNotEmpty == true
                                 ? null
                                 : EsColors.textSecondaryDark,
@@ -196,8 +197,8 @@ class ProfileScreen extends ConsumerWidget {
                             keyboardType: TextInputType.phone,
                             onTap: () => showProfileEditSheet(
                               context: context,
-                              title: 'Teléfono de emergencia',
-                              hint: '+34 600 000 000',
+                              title: S.of(context).emergencyPhoneTitle,
+                              hint: S.of(context).phoneHint,
                               initialValue: profile.crisisContactPhone ?? '',
                               keyboardType: TextInputType.phone,
                               onSave: (value) => ref
@@ -213,12 +214,12 @@ class ProfileScreen extends ConsumerWidget {
     
                       // Sección: Legal
                       ProfileSectionCard(
-                        title: 'Información Legal',
+                        title: S.of(context).legalInfoSection,
                         children: [
                           _ProfileTile(
                             icon: Icons.gavel_outlined,
-                            label: 'Avisos Legales y Ética',
-                            value: 'Términos, Privacidad y Compromiso IA',
+                            label: S.of(context).legalNoticesLabel,
+                            value: S.of(context).legalNoticesSubtitle,
                             iconColor: EsColors.primaryBlue,
                             onTap: () => context.push(routes.RouteNames.legal),
                           ),
@@ -232,12 +233,12 @@ class ProfileScreen extends ConsumerWidget {
                           final billingAsync = ref.watch(billingProvider);
                           return billingAsync.when(
                             loading: () => ProfileSectionCard(
-                              title: 'Plan',
+                              title: S.of(context).planSection,
                               children: [
                                 _ProfileTile(
                                   icon: Icons.workspace_premium,
-                                  label: 'Estado del plan',
-                                  value: 'Cargando...',
+                                  label: S.of(context).planStatusLabel,
+                                  value: S.of(context).loading,
                                   iconColor: EsColors.primaryBlue,
                                   isEditable: false,
                                 ),
@@ -245,12 +246,12 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                             error: (_, __) => const SizedBox.shrink(),
                             data: (billing) => ProfileSectionCard(
-                              title: 'Plan',
+                              title: S.of(context).planSection,
                               children: [
                                 _ProfileTile(
                                   icon: Icons.workspace_premium,
-                                  label: 'Estado del plan',
-                                  value: billing.isPremium ? 'Premium' : 'Gratuito',
+                                  label: S.of(context).planStatusLabel,
+                                  value: billing.isPremium ? S.of(context).premium : S.of(context).free,
                                   iconColor: billing.isPremium
                                       ? EsColors.warning
                                       : EsColors.primaryBlue,
@@ -259,7 +260,7 @@ class ProfileScreen extends ConsumerWidget {
                                 if (billing.isFree) ...[
                                   _ProfileTile(
                                     icon: Icons.forum_outlined,
-                                    label: 'Mensajes hoy',
+                                    label: S.of(context).messagesToday,
                                     value: '${billing.messagesUsed} / ${billing.dailyLimit}',
                                     iconColor: billing.remainingMessages <= 5
                                         ? EsColors.warning
@@ -269,7 +270,7 @@ class ProfileScreen extends ConsumerWidget {
                                   _ProfileTile(
                                     icon: Icons.arrow_circle_up_outlined,
                                     label: '',
-                                    value: 'Actualizar a Premium',
+                                    value: S.of(context).upgradeToPremium,
                                     iconColor: EsColors.primaryBlue,
                                     valueColor: EsColors.primaryBlue,
                                     onTap: () => context.push(routes.RouteNames.paywall),
@@ -282,11 +283,11 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: EsSpacing.md),
                       ProfileSectionCard(
-                        title: 'Cuenta',
+                        title: S.of(context).accountSection,
                         children: [
                           _ProfileTile(
                             icon: Icons.logout,
-                            label: 'Cerrar sesión',
+                            label: S.of(context).signOut,
                             value: '',
                             isEditable: false,
                             iconColor: EsColors.warning,
@@ -294,7 +295,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           _ProfileTile(
                             icon: Icons.download_outlined,
-                            label: 'Exportar mis datos (GDPR)',
+                            label: S.of(context).exportDataLabel,
                             value: '',
                             isEditable: false,
                             iconColor: EsColors.primaryBlue,
@@ -302,7 +303,7 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           _ProfileTile(
                             icon: Icons.delete_forever_outlined,
-                            label: 'Eliminar cuenta',
+                            label: S.of(context).deleteAccountLabel,
                             value: '',
                             isEditable: false,
                             labelColor: EsColors.distress,
@@ -337,22 +338,22 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: EsColors.surfaceDark,
-        title: const Text('Cerrar sesión', style: EsTypography.headlineMedium),
-        content: const Text(
-          '¿Seguro que quieres cerrar sesión?',
+        title: Text(S.of(context).signOut, style: EsTypography.headlineMedium),
+        content: Text(
+          S.of(context).signOutConfirmMessage,
           style: EsTypography.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar', style: TextStyle(color: EsColors.textSecondaryDark)),
+            child: Text(S.of(context).cancel, style: const TextStyle(color: EsColors.textSecondaryDark)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               ref.read(profileProvider.notifier).signOut();
             },
-            child: const Text('Salir', style: TextStyle(color: EsColors.warning)),
+            child: Text(S.of(context).exitSignOut, style: const TextStyle(color: EsColors.warning)),
           ),
         ],
       ),
@@ -364,15 +365,15 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: EsColors.surfaceDark,
-        title: const Text('Eliminar cuenta', style: EsTypography.headlineMedium),
-        content: const Text(
-          'Esta acción es irreversible. Todos tus datos serán eliminados permanentemente.',
+        title: Text(S.of(context).deleteAccountLabel, style: EsTypography.headlineMedium),
+        content: Text(
+          S.of(context).deleteAccountConfirmMessage,
           style: EsTypography.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar', style: TextStyle(color: EsColors.textSecondaryDark)),
+            child: Text(S.of(context).cancel, style: const TextStyle(color: EsColors.textSecondaryDark)),
           ),
           TextButton(
             onPressed: () async {
@@ -383,14 +384,14 @@ class ProfileScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error al eliminar cuenta: $e'),
+                      content: Text(S.of(context).errorDeletingAccount(e.toString())),
                       backgroundColor: EsColors.distress,
                     ),
                   );
                 }
               }
             },
-            child: const Text('Eliminar', style: TextStyle(color: EsColors.distress)),
+            child: Text(S.of(context).deleteBtn, style: const TextStyle(color: EsColors.distress)),
           ),
         ],
       ),
@@ -401,19 +402,19 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const Center(
+      builder: (ctx) => Center(
         child: Card(
           color: EsColors.surfaceDark,
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: EsColors.primaryBlue),
-                SizedBox(height: 16),
+                const CircularProgressIndicator(color: EsColors.primaryBlue),
+                const SizedBox(height: 16),
                 Text(
-                  'Preparando tu archivo de datos...',
-                  style: TextStyle(color: EsColors.textPrimaryDark),
+                  S.of(context).preparingDataFile,
+                  style: const TextStyle(color: EsColors.textPrimaryDark),
                 ),
               ],
             ),
@@ -442,8 +443,8 @@ class ProfileScreen extends ConsumerWidget {
         html.Url.revokeObjectUrl(url);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Descarga del archivo de datos iniciada.'),
+          SnackBar(
+            content: Text(S.of(context).downloadStarted),
             backgroundColor: EsColors.success,
           ),
         );
@@ -454,14 +455,14 @@ class ProfileScreen extends ConsumerWidget {
         await file.writeAsString(jsonData);
 
         final xFile = XFile(file.path, mimeType: 'application/json');
-        await Share.shareXFiles([xFile], subject: 'Mis datos exportados de EchoSoul');
+        await Share.shareXFiles([xFile], subject: S.of(context).exportedDataSubject);
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // Asegura cerrar el loading en caso de error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al exportar datos: $e'),
+            content: Text(S.of(context).errorExportingData(e.toString())),
             backgroundColor: EsColors.distress,
           ),
         );
@@ -582,8 +583,8 @@ class _AvatarHeader extends ConsumerWidget {
       await ref.read(profileProvider.notifier).uploadAvatar(File(picked.path));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Foto actualizada correctamente.'),
+          SnackBar(
+            content: Text(S.of(context).photoUpdatedSuccessfully),
             backgroundColor: EsColors.success,
           ),
         );
@@ -592,7 +593,7 @@ class _AvatarHeader extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al subir la foto: $e'),
+            content: Text(S.of(context).errorUploadingPhoto(e.toString())),
             backgroundColor: EsColors.distress,
           ),
         );
