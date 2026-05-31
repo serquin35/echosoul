@@ -1,6 +1,6 @@
 # EchoSoul — Master Plan de Desarrollo
 
-> **Versión:** 5.2 | **Fecha:** 17 Mayo 2026 | **Autor:** Serquin + Antigravity
+> **Versión:** 5.3 | **Fecha:** 31 Mayo 2026 | **Autor:** Serquin + Antigravity
 > **Repositorio:** `serquin35/echosoul` | **Rama activa:** `master`
 > **⚠️ Este archivo es la ÚNICA fuente de verdad del proyecto.**
 
@@ -143,6 +143,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | `profile` | Perfil de usuario ✅ |
 | `legal` | Política + T&C ✅ |
 | `landing` | Landing page ✅ |
+| `i18n` | Multi-idioma ES/EN ✅ |
 
 **Arquitectura:** Clean Architecture · UI tonta + Lógica ciega · `EsPlatform` wrapper · Navegación adaptativa (Bottom Nav Android / Sidebar Web ≥720dp)
 
@@ -167,7 +168,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [ ] Google Sign-In web — pendiente
 - [ ] Dominio custom en Vercel — pendiente
 
-### 🎯 FASE 2 — MVP Android [EN PROGRESO ~65%]
+### 🎯 FASE 2 — MVP Android [EN PROGRESO ~75%]
 
 **Completado en sesión 17/05/2026:**
 - [x] `google-services.json` en `android/app/` + `AndroidManifest.xml` con permisos FCM
@@ -183,6 +184,14 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] **Modal Dialog Responsivo para Web/Escritorio (≥600px)** — En pantallas anchas (como monitores de 27 pulgadas), la info del compañero ahora se dibuja centrada y premium como un `Dialog` con un botón de cierre (`Icons.close`), eliminando el desplazamiento vertical excesivo.
 - [x] Páginas legales públicas (`/privacy`, `/terms`, `/cookies`) con navegación correcta
 - [x] Botón (i) de info del companion funcional en Android y Web
+
+**Completado en sesión 31/05/2026:**
+- [x] **i18n multi-idioma (ES/EN)** — Migración completa de todas las pantallas a `S.of(context)`:
+  - ARB files con 160+ keys por idioma
+  - `LocaleProvider` con persistencia SharedPreferences
+  - Language switcher en perfil con sync a Supabase `profiles.preferred_language`
+  - Landing pages en inglés (cookies, privacy, terms)
+  - Versión 1.0.1+2
 
 **Pendiente:**
 - [ ] Conectar workflow `buenos-dias` al cron de n8n
@@ -211,7 +220,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [ ] Memoria vectorial (pgvector embeddings)
 - [ ] WhatsApp Business API (Twilio)
 - [ ] iOS (App Store)
-- [ ] Multi-idioma (i18n — español + inglés)
+- [x] Multi-idioma (i18n — español + inglés)
 - [ ] Challenges IRL (hábitos sociales)
 - [ ] Modo offline real (Hive cache — package ya instalado)
 - [ ] Accesibilidad TalkBack / VoiceOver
@@ -389,4 +398,4 @@ Para compilar el App Bundle (.aab) firmado, las credenciales están configuradas
 
 ---
 
-*Última actualización: 19 Mayo 2026*
+*Última actualización: 31 Mayo 2026*

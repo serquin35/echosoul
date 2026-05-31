@@ -109,9 +109,25 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ---
 
+## ✅ HITO 5 — i18n Multi-idioma (ES/EN)
+
+**Completado 31/05/2026:**
+
+- [x] ARB files con traducciones completas (160+ keys ES, 153 keys EN)
+- [x] `LocaleProvider` con persistencia vía SharedPreferences
+- [x] Migración de 9 pantallas Flutter a `S.of(context)`
+- [x] Language switcher en perfil (ES ↔ EN) con sync a `profiles.preferred_language`
+- [x] Landing pages legales en inglés (`/cookies-en`, `/privacy-en`, `/terms-en`)
+- [x] Build AAB firmado para Google Play Console (v1.0.1+2)
+- [x] Commit y push a `master`
+
+---
+
 ## 📌 Pendientes inmediatos
 
-- [ ] **Android**: colocar `google-services.json` en `android/app/` antes de compilar
-- [ ] **FCM Testing**: enviar un token FCM real desde dispositivo para probar notificaciones push
+- [ ] **Test FCM real**: validar notificaciones push con el nuevo build AAB
 - [ ] **Gmail credential**: asignar credencial Gmail en nodos de email de los workflows
 - [ ] **Dominio custom**: configurar en Vercel
+- [ ] **Google Sign-In web**: pendiente de implementar
+- [ ] **Voz proactiva (Retell/Vapi)**: integración pendiente
+- [ ] **Monetización**: Google Play Billing + Paddle
