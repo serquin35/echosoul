@@ -66,7 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final success = await _supabaseClient.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: kIsWeb 
-          ? Uri.base.toString() 
+          ? 'https://echosoul.dev/app/' 
           : 'io.echosoul.app://login-callback',
     );
 
