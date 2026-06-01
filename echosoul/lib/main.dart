@@ -12,7 +12,10 @@ import 'core/services/fcm_service.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/locale_provider.dart';
+
+const _kLangKey = 'preferred_language';
 
 void main() async {
   runZonedGuarded(() async {
@@ -21,7 +24,7 @@ void main() async {
     debugPrint('🚀 APP START: WidgetsBinding initialized');
     
     try {
-  
+   
       // Initialize date formatting for intl
       await initializeDateFormatting('es_ES', null);
       await initializeDateFormatting('en_US', null);
@@ -29,6 +32,11 @@ void main() async {
       
       await dotenv.load(fileName: ".env");
       debugPrint('🚀 APP START: .env loaded');
+
+      // Load locale BEFORE app builds para evitar rebuild de MaterialApp.router
+      final prefs = await SharedPreferences.getInstance();
+      final initialLangCode = prefs.getString(_kLangKey) ?? 'es';
+      debugPrint('🚀 APP START: Locale loaded: $initialLangCode');
 
       // Diagnostic logs for Production (Safe info only)
       final webhook = Env.n8nChatWebhookUrl;
@@ -53,8 +61,11 @@ void main() async {
       debugPrint('🚀 Supabase Session: ${session != null ? 'ACTIVE (${session.user.email})' : 'NULL'}');
 
       runApp(
-        const ProviderScope(
-          child: EchoSoulApp(),
+        ProviderScope(
+          overrides: [
+            localeProvider.overrideWith((ref) => LocaleNotifier(Locale(initialLangCode))),
+          ],
+          child: const EchoSoulApp(),
         ),
       );
     } catch (e, stack) {

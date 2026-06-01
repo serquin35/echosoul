@@ -5,15 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kLangKey = 'preferred_language';
 
 class LocaleNotifier extends StateNotifier<Locale> {
-  LocaleNotifier() : super(const Locale('es')) {
-    _loadLocale();
-  }
-
-  Future<void> _loadLocale() async {
-    final prefs = await SharedPreferences.getInstance();
-    final langCode = prefs.getString(_kLangKey) ?? 'es';
-    state = Locale(langCode);
-  }
+  LocaleNotifier(super.initialLocale);
 
   Future<void> setLocale(String languageCode) async {
     final prefs = await SharedPreferences.getInstance();
@@ -23,5 +15,5 @@ class LocaleNotifier extends StateNotifier<Locale> {
 }
 
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
-  return LocaleNotifier();
+  return LocaleNotifier(const Locale('es'));
 });

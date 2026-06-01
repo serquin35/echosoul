@@ -65,6 +65,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Usuario no autenticado.');
 
+    final currentDisplayName = user.userMetadata?['full_name'] as String?;
+
     // Actualiza tablas en paralelo con tipo homogéneo Future<void>
     await Future.wait<void>([
       _client.from('profiles').update({
@@ -81,10 +83,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
       }).then((_) {}),
     ]);
 
-    // Auth metadata aparte (devuelve UserResponse, no void)
-    await _client.auth.updateUser(
-      UserAttributes(data: {'full_name': profile.displayName}),
-    );
+    // Solo actualizamos auth metadata si el nombre cambió realmente,
+    // para evitar sobreescribir onboarding_completed y otros metadatos
+    if (currentDisplayName != profile.displayName) {
+      await _client.auth.updateUser(
+        UserAttributes(data: {'full_name': profile.displayName}),
+      );
+    }
   }
 
 

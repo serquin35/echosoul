@@ -14,6 +14,8 @@ class LegalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('--- [LEGAL SCREEN] BUILD ---');
+    debugPrint('canPop: ${context.canPop()}');
     return Scaffold(
       backgroundColor: EsColors.backgroundDark,
       appBar: AppBar(
@@ -24,9 +26,12 @@ class LegalScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: EsColors.textPrimaryDark),
           onPressed: () {
+            debugPrint('--- [LEGAL SCREEN] BACK BUTTON PRESSED ---');
+            debugPrint('canPop: ${context.canPop()}');
             if (context.canPop()) {
               context.pop();
             } else {
+              debugPrint('LEGAL: canPop is FALSE -> navigating to home');
               final user = Supabase.instance.client.auth.currentUser;
               if (user != null) {
                 context.goNamed(RouteNames.companionHome);

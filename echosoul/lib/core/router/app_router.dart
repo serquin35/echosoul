@@ -173,12 +173,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: RouteNames.profile,
             builder: (context, state) => const ProfileScreen(),
           ),
+          GoRoute(
+            path: RouteNames.legal,
+            name: RouteNames.legal,
+            builder: (context, state) => const LegalScreen(),
+          ),
         ],
-      ),
-      GoRoute(
-        path: RouteNames.legal,
-        name: RouteNames.legal,
-        builder: (context, state) => const LegalScreen(),
       ),
       GoRoute(
         path: RouteNames.resetPassword,

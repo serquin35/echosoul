@@ -153,8 +153,7 @@ class _EsSidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
-    final authState = ref.watch(authStateChangesProvider);
-    final user = authState.value;
+    final user = ref.watch(authControllerProvider).valueOrNull;
 
     return SizedBox(
       width: _width,
