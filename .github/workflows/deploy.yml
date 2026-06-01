@@ -63,7 +63,12 @@ jobs:
               { "handle": "filesystem" },
               { "src": "/app/(.*)", "dest": "/app/index.html" },
               { "src": "/((?!app/).*)", "dest": "/index.html" }
-            ]
+            ],
+            "overrides": {
+              "privacy-en.html": { "path": "privacy-en" },
+              "terms-en.html": { "path": "terms-en" },
+              "cookies-en.html": { "path": "cookies-en" }
+            }
           }
           EOF
           
