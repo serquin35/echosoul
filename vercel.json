@@ -4,7 +4,10 @@
   "trailingSlash": false,
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/app/(.*)", "dest": "/app/index.html" },
+    { "src": "/terms-en",   "dest": "/terms-en.html" },
+    { "src": "/privacy-en", "dest": "/privacy-en.html" },
+    { "src": "/cookies-en", "dest": "/cookies-en.html" },
+    { "src": "/app/(.*)",   "dest": "/app/index.html" },
     { "src": "/((?!app/).*)", "dest": "/index.html" }
   ]
 }

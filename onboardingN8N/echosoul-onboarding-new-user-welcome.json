@@ -89,7 +89,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
             }
           ]
         },
@@ -133,7 +133,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
             }
           ]
         },
@@ -178,7 +178,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
             }
           ]
         },
