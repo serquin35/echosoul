@@ -1,6 +1,14 @@
 const chatDemo = document.getElementById('chat-demo');
 
-const messages = [
+const isEnglish = document.documentElement.lang === 'en';
+
+const messages = isEnglish ? [
+  { role: 'companion', text: 'Hey... how are you really feeling today?' },
+  { role: 'user', text: 'A bit overwhelmed with work, to be honest.' },
+  { role: 'companion', text: 'I understand. Take a deep breath. I\'m here to listen. Do you want to tell me what\'s weighing on you most right now?' },
+  { role: 'user', text: 'I feel like I can\'t keep up with everything.' },
+  { role: 'companion', text: 'You don\'t have to do it all alone. Remember, your worth isn\'t tied to your productivity. How about we take a moment to just disconnect?' }
+] : [
   { role: 'companion', text: 'Hola... ¿cómo te sientes hoy realmente?' },
   { role: 'user', text: 'Un poco abrumado con el trabajo, la verdad.' },
   { role: 'companion', text: 'Entiendo. Respira hondo. Estoy aquí para escucharte. ¿Quieres contarme qué es lo que más te pesa ahora?' },
@@ -144,5 +152,35 @@ navStyle.textContent = `
     padding: 1rem 0 !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   }
+  .lang-switcher {
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+    opacity: 0.5;
+  }
+  .lang-switcher.active {
+    opacity: 1;
+    color: var(--neon-cyan);
+    background: rgba(0, 229, 255, 0.1);
+  }
+  .lang-switcher:hover {
+    opacity: 1;
+    color: var(--neon-cyan);
+  }
 `;
 document.head.appendChild(navStyle);
+
+// Language switcher
+document.querySelectorAll('.lang-switcher').forEach(function(el) {
+  el.addEventListener('click', function() {
+    var lang = this.getAttribute('data-lang');
+    localStorage.setItem('echosoul_lang', lang);
+    if (lang === 'en') {
+      window.location.href = '/en';
+    } else {
+      window.location.href = '/';
+    }
+  });
+});

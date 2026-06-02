@@ -131,5 +131,6 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] **Google Sign-In web**: implementado
 - [x] **FCM sync en initState**: ConsumerStatefulWidget con addPostFrameCallback
 - [x] **SenderName en emails n8n**: "EchoSoul" como remitente en todos los workflows
+- [x] **Landing i18n EN**: index-en.html + detección idioma + language switcher
 - [ ] **Voz proactiva (Retell/Vapi)**: integración pendiente
 - [ ] **Monetización**: Google Play Billing + Paddle

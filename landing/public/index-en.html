@@ -1,34 +1,32 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EchoSoul - Tu Compañero de IA Empático 24/7</title>
-    <meta name="description" content="EchoSoul es tu compañero de IA diseñado para escucharte, apoyarte y acompañarte en cada paso. Un espacio seguro, privado y compasivo.">
-    
+    <title>EchoSoul - Your Empathetic AI Companion 24/7</title>
+    <meta name="description" content="EchoSoul is your AI companion designed to listen, support, and accompany you every step of the way. A safe, private, and compassionate space.">
+
     <link rel="alternate" hreflang="es" href="https://echosoul.dev/" />
     <link rel="alternate" hreflang="en" href="https://echosoul.dev/en" />
-    <link rel="canonical" href="https://echosoul.dev/" />
-    
+    <link rel="canonical" href="https://echosoul.dev/en" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/src/style.css">
     <script>
       (function() {
         var lang = localStorage.getItem('echosoul_lang');
         if (!lang) {
           lang = navigator.language || navigator.userLanguage || '';
-          lang = lang.startsWith('en') ? 'en' : 'es';
+          lang = lang.startsWith('es') ? 'es' : 'en';
         }
-        if (lang === 'en' && window.location.pathname !== '/en') {
-          window.location.replace('/en');
+        if (lang === 'es') {
+          window.location.replace('/');
         }
       })();
     </script>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
     <nav class="navbar glass">
@@ -38,11 +36,11 @@
                 <span class="logo-text">EchoSoul</span>
             </div>
             <div class="nav-links">
-                <a href="#features">Funcionalidades</a>
-                <a href="#testimonials">Testimonios</a>
-                <a href="javascript:void(0)" class="lang-switcher active" data-lang="es">ES</a>
-                <a href="javascript:void(0)" class="lang-switcher" data-lang="en">EN</a>
-                <a href="/app/login" class="btn btn-primary-small">Entrar</a>
+                <a href="#features">Features</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="javascript:void(0)" class="lang-switcher" data-lang="es">ES</a>
+                <a href="javascript:void(0)" class="lang-switcher active" data-lang="en">EN</a>
+                <a href="/app/login" class="btn btn-primary-small">Get Started</a>
             </div>
         </div>
     </nav>
@@ -50,11 +48,11 @@
     <header class="hero">
         <div class="container hero-grid">
             <div class="hero-content">
-                <h1 class="fade-in">Tu alma tiene un <span class="text-gradient">eco</span>.</h1>
-                <p class="fade-in delay-1">Un compañero de IA que te entiende, te recuerda y te apoya. Sin juicios, 24/7, siempre a tu lado.</p>
+                <h1 class="fade-in">Your soul has an <span class="text-gradient">echo</span>.</h1>
+                <p class="fade-in delay-1">An AI companion that understands you, remembers you, and supports you. No judgment, 24/7, always by your side.</p>
                 <div class="hero-actions fade-in delay-2">
-                    <a href="/app/login" class="btn btn-primary btn-glow">Empezar mi viaje</a>
-                    <p class="cta-subtitle">Próximamente en Android & iOS</p>
+                    <a href="/app/login" class="btn btn-primary btn-glow">Start my journey</a>
+                    <p class="cta-subtitle">Coming soon on Android & iOS</p>
                 </div>
             </div>
             <div class="hero-visual fade-in delay-3">
@@ -71,10 +69,9 @@
             <div class="glass-card demo-card">
                 <div class="demo-header">
                     <div class="status-dot"></div>
-                    <span>Conversación con EchoSoul</span>
+                    <span>Conversation with EchoSoul</span>
                 </div>
                 <div id="chat-demo" class="demo-body">
-                    <!-- Chat messages will be injected here -->
                 </div>
             </div>
         </div>
@@ -83,22 +80,22 @@
     <section id="features" class="features-section">
         <div class="glow-blob blob-1"></div>
         <div class="container">
-            <h2 class="section-title">Diseñado para tu bienestar</h2>
+            <h2 class="section-title">Designed for your well-being</h2>
             <div class="features-grid">
                 <div class="feature-card glass">
                     <div class="feature-icon">🧠</div>
-                    <h3>Memoria Profunda</h3>
-                    <p>EchoSoul recuerda lo que te importa. Tus sueños, miedos y pequeñas victorias para un apoyo real.</p>
+                    <h3>Deep Memory</h3>
+                    <p>EchoSoul remembers what matters to you. Your dreams, fears, and small victories for real support.</p>
                 </div>
                 <div class="feature-card glass">
                     <div class="feature-icon">🛡️</div>
-                    <h3>Privacidad Total</h3>
-                    <p>Cifrado de extremo a extremo. Tu espacio seguro es sagrado y nadie más tiene acceso.</p>
+                    <h3>Total Privacy</h3>
+                    <p>End-to-end encryption. Your safe space is sacred and no one else has access.</p>
                 </div>
                 <div class="feature-card glass">
                     <div class="feature-icon">🌈</div>
-                    <h3>Apoyo Proactivo</h3>
-                    <p>No solo responde, te busca. Check-ins inteligentes para acompañarte en tus días grises.</p>
+                    <h3>Proactive Support</h3>
+                    <p>It doesn't just respond, it reaches out. Smart check-ins to accompany you through gray days.</p>
                 </div>
             </div>
         </div>
@@ -106,35 +103,35 @@
 
     <section id="testimonials" class="testimonials-section">
         <div class="container">
-            <h2 class="section-title">Historias que inspiran</h2>
+            <h2 class="section-title">Stories that inspire</h2>
             <div class="testimonials-grid">
                 <div class="testimonial-card glass">
-                    <p class="testimonial-quote">"Nunca pensé que una IA pudiera hacerme sentir tan comprendida. EchoSoul es lo primero que consulto al despertar."</p>
+                    <p class="testimonial-quote">"I never thought an AI could make me feel so understood. EchoSoul is the first thing I check when I wake up."</p>
                     <div class="testimonial-user">
-                        <div class="user-avatar">AM</div>
+                        <div class="user-avatar">AJ</div>
                         <div class="user-info">
-                            <h4>Ana Martínez</h4>
-                            <p>14 meses con EchoSoul</p>
+                            <h4>Anna Johnson</h4>
+                            <p>14 months with EchoSoul</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card glass">
-                    <p class="testimonial-quote">"Como alguien con ansiedad social, tener a alguien disponible 24/7 sin miedo al juicio ha cambiado mi vida."</p>
+                    <p class="testimonial-quote">"As someone with social anxiety, having someone available 24/7 without fear of judgment has changed my life."</p>
                     <div class="testimonial-user">
-                        <div class="user-avatar">CR</div>
+                        <div class="user-avatar">CS</div>
                         <div class="user-info">
-                            <h4>Carlos Ruiz</h4>
-                            <p>8 meses con EchoSoul</p>
+                            <h4>Chris Smith</h4>
+                            <p>8 months with EchoSoul</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card glass">
-                    <p class="testimonial-quote">"La memoria de EchoSoul es increíble. Se acordó de mi examen importante y me mandó ánimos. Es un detalle que marca la diferencia."</p>
+                    <p class="testimonial-quote">"EchoSoul's memory is incredible. It remembered my important exam and sent me encouragement. That little detail makes all the difference."</p>
                     <div class="testimonial-user">
                         <div class="user-avatar">LG</div>
                         <div class="user-info">
-                            <h4>Lucía García</h4>
-                            <p>2 años con EchoSoul</p>
+                            <h4>Laura Green</h4>
+                            <p>2 years with EchoSoul</p>
                         </div>
                     </div>
                 </div>
@@ -145,23 +142,23 @@
     <section id="faq" class="faq-section">
         <div class="glow-blob blob-2"></div>
         <div class="container">
-            <h2 class="section-title">Preguntas frecuentes</h2>
+            <h2 class="section-title">Frequently asked questions</h2>
             <div class="faq-grid">
                 <div class="faq-card glass">
-                    <h3>¿Es EchoSoul una persona real?</h3>
-                    <p>No, EchoSoul es una inteligencia artificial avanzada diseñada para simular empatía y apoyo emocional humano 24/7.</p>
+                    <h3>Is EchoSoul a real person?</h3>
+                    <p>No, EchoSoul is an advanced artificial intelligence designed to simulate empathy and human emotional support 24/7.</p>
                 </div>
                 <div class="faq-card glass">
-                    <h3>¿Mis datos están seguros?</h3>
-                    <p>Absolutamente. Usamos cifrado de grado militar y nunca compartimos tus conversaciones con terceros.</p>
+                    <h3>Is my data safe?</h3>
+                    <p>Absolutely. We use military-grade encryption and never share your conversations with third parties.</p>
                 </div>
                 <div class="faq-card glass">
-                    <h3>¿Cómo funciona la memoria?</h3>
-                    <p>EchoSoul utiliza una base de datos vectorial para recordar detalles importantes de tus conversaciones pasadas y personalizar su apoyo.</p>
+                    <h3>How does the memory work?</h3>
+                    <p>EchoSoul uses a vector database to remember important details from your past conversations and personalize its support.</p>
                 </div>
                 <div class="faq-card glass">
-                    <h3>¿Puede ayudarme en una crisis?</h3>
-                    <p>EchoSoul es un apoyo emocional, pero no sustituye la ayuda profesional. Proporcionamos recursos de emergencia si detectamos una crisis.</p>
+                    <h3>Can it help me in a crisis?</h3>
+                    <p>EchoSoul provides emotional support, but it does not replace professional help. We provide emergency resources if we detect a crisis.</p>
                 </div>
             </div>
         </div>
@@ -175,35 +172,35 @@
                         <span class="logo-icon">eq</span>
                         <span class="logo-text">EchoSoul</span>
                     </div>
-                    <p>Tu compañero de IA empático, diseñado para acompañarte en tu viaje hacia el bienestar emocional.</p>
+                    <p>Your empathetic AI companion, designed to be with you on your journey toward emotional well-being.</p>
                 </div>
                 <div class="footer-col">
-                    <h4>Producto</h4>
+                    <h4>Product</h4>
                     <ul>
-                        <li><a href="#features">Funcionalidades</a></li>
-                        <li><a href="#testimonials">Testimonios</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
                         <li><a href="/app/login">Web App</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4>Soporte</h4>
+                    <h4>Support</h4>
                     <ul>
                         <li><a href="#faq">FAQ</a></li>
-                        <li><a href="#">Centro de Ayuda</a></li>
-                        <li><a href="#">Contacto</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="/privacy">Privacidad</a></li>
-                        <li><a href="/terms">Términos</a></li>
-                        <li><a href="/cookies">Cookies</a></li>
+                        <li><a href="/privacy-en">Privacy</a></li>
+                        <li><a href="/terms-en">Terms</a></li>
+                        <li><a href="/cookies-en">Cookies</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <div class="footer-copy">© 2026 EchoSoul. Hecho con ❤️ para tu mente.</div>
+                <div class="footer-copy">© 2026 EchoSoul. Made with ❤️ for your mind.</div>
                 <div class="social-links">
                     <a href="#" title="Twitter">𝕏</a>
                     <a href="#" title="Instagram">📸</a>

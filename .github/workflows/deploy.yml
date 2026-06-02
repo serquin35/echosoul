@@ -67,7 +67,8 @@ jobs:
             "overrides": {
               "privacy-en.html": { "path": "privacy-en" },
               "terms-en.html": { "path": "terms-en" },
-              "cookies-en.html": { "path": "cookies-en" }
+              "cookies-en.html": { "path": "cookies-en" },
+              "index-en.html": { "path": "en" }
             }
           }
           EOF

@@ -8,6 +8,7 @@
     { "source": "/cookies",     "destination": "/cookies.html" },
     { "source": "/cookies-en",  "destination": "/cookies-en.html" },
     { "source": "/upgrade",     "destination": "/upgrade.html" },
+    { "source": "/en",          "destination": "/index-en.html" },
     { "source": "/(.*)",        "destination": "/index.html" }
   ]
 }
