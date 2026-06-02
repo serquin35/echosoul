@@ -60,12 +60,10 @@ h1, h2, h3, .logo-text {
   gap: 0.75rem;
 }
 
-.logo-icon {
-  background: var(--gradient-blue);
-  padding: 0.5rem;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 0.8rem;
+.logo-icon-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .logo-text {
