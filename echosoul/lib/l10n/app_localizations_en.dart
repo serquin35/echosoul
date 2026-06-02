@@ -483,4 +483,46 @@ class SEn extends S {
 
   @override
   String get premiumSubtitle => 'Voice, unlimited memory and more';
+
+  @override
+  String get dailyLimitSection => 'Daily message limit';
+
+  @override
+  String get dailyLimitSubtitle =>
+      'To prevent dependency, set a maximum number of messages per day';
+
+  @override
+  String get dailyLimitCustom => 'Custom limit';
+
+  @override
+  String get dailyLimitPlan => 'Plan limit';
+
+  @override
+  String get dailyLimitUnlimited => 'Unlimited';
+
+  @override
+  String get dailyLimitDialogTitle => 'Adjust daily limit';
+
+  @override
+  String get dailyLimitDialogHint => 'Messages per day (0 = no limit)';
+
+  @override
+  String get dailyLimitSaved => 'Daily limit updated';
+
+  @override
+  String get dailyLimitResetDaily => 'Resets every day';
+
+  @override
+  String get dailyLimitMin => 'Min. 5 messages';
+
+  @override
+  String dailyLimitMax(int max) {
+    return 'Max. $max messages';
+  }
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get usePlanLimit => 'Use plan limit';
 }

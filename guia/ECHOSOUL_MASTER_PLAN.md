@@ -284,7 +284,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | **H11** | Monetización (Play Billing + Paddle) | Paywall UI + lógica free/premium + webhook Supabase | 🔴 Alto |
 | ~~**H12**~~ | ~~Exportar datos GDPR~~ | ~~✅ COMPLETADO — Función SQL / RPC + Share nativo~~ | ✅ |
 | **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
-| **H14** | Fuentes Inter en Flutter | Descomentar sección `fonts` en `pubspec.yaml` + añadir TTF | 🟢 Bajo |
+| ~~**H14**~~ | ~~Fuentes Inter en Flutter~~ | ~~✅ COMPLETADO — Descargados TTF de rsms/inter v4.0 y configurados en pubspec.yaml~~ | ✅ |
 
 ### 🟢 BAJA PRIORIDAD — Post-MVP / Futuro
 
@@ -305,7 +305,6 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Ítem | Urgencia |
 |------|---------|
 
-| Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
 | Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
 | JSON legacy referenciando `user_profiles` (tabla renombrada a `profiles`) | 🟢 Baja (son backups) |
 | Modo offline sin implementar (hive instalado, sin usar) | 🟢 Baja |
@@ -322,6 +321,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Ítem resuelto | Fix aplicado |
 |---------------|--------------|
 | FCM token sin actualizar en re-login (token caduca al reinstalar) | `_syncInitialFcmToken` en `initState` de `EchoSoulApp` (ConsumerStatefulWidget) + `addPostFrameCallback` |
+| Fuentes Inter comentadas en `pubspec.yaml` | Descargadas fuentes Inter TTF de rsms/inter v4.0 y descomentadas en `pubspec.yaml` |
 
 ---
 

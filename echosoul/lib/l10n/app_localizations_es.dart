@@ -483,4 +483,46 @@ class SEs extends S {
 
   @override
   String get premiumSubtitle => 'Voz, memoria ilimitada y más';
+
+  @override
+  String get dailyLimitSection => 'Límite diario de mensajes';
+
+  @override
+  String get dailyLimitSubtitle =>
+      'Para evitar dependencia, puedes establecer un máximo de mensajes por día';
+
+  @override
+  String get dailyLimitCustom => 'Límite personalizado';
+
+  @override
+  String get dailyLimitPlan => 'Límite del plan';
+
+  @override
+  String get dailyLimitUnlimited => 'Ilimitado';
+
+  @override
+  String get dailyLimitDialogTitle => 'Ajustar límite diario';
+
+  @override
+  String get dailyLimitDialogHint => 'Mensajes por día (0 = sin límite)';
+
+  @override
+  String get dailyLimitSaved => 'Límite diario actualizado';
+
+  @override
+  String get dailyLimitResetDaily => 'Se reinicia cada día';
+
+  @override
+  String get dailyLimitMin => 'Mín. 5 mensajes';
+
+  @override
+  String dailyLimitMax(int max) {
+    return 'Máx. $max mensajes';
+  }
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get usePlanLimit => 'Usar límite del plan';
 }

@@ -156,5 +156,23 @@
   "moodRecentHistory": "Historial reciente",
   "moodNoLabel": "Sin etiqueta",
   "becomePremium": "Hazte Premium",
-  "premiumSubtitle": "Voz, memoria ilimitada y más"
+  "premiumSubtitle": "Voz, memoria ilimitada y más",
+  "dailyLimitSection": "Límite diario de mensajes",
+  "dailyLimitSubtitle": "Para evitar dependencia, puedes establecer un máximo de mensajes por día",
+  "dailyLimitCustom": "Límite personalizado",
+  "dailyLimitPlan": "Límite del plan",
+  "dailyLimitUnlimited": "Ilimitado",
+  "dailyLimitDialogTitle": "Ajustar límite diario",
+  "dailyLimitDialogHint": "Mensajes por día (0 = sin límite)",
+  "dailyLimitSaved": "Límite diario actualizado",
+  "dailyLimitResetDaily": "Se reinicia cada día",
+  "dailyLimitMin": "Mín. 5 mensajes",
+  "dailyLimitMax": "Máx. {max} mensajes",
+  "@dailyLimitMax": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "save": "Guardar",
+  "usePlanLimit": "Usar límite del plan"
 }

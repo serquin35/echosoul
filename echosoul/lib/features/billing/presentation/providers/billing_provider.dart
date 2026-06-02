@@ -31,6 +31,11 @@ class BillingNotifier extends AsyncNotifier<BillingEntity> {
     return false;
   }
 
+  Future<void> setCustomDailyLimit(int limit) async {
+    await ref.read(billingRepositoryProvider).setCustomDailyLimit(limit);
+    await refresh();
+  }
+
   Future<void> incrementMessagesUsed() async {
     await ref.read(billingRepositoryProvider).incrementMessagesUsed();
     await refresh();

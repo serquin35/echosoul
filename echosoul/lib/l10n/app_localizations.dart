@@ -996,6 +996,84 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Voz, memoria ilimitada y más'**
   String get premiumSubtitle;
+
+  /// No description provided for @dailyLimitSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Límite diario de mensajes'**
+  String get dailyLimitSection;
+
+  /// No description provided for @dailyLimitSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Para evitar dependencia, puedes establecer un máximo de mensajes por día'**
+  String get dailyLimitSubtitle;
+
+  /// No description provided for @dailyLimitCustom.
+  ///
+  /// In es, this message translates to:
+  /// **'Límite personalizado'**
+  String get dailyLimitCustom;
+
+  /// No description provided for @dailyLimitPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Límite del plan'**
+  String get dailyLimitPlan;
+
+  /// No description provided for @dailyLimitUnlimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Ilimitado'**
+  String get dailyLimitUnlimited;
+
+  /// No description provided for @dailyLimitDialogTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustar límite diario'**
+  String get dailyLimitDialogTitle;
+
+  /// No description provided for @dailyLimitDialogHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensajes por día (0 = sin límite)'**
+  String get dailyLimitDialogHint;
+
+  /// No description provided for @dailyLimitSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Límite diario actualizado'**
+  String get dailyLimitSaved;
+
+  /// No description provided for @dailyLimitResetDaily.
+  ///
+  /// In es, this message translates to:
+  /// **'Se reinicia cada día'**
+  String get dailyLimitResetDaily;
+
+  /// No description provided for @dailyLimitMin.
+  ///
+  /// In es, this message translates to:
+  /// **'Mín. 5 mensajes'**
+  String get dailyLimitMin;
+
+  /// No description provided for @dailyLimitMax.
+  ///
+  /// In es, this message translates to:
+  /// **'Máx. {max} mensajes'**
+  String dailyLimitMax(int max);
+
+  /// No description provided for @save.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar'**
+  String get save;
+
+  /// No description provided for @usePlanLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Usar límite del plan'**
+  String get usePlanLimit;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

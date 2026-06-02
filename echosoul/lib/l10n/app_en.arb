@@ -149,5 +149,23 @@
   "moodNoLabel": "No label",
   "becomePremium": "Become Premium",
   "premiumSubtitle": "Voice, unlimited memory and more",
-  "photoUpdatedSuccessfully": "Photo updated successfully"
+  "photoUpdatedSuccessfully": "Photo updated successfully",
+  "dailyLimitSection": "Daily message limit",
+  "dailyLimitSubtitle": "To prevent dependency, set a maximum number of messages per day",
+  "dailyLimitCustom": "Custom limit",
+  "dailyLimitPlan": "Plan limit",
+  "dailyLimitUnlimited": "Unlimited",
+  "dailyLimitDialogTitle": "Adjust daily limit",
+  "dailyLimitDialogHint": "Messages per day (0 = no limit)",
+  "dailyLimitSaved": "Daily limit updated",
+  "dailyLimitResetDaily": "Resets every day",
+  "dailyLimitMin": "Min. 5 messages",
+  "dailyLimitMax": "Max. {max} messages",
+  "@dailyLimitMax": {
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "save": "Save",
+  "usePlanLimit": "Use plan limit"
 }

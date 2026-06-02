@@ -28,7 +28,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/mood_entries?user_id=eq.{{ $json.body.user_id }}&order=created_at.desc&limit=7",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/checkins?user_id=eq.{{ $json.body.user_id }}&order=created_at.desc&limit=7",
         "authentication": "none",
         "sendHeaders": true,
         "headerParameters": {

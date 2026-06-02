@@ -11,6 +11,7 @@ import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
 import '../../../../core/router/route_names.dart' as routes;
+import '../../../billing/domain/entities/billing_entity.dart';
 import '../../../billing/presentation/providers/billing_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_section_card.dart';
@@ -227,7 +228,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: EsSpacing.md),
 
-                      // Sección: Plan Premium
+                      // Sección: Plan y Límite diario
                       Consumer(
                         builder: (context, ref, _) {
                           final billingAsync = ref.watch(billingProvider);
@@ -244,38 +245,78 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            error: (_, __) => const SizedBox.shrink(),
-                            data: (billing) => ProfileSectionCard(
+                            error: (_, __) => ProfileSectionCard(
                               title: S.of(context).planSection,
                               children: [
                                 _ProfileTile(
                                   icon: Icons.workspace_premium,
                                   label: S.of(context).planStatusLabel,
-                                  value: billing.isPremium ? S.of(context).premium : S.of(context).free,
-                                  iconColor: billing.isPremium
-                                      ? EsColors.warning
-                                      : EsColors.primaryBlue,
+                                  value: S.of(context).free,
+                                  iconColor: EsColors.primaryBlue,
                                   isEditable: false,
                                 ),
-                                if (billing.isFree) ...[
-                                  _ProfileTile(
-                                    icon: Icons.forum_outlined,
-                                    label: S.of(context).messagesToday,
-                                    value: '${billing.messagesUsed} / ${billing.dailyLimit}',
-                                    iconColor: billing.remainingMessages <= 5
-                                        ? EsColors.warning
-                                        : EsColors.calm,
-                                    isEditable: false,
-                                  ),
-                                  _ProfileTile(
-                                    icon: Icons.arrow_circle_up_outlined,
-                                    label: '',
-                                    value: S.of(context).upgradeToPremium,
-                                    iconColor: EsColors.primaryBlue,
-                                    valueColor: EsColors.primaryBlue,
-                                    onTap: () => context.push(routes.RouteNames.paywall),
-                                  ),
-                                ],
+                              ],
+                            ),
+                            data: (billing) => Column(
+                              children: [
+                                ProfileSectionCard(
+                                  title: S.of(context).planSection,
+                                  children: [
+                                    _ProfileTile(
+                                      icon: Icons.workspace_premium,
+                                      label: S.of(context).planStatusLabel,
+                                      value: billing.isPremium ? S.of(context).premium : S.of(context).free,
+                                      iconColor: billing.isPremium
+                                          ? EsColors.warning
+                                          : EsColors.primaryBlue,
+                                      isEditable: false,
+                                    ),
+                                    if (billing.isFree) ...[
+                                      _ProfileTile(
+                                        icon: Icons.forum_outlined,
+                                        label: S.of(context).messagesToday,
+                                        value: '${billing.messagesUsed} / ${billing.dailyLimit}',
+                                        iconColor: billing.remainingMessages <= 5
+                                            ? EsColors.warning
+                                            : EsColors.calm,
+                                        isEditable: false,
+                                      ),
+                                      _ProfileTile(
+                                        icon: Icons.arrow_circle_up_outlined,
+                                        label: '',
+                                        value: S.of(context).upgradeToPremium,
+                                        iconColor: EsColors.primaryBlue,
+                                        valueColor: EsColors.primaryBlue,
+                                        onTap: () => context.push(routes.RouteNames.paywall),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: EsSpacing.md),
+                                ProfileSectionCard(
+                                  title: S.of(context).dailyLimitSection,
+                                  subtitle: S.of(context).dailyLimitSubtitle,
+                                  children: [
+                                    _ProfileTile(
+                                      icon: Icons.timer_outlined,
+                                      label: S.of(context).messagesToday,
+                                      value: '${billing.messagesUsed} / ${billing.dailyLimit}',
+                                      iconColor: billing.remainingMessages <= 5
+                                          ? EsColors.warning
+                                          : EsColors.calm,
+                                      isEditable: false,
+                                    ),
+                                    _ProfileTile(
+                                      icon: Icons.tune,
+                                      label: S.of(context).dailyLimitCustom,
+                                      value: billing.hasCustomLimit
+                                          ? '${billing.customDailyLimit} ${S.of(context).dailyLimitResetDaily}'
+                                          : S.of(context).dailyLimitPlan,
+                                      iconColor: EsColors.neonCyan,
+                                      onTap: () => _showDailyLimitDialog(context, ref, billing),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           );
@@ -598,6 +639,80 @@ class _AvatarHeader extends ConsumerWidget {
           ),
         );
       }
+    }
+  }
+}
+
+Future<void> _showDailyLimitDialog(
+    BuildContext context, WidgetRef ref, BillingEntity billing) async {
+  final planLimit = billing.dailyLimit;
+  final currentVal = billing.customDailyLimit ?? planLimit;
+  final controller = TextEditingController(text: currentVal.toString());
+
+  final result = await showDialog<int>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: EsColors.surfaceDark,
+      title: Text(S.of(ctx).dailyLimitDialogTitle, style: EsTypography.headlineMedium),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(S.of(ctx).dailyLimitSubtitle, style: EsTypography.bodyMedium),
+          const SizedBox(height: EsSpacing.md),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: EsTypography.bodyLarge,
+            decoration: InputDecoration(
+              hintText: S.of(ctx).dailyLimitDialogHint,
+              hintStyle: EsTypography.bodyMedium,
+              filled: true,
+              fillColor: EsColors.surfaceElevated,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: EsSpacing.sm),
+          Text(
+            S.of(ctx).dailyLimitMin,
+            style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+          ),
+          Text(
+            S.of(ctx).dailyLimitMax(planLimit),
+            style: EsTypography.caption.copyWith(color: EsColors.textSecondaryDark),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(0),
+          child: Text(S.of(ctx).usePlanLimit, style: const TextStyle(color: EsColors.textSecondaryDark)),
+        ),
+        TextButton(
+          onPressed: () {
+            final value = int.tryParse(controller.text);
+            if (value != null && value >= 0) {
+              Navigator.of(ctx).pop(value.clamp(0, planLimit));
+            }
+          },
+          child: Text(S.of(ctx).save, style: const TextStyle(color: EsColors.primaryBlue)),
+        ),
+      ],
+    ),
+  );
+
+  if (result != null && context.mounted) {
+    await ref.read(billingProvider.notifier).setCustomDailyLimit(result);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).dailyLimitSaved),
+          backgroundColor: EsColors.success,
+        ),
+      );
     }
   }
 }

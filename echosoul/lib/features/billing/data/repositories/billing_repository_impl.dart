@@ -44,12 +44,43 @@ class BillingRepositoryImpl implements BillingRepository {
       );
     }
 
+    final planLimit = data['daily_limit'] as int? ?? 20;
+    final customLimit = await _getCustomDailyLimit(user.id);
+    final effectiveLimit = customLimit != null && customLimit > 0 && customLimit < planLimit
+        ? customLimit
+        : planLimit;
+
     return BillingEntity(
       plan: data['plan'] as String? ?? 'free',
-      dailyLimit: data['daily_limit'] as int? ?? 20,
+      dailyLimit: effectiveLimit,
       messagesUsed: data['messages_used'] as int? ?? 0,
       lastResetDate: lastReset,
+      customDailyLimit: customLimit,
     );
+  }
+
+  Future<int?> _getCustomDailyLimit(String userId) async {
+    try {
+      final prefs = await _client
+          .from('user_preferences')
+          .select('custom_daily_limit')
+          .eq('user_id', userId)
+          .maybeSingle() as Map<String, dynamic>?;
+      return prefs?['custom_daily_limit'] as int?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> setCustomDailyLimit(int limit) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    await _client.from('user_preferences').upsert({
+      'user_id': user.id,
+      'custom_daily_limit': limit > 0 ? limit : null,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
   }
 
   @override
