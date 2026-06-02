@@ -243,7 +243,9 @@
         "sendTo": "={{ $json.email }}",
         "subject": "={{ $json.subject }}",
         "message": "={{ $json.body }}",
-        "options": {}
+        "options": {
+          "senderName": "EchoSoul"
+        }
       },
       "id": "1d256307-9832-46e0-86c7-f51e4a57c8eb",
       "name": "Send welcome email",

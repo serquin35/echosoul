@@ -125,9 +125,11 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ## 📌 Pendientes inmediatos
 
-- [ ] **Test FCM real**: validar notificaciones push con el nuevo build AAB
-- [ ] **Gmail credential**: asignar credencial Gmail en nodos de email de los workflows
-- [ ] **Dominio custom**: configurar en Vercel
-- [ ] **Google Sign-In web**: pendiente de implementar
+- [x] **Test FCM real**: validar notificaciones push con el nuevo build AAB
+- [x] **Gmail credential**: asignar credencial Gmail en nodos de email de los workflows
+- [x] **Dominio custom**: configurar en Vercel
+- [x] **Google Sign-In web**: implementado
+- [x] **FCM sync en initState**: ConsumerStatefulWidget con addPostFrameCallback
+- [x] **SenderName en emails n8n**: "EchoSoul" como remitente en todos los workflows
 - [ ] **Voz proactiva (Retell/Vapi)**: integración pendiente
 - [ ] **Monetización**: Google Play Billing + Paddle

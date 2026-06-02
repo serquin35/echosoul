@@ -391,7 +391,9 @@
         "sendTo": "={{ $json.email }}",
         "subject": "=EchoSoul está aquí contigo hoy 💙",
         "message": "={{ '<div style=\"font-family:sans-serif;padding:24px;max-width:480px\">' + $json.generated_message + '</div>' }}",
-        "options": {}
+        "options": {
+          "senderName": "EchoSoul"
+        }
       },
       "id": "de6c6d30-46ad-4b4b-9c91-215854434ba0",
       "name": "Send email checkin",

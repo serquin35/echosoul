@@ -364,7 +364,9 @@
         "subject": "=EchoSoul te está pensando 💙",
         "emailType": "html",
         "message": "={{ '<div style=\"font-family:sans-serif;padding:24px;max-width:480px\">' + $json.generated_message + '</div>' }}",
-        "options": {}
+        "options": {
+          "senderName": "EchoSoul"
+        }
       },
       "credentials": {
         "gmailOAuth2": {

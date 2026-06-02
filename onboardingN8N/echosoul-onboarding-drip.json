@@ -234,7 +234,9 @@
         "subject": "={{ $json.subject }}",
         "emailType": "html",
         "message": "={{ $json.body }}",
-        "options": {}
+        "options": {
+          "senderName": "EchoSoul"
+        }
       },
       "credentials": {
         "gmailOAuth2": {

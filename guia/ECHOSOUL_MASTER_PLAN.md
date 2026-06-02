@@ -1,8 +1,14 @@
 # EchoSoul — Master Plan de Desarrollo
 
-> **Versión:** 5.3 | **Fecha:** 31 Mayo 2026 | **Autor:** Serquin + Antigravity
+> **Versión:** 5.4 | **Fecha:** 02 Junio 2026 | **Autor:** Serquin + Antigravity
 > **Repositorio:** `serquin35/echosoul` | **Rama activa:** `master`
 > **⚠️ Este archivo es la ÚNICA fuente de verdad del proyecto.**
+
+> [!CAUTION]
+> **REGLA DE SEGURIDAD CRÍTICA — PREVENCIÓN DE FUGAS DE CREDENCIALES:**
+> En sesiones previas, un modelo subió por error claves privadas de Supabase a GitHub, forzando un costoso cambio de claves en todo el proyecto.
+> **BAJO NINGUNA CIRCUNSTANCIA** se deben commitear o subir archivos `.env`, `.pem`, `.jks`, o claves sensibles en texto plano. 
+> Antes de realizar cualquier comando `git commit` o `git push`, se debe verificar exhaustivamente el estado de los archivos utilizando `git diff` y `git status` para asegurar la absoluta confidencialidad y seguridad del proyecto.
 
 ---
 
@@ -157,7 +163,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Auth email + reset password (PKCE)
 - [x] 11 tablas Supabase con RLS completo
 
-### ✅ FASE 1 — MVP Web [COMPLETADA ~85%]
+### ✅ FASE 1 — MVP Web [COMPLETADA 100%]
 - [x] Todas las pantallas implementadas (Landing, Auth, Onboarding, Chat, Mood, Profile, Legal, Voice UI)
 - [x] 8 workflows n8n activos y funcionando
 - [x] Memoria a largo plazo con deduplicación por hash
@@ -165,10 +171,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Drip onboarding (pasos 0–3) + FCM Firebase v1
 - [x] Deploy Vercel estable
 - [x] Política de Privacidad + T&C en URL pública
-- [ ] Google Sign-In web — pendiente
-- [ ] Dominio custom en Vercel — pendiente
+- [x] Google Sign-In web
+- [x] Dominio custom en Vercel
 
-### 🎯 FASE 2 — MVP Android [EN PROGRESO ~75%]
+### 🎯 FASE 2 — MVP Android [EN PROGRESO ~90%]
 
 **Completado en sesión 17/05/2026:**
 - [x] `google-services.json` en `android/app/` + `AndroidManifest.xml` con permisos FCM
@@ -194,10 +200,10 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
   - Versión 1.0.1+2
 
 **Pendiente:**
-- [ ] Conectar workflow `buenos-dias` al cron de n8n
+- [x] Conectar workflow `buenos-dias` al cron de n8n (sustituido por `daily-checkin`)
 - [ ] Integración Retell AI / Vapi.ai (voz proactiva)
 - [x] Build AAB firmado → Google Play Console
-- [ ] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
+- [x] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
 
 ### 💳 FASE 3 — Monetización [PENDIENTE]
 - [ ] Google Play Billing (compra in-app Android)
@@ -298,7 +304,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 | Ítem | Urgencia |
 |------|---------|
-| FCM token sin actualizar en re-login (token caduca al reinstalar) | 🟡 Media |
+
 | Fuentes Inter comentadas en `pubspec.yaml` | 🟡 Media |
 | Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
 | JSON legacy referenciando `user_profiles` (tabla renombrada a `profiles`) | 🟢 Baja (son backups) |
@@ -311,6 +317,11 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | `showModalBottomSheet` con `Colors.transparent` → negro en Android | `backgroundColor: EsColors.backgroundDark` + `shape` nativo |
 | `MediaQuery` leído del contexto del builder modal → dimensiones incorrectas | `MediaQuery.sizeOf` leído del contexto exterior pre-modal |
 | `DraggableScrollableSheet` sin `expand: false` → sheet vacío en web | Reemplazado por `SizedBox` con altura calculada |
+
+### ✅ Deuda técnica resuelta (02/06/2026)
+| Ítem resuelto | Fix aplicado |
+|---------------|--------------|
+| FCM token sin actualizar en re-login (token caduca al reinstalar) | `_syncInitialFcmToken` en `initState` de `EchoSoulApp` (ConsumerStatefulWidget) + `addPostFrameCallback` |
 
 ---
 

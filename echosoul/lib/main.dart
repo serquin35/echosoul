@@ -80,18 +80,47 @@ void main() async {
   });
 }
 
-class EchoSoulApp extends ConsumerWidget {
+class EchoSoulApp extends ConsumerStatefulWidget {
   const EchoSoulApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EchoSoulApp> createState() => _EchoSoulAppState();
+}
+
+class _EchoSoulAppState extends ConsumerState<EchoSoulApp> {
+  @override
+  void initState() {
+    super.initState();
+    _syncInitialFcmToken();
+  }
+
+  Future<void> _syncInitialFcmToken() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        debugPrint('Main InitState: Usuario activo detectado al iniciar, sincronizando FCM...');
+        final hasPermission = await FcmService().requestPermission();
+        if (hasPermission) {
+          final token = await FcmService().getToken();
+          if (token != null) {
+            await ref.read(authRepositoryProvider).updateFcmToken(token);
+          }
+        } else {
+          debugPrint('Main InitState: Permiso FCM denegado por el usuario.');
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
 
     // Note: Password recovery navigation is now handled entirely within app_router.dart's redirect logic.
     // This avoids race conditions between Riverpod listeners and GoRouter's state machine.
 
-    // Sincronización automática de FCM Token al iniciar sesión
+    // Sincronización automática de FCM Token al iniciar sesión (runtime)
     ref.listen(authStateChangesProvider, (previous, next) {
       next.whenData((user) async {
         if (user != null) {
@@ -109,7 +138,6 @@ class EchoSoulApp extends ConsumerWidget {
       });
     });
 
-
     return MaterialApp.router(
       title: 'EchoSoul',
       debugShowCheckedModeBanner: false,
@@ -124,8 +152,8 @@ class EchoSoulApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('es'), // Español
-        Locale('en'), // English
+        Locale('es'),
+        Locale('en'),
       ],
       routerConfig: router,
     );
