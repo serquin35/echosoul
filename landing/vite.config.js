@@ -13,6 +13,12 @@ export default defineConfig({
     // Output a dist/ (Vercel lo detecta automáticamente)
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        en: 'index-en.html',
+      },
+    },
   },
 
   server: {
