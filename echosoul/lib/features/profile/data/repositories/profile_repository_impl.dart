@@ -29,6 +29,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       await _client.from('profiles').upsert({
         'id': user.id,
         'display_name': defaultName,
+        'email': user.email,
         'onboarding_completed': false,
         'is_paused': false,
         'created_at': DateTime.now().toUtc().toIso8601String(),

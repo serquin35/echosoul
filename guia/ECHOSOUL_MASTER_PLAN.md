@@ -220,7 +220,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] GDPR: exportar datos del usuario desde la app
 - [x] GDPR: eliminar cuenta + todos los datos desde la app
 - [x] Data Safety Form Play Store
-- [ ] Límites diarios de interacción configurables
+- [x] Límites diarios de interacción configurables
 
 ### 🚀 FASE 5 — Post-MVP / Futuro [PENDIENTE]
 - [ ] Memoria vectorial (pgvector embeddings)
@@ -305,7 +305,6 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | Ítem | Urgencia |
 |------|---------|
 
-| Escala mood 1-10 no validada entre Flutter y n8n | 🟡 Media |
 | JSON legacy referenciando `user_profiles` (tabla renombrada a `profiles`) | 🟢 Baja (son backups) |
 | Modo offline sin implementar (hive instalado, sin usar) | 🟢 Baja |
 
@@ -322,6 +321,8 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 |---------------|--------------|
 | FCM token sin actualizar en re-login (token caduca al reinstalar) | `_syncInitialFcmToken` en `initState` de `EchoSoulApp` (ConsumerStatefulWidget) + `addPostFrameCallback` |
 | Fuentes Inter comentadas en `pubspec.yaml` | Descargadas fuentes Inter TTF de rsms/inter v4.0 y descomentadas en `pubspec.yaml` |
+| Escala mood 1-10 no validada entre Flutter y n8n | Ampliada restricción CHECK en DB y adaptados workflows de n8n para usar tabla checkins |
+| Límites diarios de interacción configurables | Implementado diálogo y lógica de límite personalizado en perfil de usuario con columna en user_preferences |
 
 ---
 
