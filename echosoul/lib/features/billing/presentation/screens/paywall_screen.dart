@@ -307,17 +307,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
 
-    final checkoutUrl = _isYearly
-        ? const String.fromEnvironment(
-            'LS_CHECKOUT_YEARLY_URL',
-            defaultValue: 'https://echosoul.dev/upgrade?plan=yearly',
-          )
-        : const String.fromEnvironment(
-            'LS_CHECKOUT_MONTHLY_URL',
-            defaultValue: 'https://echosoul.dev/upgrade?plan=monthly',
-          );
-    final url = '${checkoutUrl.contains('?') ? '$checkoutUrl&' : '$checkoutUrl?'}user_id=$userId';
-    final uri = Uri.parse(url);
+    // Lemon Squeezy product checkout UUID (includes both monthly & yearly variants)
+    const productUuid = '8ea74eeb-8f3b-416a-85ae-5e31561aacf8';
+    const storeSlug = 'echosoul';
+
+    final checkoutUrl =
+        'https://$storeSlug.lemonsqueezy.com/checkout/buy/$productUuid'
+        '?checkout[custom][user_id]=${Uri.encodeComponent(userId)}'
+        '&checkout[media]=0';
+    final uri = Uri.parse(checkoutUrl);
 
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
