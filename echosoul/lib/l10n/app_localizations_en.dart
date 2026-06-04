@@ -525,4 +525,53 @@ class SEn extends S {
 
   @override
   String get usePlanLimit => 'Use plan limit';
+
+  @override
+  String get paywallTitle => 'Unlock Your Companion';
+
+  @override
+  String get paywallSubtitle =>
+      'Chat without barriers with the empathic AI assistant that understands you.';
+
+  @override
+  String get paywallCancelSubtitle => 'Cancel at any time from your profile.';
+
+  @override
+  String get paywallLimitlessMessages => 'Unlimited Daily Messages';
+
+  @override
+  String get paywallLimitlessMessagesSub => 'No daily limit restrictions';
+
+  @override
+  String get paywallLongTermMemory => 'Long-Term Memory';
+
+  @override
+  String get paywallLongTermMemorySub =>
+      'Your Companion will remember every conversation';
+
+  @override
+  String get paywallProactiveInteractions => 'Proactive Interactions';
+
+  @override
+  String get paywallProactiveInteractionsSub =>
+      'Personalized good mornings, weekly insights and more';
+
+  @override
+  String get paywallVoiceCalls => 'Voice Calls (Coming Soon)';
+
+  @override
+  String get paywallVoiceCallsSub => 'Early access as soon as available';
+
+  @override
+  String get paywallStartSubscription => 'Start Subscription';
+
+  @override
+  String get paywallWebSubscriptionTitle => 'Subscription from the Web';
+
+  @override
+  String get paywallWebSubscriptionDesc =>
+      'To comply with Google Play Store policies, premium subscriptions are managed exclusively through our website.\n\nPlease visit echosoul.dev in your browser to activate your premium plan.';
+
+  @override
+  String get paywallAlreadyPremium => 'You are Premium!';
 }

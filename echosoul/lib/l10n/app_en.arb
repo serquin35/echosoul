@@ -167,5 +167,20 @@
     }
   },
   "save": "Save",
-  "usePlanLimit": "Use plan limit"
+  "usePlanLimit": "Use plan limit",
+  "paywallTitle": "Unlock Your Companion",
+  "paywallSubtitle": "Chat without barriers with the empathic AI assistant that understands you.",
+  "paywallCancelSubtitle": "Cancel at any time from your profile.",
+  "paywallLimitlessMessages": "Unlimited Daily Messages",
+  "paywallLimitlessMessagesSub": "No daily limit restrictions",
+  "paywallLongTermMemory": "Long-Term Memory",
+  "paywallLongTermMemorySub": "Your Companion will remember every conversation",
+  "paywallProactiveInteractions": "Proactive Interactions",
+  "paywallProactiveInteractionsSub": "Personalized good mornings, weekly insights and more",
+  "paywallVoiceCalls": "Voice Calls (Coming Soon)",
+  "paywallVoiceCallsSub": "Early access as soon as available",
+  "paywallStartSubscription": "Start Subscription",
+  "paywallWebSubscriptionTitle": "Subscription from the Web",
+  "paywallWebSubscriptionDesc": "To comply with Google Play Store policies, premium subscriptions are managed exclusively through our website.\n\nPlease visit echosoul.dev in your browser to activate your premium plan.",
+  "paywallAlreadyPremium": "You are Premium!"
 }

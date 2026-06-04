@@ -1074,6 +1074,96 @@ abstract class S {
   /// In es, this message translates to:
   /// **'Usar límite del plan'**
   String get usePlanLimit;
+
+  /// No description provided for @paywallTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Libera a tu Companion'**
+  String get paywallTitle;
+
+  /// No description provided for @paywallSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Conversa sin barreras con el asistente de IA empática que te comprende.'**
+  String get paywallSubtitle;
+
+  /// No description provided for @paywallCancelSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancela en cualquier momento desde tu perfil.'**
+  String get paywallCancelSubtitle;
+
+  /// No description provided for @paywallLimitlessMessages.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensajes Diarios Ilimitados'**
+  String get paywallLimitlessMessages;
+
+  /// No description provided for @paywallLimitlessMessagesSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin restricción de límite diario'**
+  String get paywallLimitlessMessagesSub;
+
+  /// No description provided for @paywallLongTermMemory.
+  ///
+  /// In es, this message translates to:
+  /// **'Memoria a Largo Plazo'**
+  String get paywallLongTermMemory;
+
+  /// No description provided for @paywallLongTermMemorySub.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu Companion recordará cada conversación'**
+  String get paywallLongTermMemorySub;
+
+  /// No description provided for @paywallProactiveInteractions.
+  ///
+  /// In es, this message translates to:
+  /// **'Interacciones Proactivas'**
+  String get paywallProactiveInteractions;
+
+  /// No description provided for @paywallProactiveInteractionsSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Buenos días, insights semanales y más'**
+  String get paywallProactiveInteractionsSub;
+
+  /// No description provided for @paywallVoiceCalls.
+  ///
+  /// In es, this message translates to:
+  /// **'Llamadas de Voz (Próximamente)'**
+  String get paywallVoiceCalls;
+
+  /// No description provided for @paywallVoiceCallsSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso anticipado cuando esté disponible'**
+  String get paywallVoiceCallsSub;
+
+  /// No description provided for @paywallStartSubscription.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar Suscripción'**
+  String get paywallStartSubscription;
+
+  /// No description provided for @paywallWebSubscriptionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Suscripción desde la Web'**
+  String get paywallWebSubscriptionTitle;
+
+  /// No description provided for @paywallWebSubscriptionDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Para cumplir con las políticas de Google Play Store, las suscripciones premium se gestionan exclusivamente a través de nuestra web.\n\nPor favor, visita echosoul.dev en tu navegador para activar tu plan premium.'**
+  String get paywallWebSubscriptionDesc;
+
+  /// No description provided for @paywallAlreadyPremium.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Ya eres Premium!'**
+  String get paywallAlreadyPremium;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

@@ -525,4 +525,54 @@ class SEs extends S {
 
   @override
   String get usePlanLimit => 'Usar límite del plan';
+
+  @override
+  String get paywallTitle => 'Libera a tu Companion';
+
+  @override
+  String get paywallSubtitle =>
+      'Conversa sin barreras con el asistente de IA empática que te comprende.';
+
+  @override
+  String get paywallCancelSubtitle =>
+      'Cancela en cualquier momento desde tu perfil.';
+
+  @override
+  String get paywallLimitlessMessages => 'Mensajes Diarios Ilimitados';
+
+  @override
+  String get paywallLimitlessMessagesSub => 'Sin restricción de límite diario';
+
+  @override
+  String get paywallLongTermMemory => 'Memoria a Largo Plazo';
+
+  @override
+  String get paywallLongTermMemorySub =>
+      'Tu Companion recordará cada conversación';
+
+  @override
+  String get paywallProactiveInteractions => 'Interacciones Proactivas';
+
+  @override
+  String get paywallProactiveInteractionsSub =>
+      'Buenos días, insights semanales y más';
+
+  @override
+  String get paywallVoiceCalls => 'Llamadas de Voz (Próximamente)';
+
+  @override
+  String get paywallVoiceCallsSub => 'Acceso anticipado cuando esté disponible';
+
+  @override
+  String get paywallStartSubscription => 'Iniciar Suscripción';
+
+  @override
+  String get paywallWebSubscriptionTitle => 'Suscripción desde la Web';
+
+  @override
+  String get paywallWebSubscriptionDesc =>
+      'Para cumplir con las políticas de Google Play Store, las suscripciones premium se gestionan exclusivamente a través de nuestra web.\n\nPor favor, visita echosoul.dev en tu navegador para activar tu plan premium.';
+
+  @override
+  String get paywallAlreadyPremium => '¡Ya eres Premium!';
 }

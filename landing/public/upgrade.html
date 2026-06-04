@@ -10,9 +10,6 @@
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="./legal-style.css">
   
-  <!-- Paddle.js SDK -->
-  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
-
   <style>
     /* Estilos específicos para la sección de Upgrade (Checkout) */
     .premium-badge {
@@ -29,18 +26,57 @@
       box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
     }
 
-    .pricing-section {
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 480px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pricing-card {
       text-align: center;
-      margin: 2rem 0;
-      padding: 1.5rem;
+      padding: 1.5rem 1rem;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--divider);
       border-radius: 16px;
+      position: relative;
+      transition: border-color 0.3s;
+    }
+
+    .pricing-card:hover {
+      border-color: var(--neon-cyan);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--neon-cyan);
+      background: rgba(34, 211, 238, 0.05);
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
+    }
+
+    .featured-badge {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #3b82f6, #22d3ee);
+      color: #0b0f19;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
     }
 
     .price {
       font-family: 'Outfit', sans-serif;
-      font-size: 3rem;
+      font-size: 2.5rem;
       font-weight: 800;
       color: var(--text-primary);
       line-height: 1;
@@ -49,6 +85,12 @@
     .price-period {
       font-size: 1rem;
       color: var(--text-secondary);
+    }
+
+    .price-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
     }
 
     .feature-grid {
@@ -83,22 +125,22 @@
       color: var(--text-secondary);
     }
 
-    /* Premium Animated Button */
     .pay-button {
       display: block;
       width: 100%;
-      padding: 1.1rem;
+      padding: 1rem;
       background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
       color: #ffffff;
       border: none;
       border-radius: 14px;
       font-family: 'Outfit', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
       text-align: center;
+      text-decoration: none;
     }
 
     .pay-button:hover:not(:disabled) {
@@ -117,6 +159,18 @@
       cursor: not-allowed;
       box-shadow: none;
       border: 1px solid var(--divider);
+    }
+
+    .pay-button.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--divider);
+      box-shadow: none;
+    }
+
+    .pay-button.secondary:hover:not(:disabled) {
+      border-color: var(--neon-cyan);
+      box-shadow: none;
+      filter: none;
     }
 
     .status-card {
@@ -158,14 +212,45 @@
         <p style="margin-bottom: 1.5rem;">Conversa sin barreras con el asistente de IA empática que te comprende.</p>
       </div>
 
-      <div class="pricing-section">
-        <div class="price">$9.99<span class="price-period">/mes</span></div>
-        <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-secondary);">Cancela en cualquier momento desde tu perfil.</p>
+      <div class="pricing-grid">
+        <!-- Plan Mensual -->
+        <div class="pricing-card">
+          <div class="price">€4.99<span class="price-period">/mes</span></div>
+          <p class="price-sub">Facturado mensualmente</p>
+          <div style="margin-top: 1.25rem;">
+            <a class="pay-button secondary" id="btn-monthly" href="#" target="_blank">
+              Elegir Mensual
+            </a>
+          </div>
+        </div>
+
+        <!-- Plan Anual (destacado) -->
+        <div class="pricing-card featured">
+          <div class="featured-badge">Mejor valor</div>
+          <div class="price">€39.99<span class="price-period">/año</span></div>
+          <p class="price-sub">€3.33/mes — ahorras ~€20</p>
+          <div style="margin-top: 1.25rem;">
+            <a class="pay-button" id="btn-yearly" href="#" target="_blank">
+              Elegir Anual
+            </a>
+          </div>
+        </div>
       </div>
+
+      <p style="font-size: 0.8rem; text-align: center; color: var(--text-secondary); margin: 0 0 1rem 0;">
+        Cancela en cualquier momento desde tu perfil.
+      </p>
 
       <h2>Beneficios Premium</h2>
       
       <div class="feature-grid">
+        <div class="feature-item">
+          <span class="feature-icon">✦</span>
+          <div class="feature-text">
+            <strong>Llamadas de Voz</strong>
+            <span>Conversaciones de voz fluidas en tiempo real con tu Companion.</span>
+          </div>
+        </div>
         <div class="feature-item">
           <span class="feature-icon">✦</span>
           <div class="feature-text">
@@ -187,23 +272,11 @@
             <span>Mensajes de buenos días, análisis de estado de ánimo e insights semanales automáticos por correo/push.</span>
           </div>
         </div>
-        <div class="feature-item">
-          <span class="feature-icon">✦</span>
-          <div class="feature-text">
-            <strong>Llamadas de Voz Integradas (Próximamente)</strong>
-            <span>Acceso anticipado a sesiones de voz fluida en tiempo real cuando necesites desahogarte de viva voz.</span>
-          </div>
-        </div>
       </div>
 
       <!-- Warning if user_id is missing -->
       <div class="alert-box" id="user-warning" style="display: none;">
         <p><strong>⚠️ Identificación Requerida:</strong> No hemos podido detectar tu identificador de usuario. Por favor, abre la aplicación de EchoSoul, navega a la sección Premium e inicia el pago desde allí para que podamos vincular tu cuenta.</p>
-      </div>
-
-      <!-- Checkout CTA -->
-      <div style="margin-top: 2.5rem;">
-        <button class="pay-button" id="pay-button" disabled>Iniciar Suscripción</button>
       </div>
     </div>
 
@@ -235,20 +308,18 @@
   </div>
 
   <script>
-    // CONFIGURACIÓN DE PADDLE
-    // ⚠️ REEMPLAZA estos valores cuando tengas tu cuenta de Paddle:
-    const PADDLE_SANDBOX = true; // Cambiar a false en producción
-    const PADDLE_CLIENT_TOKEN = 'sp_clt_5e2df45a2789ffae'; // ← Pon tu Client Token aquí
-    const PADDLE_PRICE_ID = 'pri_01h...'; // ← Pon tu Price ID aquí
-    const APP_HOME_URL = 'https://echosoul.one/app/';
+    // CONFIGURACIÓN DE LEMON SQUEEZY
+    // ⚠️ REEMPLAZA con los IDs de tus variantes de Lemon Squeezy:
+    const LS_MONTHLY_VARIANT_ID = '1746423'; // ← ID de la variante mensual
+    const LS_YEARLY_VARIANT_ID  = '1746476';   // ← ID de la variante anual
+    const LS_STORE_SLUG         = 'echosoul';            // ← Slug de tu store en LS
 
     // Obtener user_id desde la URL
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
-    const payButton = document.getElementById('pay-button');
     const warningBox = document.getElementById('user-warning');
     
-    // Si viene de la app, podemos personalizar el botón de volver
+    // Si viene de la app, personalizar el botón de volver
     const redirectUrl = urlParams.get('redirect_url');
     if (redirectUrl) {
       document.getElementById('back-btn').setAttribute('href', redirectUrl);
@@ -256,59 +327,19 @@
 
     if (!userId) {
       warningBox.style.display = 'block';
-      payButton.disabled = true;
-      payButton.textContent = 'Requiere iniciar sesión';
+      document.getElementById('btn-monthly').style.pointerEvents = 'none';
+      document.getElementById('btn-monthly').style.opacity = '0.4';
+      document.getElementById('btn-yearly').style.pointerEvents = 'none';
+      document.getElementById('btn-yearly').style.opacity = '0.4';
     } else {
-      payButton.disabled = false;
-      
-      // Configurar Paddle
-      try {
-        if (PADDLE_SANDBOX) {
-          Paddle.Environment.set('sandbox');
-        }
-        
-        Paddle.Initialize({ 
-          token: PADDLE_CLIENT_TOKEN,
-          eventCallback: function(event) {
-            if (event.name === 'checkout.completed') {
-              showCard('success-card');
-            }
-          }
-        });
+      // Construir URLs de checkout de Lemon Squeezy
+      const baseUrl = `https://${LS_STORE_SLUG}.lemonsqueezy.com/checkout/buy`;
 
-        payButton.addEventListener('click', function() {
-          Paddle.Checkout.open({
-            settings: {
-              displayMode: 'overlay',
-              theme: 'dark',
-              locale: 'es'
-            },
-            items: [
-              {
-                priceId: PADDLE_PRICE_ID,
-                quantity: 1
-              }
-            ],
-            customData: {
-              user_id: userId
-            }
-          });
-        });
+      const monthlyUrl = `${baseUrl}/${LS_MONTHLY_VARIANT_ID}?checkout[custom][user_id]=${encodeURIComponent(userId)}&checkout[media]=0`;
+      const yearlyUrl  = `${baseUrl}/${LS_YEARLY_VARIANT_ID}?checkout[custom][user_id]=${encodeURIComponent(userId)}&checkout[media]=0`;
 
-      } catch (err) {
-        console.error('Error al inicializar Paddle:', err);
-        payButton.addEventListener('click', function() {
-          alert('Error al conectar con la pasarela de pagos. Por favor, recarga la página o inténtalo más tarde.');
-        });
-      }
-    }
-
-    function showCard(cardId) {
-      document.getElementById('checkout-card').style.display = 'none';
-      document.getElementById('success-card').style.display = 'none';
-      document.getElementById('error-card').style.display = 'none';
-      
-      document.getElementById(cardId).style.display = 'block';
+      document.getElementById('btn-monthly').href = monthlyUrl;
+      document.getElementById('btn-yearly').href  = yearlyUrl;
     }
   </script>
 </body>

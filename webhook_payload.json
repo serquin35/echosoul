@@ -1,9 +1,8 @@
 {
-  "name": "EchoSoul — billing: paddle-webhook",
   "nodes": [
     {
-      "id": "26761ea5-48b7-416c-8714-4bd5a8e2cc45",
-      "name": "Webhook Paddle",
+      "id": "16761ea5-48b7-416c-8714-4bd5a8e2cc45",
+      "name": "Webhook Lemon Squeezy",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
       "position": [
@@ -11,14 +10,14 @@
         100
       ],
       "parameters": {
-        "path": "paddle",
+        "path": "lemonsqueezy",
         "httpMethod": "POST",
         "responseMode": "responseNode",
         "options": {}
       }
     },
     {
-      "id": "ecea0164-1afa-4346-bd28-d70a4aacd4ab",
+      "id": "fcea0164-1afa-4346-bd28-d70a4aacd4ab",
       "name": "Verify signature",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -28,11 +27,11 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "\nconst crypto = require('crypto');\n\nconst body    = $json.body;\nconst headers = $json.headers;\nconst sigHeader = headers['paddle-signature'] ?? '';\n\n// Paddle Billing v2 signature: \"ts=TIMESTAMP;h1=HMAC_SHA256\"\nconst parts = {};\nsigHeader.split(';').forEach(p => {\n  const idx = p.indexOf('=');\n  if (idx > -1) parts[p.substring(0, idx)] = p.substring(idx + 1);\n});\n\nconst ts = parts['ts'] ?? '';\nconst h1 = parts['h1'] ?? '';\nconst secret = 'PADDLE_WEBHOOK_SECRET';  // ← reemplaza con tu secret real\n\n// Reconstruye el payload firmado\nconst rawBody = JSON.stringify(body);\nconst signed  = `${ts}:${rawBody}`;\nconst expected = crypto.createHmac('sha256', secret).update(signed).digest('hex');\n\nif (secret !== 'PADDLE_WEBHOOK_SECRET' && expected !== h1) {\n  return [{ json: { valid: false, reason: 'invalid_signature' } }];\n}\n\nconst eventType = body.event_type ?? '';\nconst data      = body.data ?? {};\n\n// user_id debe venir en custom_data del checkout de Paddle\nconst userId = data?.custom_data?.user_id\n            ?? data?.customer?.custom_data?.user_id\n            ?? null;\n\nif (!userId) {\n  return [{ json: { valid: false, reason: 'no_user_id_in_custom_data', event_type: eventType } }];\n}\n\nreturn [{ json: { valid: true, event_type: eventType, data, user_id: userId } }];\n"
+        "jsCode": "\nconst crypto = require('crypto');\n\nconst body    = $json.body;\nconst headers = $json.headers;\nconst sigHeader = headers['x-signature'] ?? '';\nconst secret = 'Echosoul2026Secret*';  // \u2190 reemplaza con tu secret real\n\nconst rawBody = typeof body === 'string' ? body : JSON.stringify(body);\nconst expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\n\nif (secret !== 'Echosoul2026Secret*' && expected !== sigHeader) {\n  return [{ json: { valid: false, reason: 'invalid_signature' } }];\n}\n\nconst eventName = body.meta?.event_name ?? '';\nconst data      = body.data ?? {};\n\n// user_id debe venir en custom_data del checkout de Lemon Squeezy\nconst userId = body.meta?.custom_data?.user_id ?? null;\n\nif (!userId) {\n  return [{ json: { valid: false, reason: 'no_user_id_in_custom_data', event_name: eventName } }];\n}\n\nreturn [{ json: { valid: true, event_name: eventName, data, user_id: userId } }];\n"
       }
     },
     {
-      "id": "64a2d838-411a-48d7-b557-a8c30d90fd46",
+      "id": "f4a2d838-411a-48d7-b557-a8c30d90fd46",
       "name": "IF valid",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -63,7 +62,7 @@
       }
     },
     {
-      "id": "dc56ae2b-a453-4ef4-8518-4ab14115c186",
+      "id": "fc56ae2b-a453-4ef4-8518-4ab14115c186",
       "name": "Respond 401",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -80,7 +79,7 @@
       }
     },
     {
-      "id": "d115076a-81e9-4244-8bec-18674bb882e6",
+      "id": "f115076a-81e9-4244-8bec-18674bb882e6",
       "name": "Parse event",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -90,11 +89,11 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "\nconst ev   = $json;\nconst data = ev.data;\nconst eventType = ev.event_type;\n\n// Mapa de status Paddle → plan EchoSoul\nconst STATUS_MAP = {\n  active:   { plan: 'premium', daily_limit: 9999 },\n  trialing: { plan: 'premium', daily_limit: 9999 },\n  past_due: { plan: 'premium', daily_limit: 9999 },  // grace period\n  paused:   { plan: 'free',    daily_limit: 20 },\n  canceled: { plan: 'free',    daily_limit: 20 },\n};\n\n// Para eventos de transacción\nlet subStatus = data.status ?? 'canceled';\nif (eventType === 'transaction.payment_failed') subStatus = 'past_due';\nif (eventType === 'transaction.completed')      subStatus = 'active';\n\nconst planInfo = STATUS_MAP[subStatus] ?? { plan: 'free', daily_limit: 20 };\n\nreturn [{ json: {\n  user_id:         ev.user_id,\n  provider:        'paddle',\n  provider_sub_id: data.id ?? null,\n  status:          subStatus,\n  plan:            planInfo.plan,\n  daily_limit:     planInfo.daily_limit,\n  expires_at:      data.next_billed_at ?? data.current_billing_period?.ends_at ?? null,\n  plan_id:         data.items?.[0]?.price?.id ?? null,\n  event_type:      eventType,\n  raw_event:       $('Webhook Paddle').first().json.body\n}}];\n"
+        "jsCode": "\nconst ev   = $json;\nconst data = ev.data;\nconst eventName = ev.event_name;\n\n// Mapa de status Lemon Squeezy \u2192 plan EchoSoul\nconst STATUS_MAP = {\n  active:   { plan: 'premium', daily_limit: 9999 },\n  on_trial: { plan: 'premium', daily_limit: 9999 },\n  past_due: { plan: 'premium', daily_limit: 9999 },  // grace period\n  unpaid:   { plan: 'free',    daily_limit: 20 },\n  cancelled:{ plan: 'free',    daily_limit: 20 },\n  expired:  { plan: 'free',    daily_limit: 20 },\n};\n\nconst subStatus = data.attributes?.status ?? 'expired';\nconst planInfo = STATUS_MAP[subStatus] ?? { plan: 'free', daily_limit: 20 };\n\nreturn [{ json: {\n  user_id:         ev.user_id,\n  provider:        'lemonsqueezy',\n  provider_sub_id: data.id ?? null,\n  status:          subStatus,\n  plan:            planInfo.plan,\n  daily_limit:     planInfo.daily_limit,\n  expires_at:      data.attributes?.renews_at ?? data.attributes?.ends_at ?? null,\n  plan_id:         data.attributes?.variant_id?.toString() ?? null,\n  event_type:      eventName,\n  raw_event:       $('Webhook Lemon Squeezy').first().json.body\n}}];\n"
       }
     },
     {
-      "id": "cb08a612-3d94-4323-8861-014aa65c4470",
+      "id": "fc08a612-3d94-4323-8861-014aa65c4470",
       "name": "IF skip",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -125,7 +124,7 @@
       }
     },
     {
-      "id": "16b0eb57-29fb-404a-8e09-5bc0031e4c22",
+      "id": "f6b0eb57-29fb-404a-8e09-5bc0031e4c22",
       "name": "Respond 200 skip",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -142,7 +141,7 @@
       }
     },
     {
-      "id": "de9a3935-83b1-43c7-ad68-7ebc0789045a",
+      "id": "fe9a3935-83b1-43c7-ad68-7ebc0789045a",
       "name": "Upsert subscription",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -153,17 +152,14 @@
       "parameters": {
         "method": "POST",
         "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions",
-        "authentication": "none",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "YOUR_SUPABASE_SERVICE_KEY"
-            },
-            {
               "name": "Authorization",
-              "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
             },
             {
               "name": "Content-Type",
@@ -180,10 +176,16 @@
         "rawContentType": "application/json",
         "body": "={{ JSON.stringify({user_id:$json.user_id,provider:$json.provider,provider_sub_id:$json.provider_sub_id,status:$json.status,plan_id:$json.plan_id,expires_at:$json.expires_at,raw_event:$json.raw_event}) }}",
         "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OJfBPZ3oav1nvDyb",
+          "name": "EchoSoul-supabase"
+        }
       }
     },
     {
-      "id": "5dfcc50d-bf53-41c5-9c9a-97d419b27695",
+      "id": "fdfcc50d-bf53-41c5-9c9a-97d419b27695",
       "name": "Update user plan",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -194,17 +196,14 @@
       "parameters": {
         "method": "PATCH",
         "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
-        "authentication": "none",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "apikey",
-              "value": "YOUR_SUPABASE_SERVICE_KEY"
-            },
-            {
               "name": "Authorization",
-              "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
             },
             {
               "name": "Content-Type",
@@ -221,10 +220,16 @@
         "rawContentType": "application/json",
         "body": "={{ JSON.stringify({plan:$json.plan,daily_limit:$json.daily_limit,updated_at:new Date().toISOString()}) }}",
         "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OJfBPZ3oav1nvDyb",
+          "name": "EchoSoul-supabase"
+        }
       }
     },
     {
-      "id": "3e74d948-d4c6-41fd-a772-10fdaf2dcb89",
+      "id": "fe74d948-d4c6-41fd-a772-10fdaf2dcb89",
       "name": "Respond 200 ok",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -241,7 +246,7 @@
       }
     },
     {
-      "id": "1ddcf113-6e19-4195-9a2c-3de2b70d0609",
+      "id": "fddcf113-6e19-4195-9a2c-3de2b70d0609",
       "name": "Note-c0fb",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -250,14 +255,14 @@
         100
       ],
       "parameters": {
-        "content": "## Configurar en Paddle\nDashboard → Developer Tools → Notifications\n→ New Notification\n→ URL: https://n8n.cheosdesign.info/webhook/paddle\n\n**Eventos a suscribir:**\n- subscription.created\n- subscription.updated\n- subscription.canceled\n- transaction.completed\n- transaction.payment_failed",
+        "content": "## Configurar en Lemon Squeezy\nDashboard \u2192 Developer Tools \u2192 Webhooks\n\u2192 New Webhook\n\u2192 URL: https://n8n.cheosdesign.info/webhook/lemonsqueezy\n\n**Eventos a suscribir:**\n- subscription_created\n- subscription_updated\n- subscription_cancelled\n- subscription_expired",
         "height": 240,
         "width": 340,
         "color": 5
       }
     },
     {
-      "id": "d50345e7-1c7f-4d90-9996-da6fa90bf1a7",
+      "id": "fd50345e-1c7f-4d90-9996-da6fa90bf1a7",
       "name": "Note-52e6",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -266,7 +271,7 @@
         400
       ],
       "parameters": {
-        "content": "## custom_data en Flutter\nAl crear el checkout de Paddle, pasa el user_id:\n```\nPaddleCheckout(\n  customData: {\n    'user_id': supabase.auth.currentUser!.id\n  }\n)\n```\nSin esto, n8n no puede vincular el pago al usuario.",
+        "content": "## custom_data en Flutter\nAl abrir el checkout de Lemon Squeezy, pasa el user_id:\n```\nhttps://echosoul.lemonsqueezy.com/checkout/buy/PRODUCT_ID?checkout[custom][user_id]=${userId}\n```\nSin esto, n8n no puede vincular el pago al usuario.",
         "height": 220,
         "width": 340,
         "color": 3
@@ -274,7 +279,7 @@
     }
   ],
   "connections": {
-    "Webhook Paddle": {
+    "Webhook Lemon Squeezy": {
       "main": [
         [
           {
@@ -365,13 +370,5 @@
         ]
       ]
     }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "id": "f651c384-48be-4b54-b13c-2147b7996f8d",
-  "meta": {
-    "instanceId": "echosoul-local"
   }
 }

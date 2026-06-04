@@ -1,0 +1,294 @@
+{
+  "name": "EchoSoul \u2014 billing: lemonsqueezy-sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "838f75cf-2114-4c1b-80ac-404fab531bd2",
+      "name": "Cron 3AM daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.lemonsqueezy.com/v1/subscriptions?filter[status]=active&page[size]=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5NGQ1OWNlZi1kYmI4LTRlYTUtYjE3OC1kMjU0MGZjZDY5MTkiLCJqdGkiOiJkYjQ0MzQyMjAyOWM3NTA4ZWRlNmQ4Y2MwNzdmN2I5MTFmNGVkYzY3YjIyYjA4MWMwMmQ4MmEyYzc5NmQzNDQ0Nzk5OWFiOTllY2NlYTIzOSIsImlhdCI6MTc4MDU3NzM4OS4yNTgzMDQsIm5iZiI6MTc4MDU3NzM4OS4yNTgzMDcsImV4cCI6MTc5NjM0MjQwMC4wNDM3MTksInN1YiI6IjY4MzExNjMiLCJzY29wZXMiOltdfQ.4onDOjwaLK7yem7IeOtTcbIrgmh_ram5oAvIErbm5x6kDT_tJ0zYlckWgnwP9PtaR01Jnj9R_vRzfimxMv4uq71qtoAY55uJFuiNsUt63YTnObNpCR93hCNuGiZXF_UF85tf2hmxBvM21FwKjHC4cbfTiQbW4Gr7gL0_eAYpvrChEUMu18iTI6kbx2eCCbm0GieTniqrch7yrOSO3ItspwNxQc4PYY2znRebFC1OR559sB_i4mDF2j3Sfjwja-j5A0T2B8wIQgMhNafxuA0ydGTs6Ejk2lW-84Aic8oj3rRiyg2PZz_fZXic7KmUvy27jBTKafoYi2f90epWQy3No_KzZAUjIJvFkfpV2u3upsBNqdt4fvQbYAX4sTplUyaKtc-3LKo5l_53AKl22NhEKjVgyqcHttiE4ck7S3cvX6r2iI284dd01KNGFLAewDJfjoPVwRgj1EHfUjR4c19sgQ7O2osiJS2xD30kaNUs22MwCUMOqzET19DZNbuzM1BGqeakT8-Nsika_ZrGGyLjVhR1i-wwZubcO-eZxSuWjwKS4_2II2lfwgjTIienBh1IsOsPqjTU6m0UAwREZf_Y439IavPsMA5clred-oPtgAfnK2DMLJX21Lfx-O92uWAL5rgKRca-o0jmBiXcqfJHj6-dR01Jg5y1FxtYy0nfPEA"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.api+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.api+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "402fb7ea-2d31-4685-abb0-026932eec663",
+      "name": "Fetch Lemon Squeezy active subs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?plan=eq.premium&select=user_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0e90cae9-6795-4368-b7f8-9f6cdb4c2a5b",
+      "name": "Fetch Supabase premium users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst lsSubs = $('Fetch Lemon Squeezy active subs').all().map(i => i.json);\nconst supaUsers  = $('Fetch Supabase premium users').all().map(i => i.json);\n\n// Lemon Squeezy devuelve { data: [...] } con meta.custom_data\nconst lsActive = (lsSubs[0]?.data ?? []);\nconst lsUserIds = new Set(\n  lsActive\n    .map(s => s.meta?.custom_data?.user_id)\n    .filter(Boolean)\n);\n\nconst supaUserIds = new Set(supaUsers.map(u => u.user_id).filter(Boolean));\n\nconst corrections = [];\n\n// 1. En Supabase como premium pero NO activo en Lemon Squeezy \u2192 degradar\nfor (const userId of supaUserIds) {\n  if (!lsUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'downgrade', plan: 'free', daily_limit: 20 });\n  }\n}\n\n// 2. Activo en Lemon Squeezy pero en Supabase como free \u2192 promover (webhook perdido)\nfor (const userId of lsUserIds) {\n  if (!supaUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'upgrade', plan: 'premium', daily_limit: 9999 });\n  }\n}\n\nif (corrections.length === 0) return [];\n\nreturn corrections.map(c => ({ json: c }));\n"
+      },
+      "id": "fe35b59b-211b-4bae-9f73-583dc382aac7",
+      "name": "Find discrepancies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "15544a77-9ec2-423f-9dd8-650a694d815b",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "25d9f0dc-b8dc-43e3-8372-e45588262893",
+      "name": "IF has corrections",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        544,
+        128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "768b0aeb-5ed3-4b51-bbee-570f2a879c31",
+      "name": "No discrepancies",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        592,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "191bfa30-64c0-439f-90e6-daeb7c57e55e",
+      "name": "Loop corrections",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({plan:$json.plan,daily_limit:$json.daily_limit,updated_at:new Date().toISOString()}) }}",
+        "options": {}
+      },
+      "id": "df6f580d-9c1b-4fc3-8441-ebd9ccf66782",
+      "name": "Apply correction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        992,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Safety net de billing (Lemon Squeezy)\nEste cron corre a las 3AM y reconcilia\nLemon Squeezy vs Supabase. Protege contra:\n\n- Webhooks perdidos por downtime de n8n\n- Cancelaciones no procesadas\n- Pagos exitosos no reflejados\n\nReemplaza `YOUR_LEMONSQUEEZY_API_KEY` con\ntu API key de Lemon Squeezy.",
+        "height": 240,
+        "width": 340,
+        "color": 3
+      },
+      "id": "7868ad0a-4ed5-4104-a461-06f2b4b43557",
+      "name": "Note-c58d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        16
+      ]
+    }
+  ],
+  "connections": {
+    "Cron 3AM daily": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lemon Squeezy active subs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lemon Squeezy active subs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Supabase premium users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Supabase premium users": {
+      "main": [
+        [
+          {
+            "node": "Find discrepancies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find discrepancies": {
+      "main": [
+        [
+          {
+            "node": "IF has corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF has corrections": {
+      "main": [
+        [
+          {
+            "node": "Loop corrections",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No discrepancies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop corrections": {
+      "main": [
+        [
+          {
+            "node": "Apply correction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply correction": {
+      "main": [
+        [
+          {
+            "node": "Loop corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "instanceId": "echosoul-local"
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "id": "i85kREsb3jPIAoHw"
+}
