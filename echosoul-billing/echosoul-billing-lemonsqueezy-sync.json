@@ -77,7 +77,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst lsSubs = $('Fetch Lemon Squeezy active subs').all().map(i => i.json);\nconst supaUsers = $('Fetch Supabase premium users').all().map(i => i.json);\n\n// --- Parsear respuesta de Lemon Squeezy ---\n// El nodo HTTP devuelve { data: \"<string JSON:API>\" }\n// Debemos: 1) parsear el string, 2) extraer .data del objeto parseado\nlet rawData = lsSubs[0]?.data;\n\n// Paso 1: si es string, parsear\nif (typeof rawData === 'string') {\n  try { rawData = JSON.parse(rawData); } catch(e) { rawData = {}; }\n}\n\n// Paso 2: si es un objeto con .data (JSON:API wrapper), extraer el array\nif (rawData && !Array.isArray(rawData) && typeof rawData === 'object') {\n  rawData = rawData.data ?? [];\n}\n\nconst lsActive = Array.isArray(rawData) ? rawData : [];\n\n// Extraer user_ids de las suscripciones activas en LS\nconst lsUserIds = new Set(\n  lsActive\n    .map(s => s.attributes?.custom_data?.user_id || s.meta?.custom_data?.user_id)\n    .filter(Boolean)\n);\n\n// Extraer user_ids premium de Supabase\nconst supaUserIds = new Set(\n  supaUsers.map(u => u.user_id).filter(Boolean)\n);\n\nconst corrections = [];\n\n// 1. En Supabase como premium pero NO activo en LS \u2192 degradar\nfor (const userId of supaUserIds) {\n  if (!lsUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'downgrade', plan: 'free', daily_limit: 20 });\n  }\n}\n\n// 2. Activo en LS pero NO premium en Supabase \u2192 promover\nfor (const userId of lsUserIds) {\n  if (!supaUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'upgrade', plan: 'premium', daily_limit: 9999 });\n  }\n}\n\nif (corrections.length === 0) return [];\n\nreturn corrections.map(c => ({ json: c }));\n"
+        "jsCode": "\nconst lsSubs = $('Fetch Lemon Squeezy active subs').all().map(i => i.json);\nconst supaUsers = $('Fetch Supabase premium users').all().map(i => i.json);\nconst supaSubs = $('Fetch Supabase subscriptions').all().map(i => i.json).filter(s => s.user_id && s.provider_sub_id);\n\n// Mapear provider_sub_id a user_id usando la tabla subscriptions de Supabase\nconst subIdToUserId = {};\nfor (const sub of supaSubs) {\n  subIdToUserId[sub.provider_sub_id] = sub.user_id;\n}\n\n// --- Parsear respuesta de Lemon Squeezy ---\n// El nodo HTTP devuelve { data: \"<string JSON:API>\" }\n// Debemos: 1) parsear el string, 2) extraer .data del objeto parseado\nlet rawData = lsSubs[0]?.data;\n\n// Paso 1: si es string, parsear\nif (typeof rawData === 'string') {\n  try { rawData = JSON.parse(rawData); } catch(e) { rawData = {}; }\n}\n\n// Paso 2: si es un objeto con .data (JSON:API wrapper), extraer el array\nif (rawData && !Array.isArray(rawData) && typeof rawData === 'object') {\n  rawData = rawData.data ?? [];\n}\n\nconst lsActive = Array.isArray(rawData) ? rawData : [];\n\n// Extraer user_ids de las suscripciones activas en LS\nconst lsUserIds = new Set(\n  lsActive\n    .map(s => {\n      // 1. Intentar por custom_data si viniera\n      const uid = s.attributes?.custom_data?.user_id || s.meta?.custom_data?.user_id;\n      if (uid) return uid;\n      // 2. Intentar buscar por el provider_sub_id en las suscripciones de Supabase\n      return subIdToUserId[s.id];\n    })\n    .filter(Boolean)\n);\n\n// Extraer user_ids premium de Supabase\nconst supaUserIds = new Set(\n  supaUsers.map(u => u.user_id).filter(Boolean)\n);\n\nconst corrections = [];\n\n// 1. En Supabase como premium pero NO activo en LS \u2192 degradar\nfor (const userId of supaUserIds) {\n  if (!lsUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'downgrade', plan: 'free', daily_limit: 20 });\n  }\n}\n\n// 2. Activo en LS pero NO premium en Supabase \u2192 promover\nfor (const userId of lsUserIds) {\n  if (!supaUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'upgrade', plan: 'premium', daily_limit: 9999 });\n  }\n}\n\nif (corrections.length === 0) return [];\n\nreturn corrections.map(c => ({ json: c }));\n"
       },
       "id": "fe35b59b-211b-4bae-9f73-583dc382aac7",
       "name": "Find discrepancies",
@@ -192,6 +192,37 @@
         -640,
         16
       ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions?select=user_id,provider_sub_id,status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWVpcWxsZGl3aXBheHFvdW11Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODQxMDQ0NywiZXhwIjoyMDkzOTg2NDQ3fQ.CAUkFfMWTVU8-cEGNFmLGu7fZBGF8m1glg1f8rdAqjY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2e9cae9-6795-4368-b7f8-9f6cdb4c2a5c",
+      "name": "Fetch Supabase subscriptions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        270,
+        250
+      ],
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -221,7 +252,7 @@
       "main": [
         [
           {
-            "node": "Find discrepancies",
+            "node": "Fetch Supabase subscriptions",
             "type": "main",
             "index": 0
           }
@@ -273,6 +304,17 @@
         [
           {
             "node": "Loop corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Supabase subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Find discrepancies",
             "type": "main",
             "index": 0
           }
