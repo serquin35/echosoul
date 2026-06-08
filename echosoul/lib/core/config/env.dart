@@ -28,4 +28,17 @@ class Env {
       const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
           ? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID')
           : dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '';
+
+  /// Vapi.ai public key for voice calls (WebRTC in-app).
+  /// Only the PUBLIC key goes in the client app — NEVER the private key.
+  static String get vapiPublicKey =>
+      const String.fromEnvironment('VAPI_PUBLIC_KEY').isNotEmpty
+          ? const String.fromEnvironment('VAPI_PUBLIC_KEY')
+          : dotenv.env['VAPI_PUBLIC_KEY'] ?? '';
+
+  /// Vapi.ai Assistant ID for the EchoSoul companion voice agent.
+  static String get vapiAssistantId =>
+      const String.fromEnvironment('VAPI_ASSISTANT_ID').isNotEmpty
+          ? const String.fromEnvironment('VAPI_ASSISTANT_ID')
+          : dotenv.env['VAPI_ASSISTANT_ID'] ?? '';
 }

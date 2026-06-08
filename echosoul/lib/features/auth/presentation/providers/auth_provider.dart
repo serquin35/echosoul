@@ -1,31 +1,33 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-part 'auth_provider.g.dart';
-
-@Riverpod(keepAlive: true)
-AuthRepository authRepository(AuthRepositoryRef ref) {
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(Supabase.instance.client);
-}
+});
 
-@Riverpod(keepAlive: true)
-Stream<UserEntity?> authStateChanges(AuthStateChangesRef ref) {
+final authStateChangesProvider = StreamProvider<UserEntity?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;
-}
+});
 
-@Riverpod(keepAlive: true)
-Stream<AuthState> authEvents(AuthEventsRef ref) {
+final authEventsProvider = StreamProvider<AuthState>((ref) {
   return Supabase.instance.client.auth.onAuthStateChange;
-}
+});
 
-@Riverpod(keepAlive: true)
-class AuthController extends _$AuthController {
-  @override
-  FutureOr<UserEntity?> build() async {
-    return ref.watch(authRepositoryProvider).getCurrentUser();
+class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
+  final Ref ref;
+  
+  AuthController(this.ref) : super(const AsyncValue.loading()) {
+    _init();
+  }
+  
+  Future<void> _init() async {
+    state = await AsyncValue.guard(() async {
+      return await ref.read(authRepositoryProvider).getCurrentUser();
+    });
   }
 
   Future<void> signInWithGoogle() async {
@@ -67,8 +69,6 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> resetPasswordForEmail(String email) async {
-    // We don't change state to loading for this so we don't disrupt the UI flow of the main auth state.
-    // Instead we just throw if there's an error and the UI can catch it.
     await ref.read(authRepositoryProvider).resetPasswordForEmail(email);
   }
 
@@ -84,3 +84,7 @@ class AuthController extends _$AuthController {
     await ref.read(authRepositoryProvider).updateFcmToken(token);
   }
 }
+
+final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<UserEntity?>>((ref) {
+  return AuthController(ref);
+});

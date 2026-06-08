@@ -1,16 +1,21 @@
+import '../../features/companion/domain/entities/voice_call_event.dart';
+
 /// Abstract contract for voice call services (Vapi.ai implementation).
 abstract class VoiceService {
-  /// Initiate a proactive outbound call to the user.
-  Future<void> startOutboundCall({
+  /// Start an on-demand voice call from within the app (WebRTC).
+  Future<void> startInAppCall({
     required String userId,
-    required String toPhoneNumber,
-    required String callType,       // 'morning' | 'evening' | 'crisis' | 'weekly'
-    Map<String, String>? dynamicVariables,
+    required String companionName,
+    required String userName,
+    String? firstMessage,
   });
 
-  /// End an active call.
-  Future<void> endCall({required String callId});
+  /// End the current active call.
+  Future<void> endCall();
 
-  /// Check if a call is currently active for this user.
-  Future<bool> isCallActive({required String userId});
+  /// Stream of call events (status changes, transcripts, etc.)
+  Stream<VoiceCallEvent> get callEvents;
+
+  /// Whether a call is currently active.
+  bool get isCallActive;
 }
