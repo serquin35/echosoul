@@ -184,15 +184,10 @@ class _VoiceCallScreenState extends ConsumerState<VoiceCallScreen>
                     if (isError && callState.errorMessage != null)
                       if (callState.errorMessage!.contains('LIMIT_REACHED'))
                         _buildPremiumUpsellCard(context)
+                      else if (callState.errorMessage!.contains('VAPI_'))
+                        _buildConfigErrorCard(context, callState.errorMessage!)
                       else
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16.0, left: 24, right: 24),
-                          child: Text(
-                            callState.errorMessage!.replaceAll('Exception: ', ''),
-                            textAlign: TextAlign.center,
-                            style: EsTypography.bodyMedium.copyWith(color: EsColors.distress),
-                          ),
-                        ),
+                        _buildErrorCard(context, callState.errorMessage!),
                     
                     const Spacer(),
                     
@@ -345,6 +340,67 @@ class _VoiceCallScreenState extends ConsumerState<VoiceCallScreen>
               elevation: 0,
             ),
             child: const Text('Ver Planes Premium', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfigErrorCard(BuildContext context, String errorMessage) {
+    return Container(
+      margin: const EdgeInsets.only(top: 24, left: 24, right: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: EsColors.distress.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: EsColors.distress.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.settings, color: EsColors.distress, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            'Error de Configuración',
+            style: EsTypography.headlineLarge.copyWith(
+              color: EsColors.distress,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'La llamada de voz no está disponible en este momento. '
+            'Contacta con soporte si el problema persiste.',
+            textAlign: TextAlign.center,
+            style: EsTypography.bodyMedium.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            errorMessage.replaceAll('Exception: ', ''),
+            textAlign: TextAlign.center,
+            style: EsTypography.bodySmall.copyWith(color: Colors.white38),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(BuildContext context, String errorMessage) {
+    return Container(
+      margin: const EdgeInsets.only(top: 24, left: 24, right: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: EsColors.distress.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: EsColors.distress.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.error_outline, color: EsColors.distress, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            errorMessage.replaceAll('Exception: ', ''),
+            textAlign: TextAlign.center,
+            style: EsTypography.bodyMedium.copyWith(color: EsColors.distress),
           ),
         ],
       ),

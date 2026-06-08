@@ -41,4 +41,29 @@ class Env {
       const String.fromEnvironment('VAPI_ASSISTANT_ID').isNotEmpty
           ? const String.fromEnvironment('VAPI_ASSISTANT_ID')
           : dotenv.env['VAPI_ASSISTANT_ID'] ?? '';
+
+  /// Validates that all Vapi configuration is present.
+  /// Call this before initializing VapiClient to get a clear error message.
+  static String validatedVapiPublicKey() {
+    final key = vapiPublicKey;
+    if (key.isEmpty) {
+      throw Exception(
+        'VAPI_PUBLIC_KEY is not configured. '
+        'Set it in .env or pass --dart-define=VAPI_PUBLIC_KEY=<key> during build.',
+      );
+    }
+    return key;
+  }
+
+  /// Validates Vapi Assistant ID.
+  static String validatedVapiAssistantId() {
+    final id = vapiAssistantId;
+    if (id.isEmpty) {
+      throw Exception(
+        'VAPI_ASSISTANT_ID is not configured. '
+        'Set it in .env or pass --dart-define=VAPI_ASSISTANT_ID=<id> during build.',
+      );
+    }
+    return id;
+  }
 }

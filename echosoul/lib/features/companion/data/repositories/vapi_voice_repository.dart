@@ -17,7 +17,7 @@ class VapiVoiceRepository implements VoiceService {
   bool _isCallActive = false;
   String? _currentCallRecordId;
 
-  VapiVoiceRepository(this._supabase) : _vapiClient = VapiClient(Env.vapiPublicKey) {
+  VapiVoiceRepository(this._supabase) : _vapiClient = VapiClient(Env.validatedVapiPublicKey()) {
     _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
   }
 
@@ -128,7 +128,7 @@ class VapiVoiceRepository implements VoiceService {
       _currentCallRecordId = response['id'];
 
       final call = await _vapiClient.start(
-        assistantId: Env.vapiAssistantId,
+        assistantId: Env.validatedVapiAssistantId(),
         assistantOverrides: {
           "maxDurationSeconds": maxDurationSeconds,
           if (firstMessage != null) "firstMessage": firstMessage,

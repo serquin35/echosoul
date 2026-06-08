@@ -32,12 +32,28 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.serquin.echosoul"
-        // You can update the following values to match your application needs.
+        // You can update the following values to match your application requirements.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24 // Vapi SDK requires minSdk >= 24 for WebRTC audio
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Include only the ABI architectures needed by Vapi SDK and most devices.
+        // This significantly reduces APK download size.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+    }
+
+    // Generate separate APKs per ABI for smaller download sizes.
+    // When publishing to Play Store, prefer App Bundle (flutter build appbundle).
+    splits {
+        abi {
+            isUniversalApk = false
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
     }
 
     signingConfigs {

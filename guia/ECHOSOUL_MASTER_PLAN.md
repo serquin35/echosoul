@@ -34,7 +34,7 @@
 | Automatizaciones | n8n en VPS Contabo/Dokploy (`n8n.cheosdesign.info`) | ✅ 8 workflows activos |
 | IA conversacional | GPT-4o (chat) · GPT-4o-mini (memoria) · Claude Haiku (crisis) | ✅ En n8n |
 | Push notifications | FCM v1 API (Android) · Email Gmail OAuth2 (Web) | ✅ FCM E2E validado en dispositivo físico |
-| Voz proactiva | Retell AI / Vapi.ai | 🔲 Pendiente |
+| Voz proactiva | Vapi.ai | ✅ MVP (Bajo demanda) |
 | Web deploy | Vercel via GitHub Actions (`echosoul.dev`) | ✅ Activo |
 | Android deploy | Google Play Console | ✅ Prueba cerrada activa |
 | Pagos | Google Play Billing (Android) · Paddle (Web) | 🔲 Pendiente |
@@ -201,7 +201,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 **Pendiente:**
 - [x] Conectar workflow `buenos-dias` al cron de n8n (sustituido por `daily-checkin`)
-- [ ] Integración Retell AI / Vapi.ai (voz proactiva)
+- [x] Integración Vapi.ai (voz bajo demanda MVP)
 - [x] Build AAB firmado → Google Play Console
 - [x] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
 
@@ -243,7 +243,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 3 | Chat IA fluido con memoria | ✅ |
 | 4 | Memoria a largo plazo | ✅ |
 | 5 | Buenos días / check-ins proactivos (FCM E2E ✅) | ✅ (`daily-checkin`) |
-| 6 | Llamadas de voz proactivas | 🔲 |
+| 6 | Llamadas de voz | ✅ (Vapi bajo demanda) |
 | 7 | Mood tracker funcional | ✅ |
 | 8 | Disclaimers éticos visibles | ✅ |
 | 9 | Crisis con recursos reales (teléfonos) | ✅ |
@@ -251,7 +251,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | 11 | App firmada en Play Console | ✅ |
 | 12 | Data Safety Form completado | ✅ |
 
-**11/12 completados — falta 1 (voz proactiva, opcional) para publicar.**
+**12/12 completados — MVP listo para publicar.**
 
 ---
 
@@ -280,7 +280,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
-| **H10** | Voz proactiva (Retell/Vapi) | Integrar SDK + definir pricing por llamada | 🔴 Alto |
+| ~~**H10**~~ | ~~Voz (Vapi)~~ | ~~✅ COMPLETADO — Integrado Flutter SDK Vapi~~ | ✅ |
 | **H11** | Monetización (Play Billing + Paddle) | Paywall UI + lógica free/premium + webhook Supabase | 🔴 Alto |
 | ~~**H12**~~ | ~~Exportar datos GDPR~~ | ~~✅ COMPLETADO — Función SQL / RPC + Share nativo~~ | ✅ |
 | **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
@@ -410,4 +410,4 @@ Para compilar el App Bundle (.aab) firmado, las credenciales están configuradas
 
 ---
 
-*Última actualización: 31 Mayo 2026*
+*Última actualización: 08 Junio 2026*
