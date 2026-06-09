@@ -45,6 +45,9 @@ class VapiVoiceRepository implements VoiceService {
         _eventController.add(const VoiceCallEnded());
         _finalizeCallRecord();
       } else if (event.label == "message") {
+        // Fallback: stop ringtone when any message is received (crucial for web where call-start might be delayed or skipped)
+        _stopRingtone();
+        
         final msg = event.value;
         if (msg is Map) {
           if (msg['type'] == "speech-update") {

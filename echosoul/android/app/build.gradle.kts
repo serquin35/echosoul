@@ -48,13 +48,8 @@ android {
 
     // Generate separate APKs per ABI for smaller download sizes.
     // When publishing to Play Store, prefer App Bundle (flutter build appbundle).
-    splits {
-        abi {
-            isUniversalApk = false
-            reset()
-            include("arm64-v8a", "armeabi-v7a", "x86_64")
-        }
-    }
+    // Note: The splits block for ABIs was removed because Android App Bundles (.aab)
+    // automatically generate optimal APKs for each architecture on the Play Store.
 
     signingConfigs {
         create("release") {
