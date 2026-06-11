@@ -98,6 +98,9 @@ class VapiVoiceRepository implements VoiceService {
       final String currentPlan = planData?['plan'] ?? 'free';
       int? dailyLimit;
       int maxDurationSeconds = planData?['max_call_duration_seconds'] ?? 600; // 10 mins por defecto
+      if (maxDurationSeconds > 43200) {
+        maxDurationSeconds = 43200; // Vapi hard limit (12 hours)
+      }
 
       if (currentPlan != 'premium') {
         dailyLimit = planData?['daily_voice_calls_limit'] ?? 5; // fallback razonable
