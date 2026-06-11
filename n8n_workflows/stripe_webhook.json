@@ -1,0 +1,155 @@
+{
+  "name": "EchoSoul — billing: stripe-webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-stripe",
+      "name": "Webhook Stripe",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [ 200, 200 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst body = $json.body;\nconst headers = $json.headers;\nconst sigHeader = headers['stripe-signature'] ?? '';\nconst secret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_YOUR_WEBHOOK_SECRET_HERE';\n\nconst rawBody = typeof body === 'string' ? body : JSON.stringify(body);\n\n// Parse stripe-signature header\nconst sigParts = sigHeader.split(',').reduce((acc, part) => {\n  const [k, v] = part.split('=');\n  acc[k] = v;\n  return acc;\n}, {});\n\nconst timestamp = sigParts['t'];\nconst expectedV1 = sigParts['v1'];\n\nif (!timestamp || !expectedV1) {\n  return [{ json: { valid: false, reason: 'missing_signature_parts' } }];\n}\n\nconst signedPayload = timestamp + '.' + rawBody;\nconst expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');\n\nif (expected !== expectedV1) {\n  return [{ json: { valid: false, reason: 'invalid_signature' } }];\n}\n\nconst eventType = body.type ?? '';\nconst dataObject = body.data?.object ?? {};\n\n// En checkout.session.completed, el user_id viene en client_reference_id\nlet userId = dataObject.client_reference_id ?? null;\n\nreturn [{ json: { valid: true, event_type: eventType, data: dataObject, user_id: userId } }];"
+      },
+      "id": "verify-signature",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 400, 200 ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [ { "value1": "={{ $json.valid }}", "value2": true } ]
+        }
+      },
+      "id": "if-valid",
+      "name": "IF valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [ 600, 200 ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"error\": \"invalid_signature\"}",
+        "options": { "responseCode": 401 }
+      },
+      "id": "respond-401",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 800, 400 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ev = $json;\nconst data = ev.data;\nconst eventType = ev.event_type;\n\n// We only process checkout.session.completed for new subs\n// and customer.subscription.updated/deleted for updates\nlet skip = false;\nlet subStatus = 'active';\nlet planId = '';\nlet expiresAt = null;\nlet providerSubId = '';\n\nif (eventType === 'checkout.session.completed') {\n  if (data.payment_status !== 'paid') {\n    skip = true;\n  }\n  providerSubId = data.subscription;\n} else if (eventType === 'customer.subscription.updated' || eventType === 'customer.subscription.deleted') {\n  subStatus = data.status;\n  providerSubId = data.id;\n  expiresAt = data.current_period_end ? new Date(data.current_period_end * 1000).toISOString() : null;\n} else {\n  skip = true;\n}\n\n// Map Stripe status to EchoSoul plans\nconst STATUS_MAP = {\n  active:   { plan: 'premium', daily_limit: 9999 },\n  trialing: { plan: 'premium', daily_limit: 9999 },\n  past_due: { plan: 'premium', daily_limit: 9999 },\n  unpaid:   { plan: 'free',    daily_limit: 20 },\n  canceled: { plan: 'free',    daily_limit: 20 },\n  incomplete: { plan: 'free',    daily_limit: 20 },\n  incomplete_expired: { plan: 'free', daily_limit: 20 }\n};\n\nconst planInfo = STATUS_MAP[subStatus] ?? { plan: 'free', daily_limit: 20 };\n\nreturn [{ json: {\n  skip,\n  user_id: ev.user_id,\n  provider: 'stripe',\n  provider_sub_id: providerSubId,\n  status: subStatus,\n  plan: planInfo.plan,\n  daily_limit: planInfo.daily_limit,\n  expires_at: expiresAt,\n  plan_id: planId,\n  event_type: eventType,\n  raw_event: $('Webhook Stripe').first().json.body\n}}];"
+      },
+      "id": "parse-event",
+      "name": "Parse event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 800, 200 ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [ { "value1": "={{ $json.skip }}", "value2": true } ]
+        }
+      },
+      "id": "if-skip",
+      "name": "IF skip",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [ 1000, 200 ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\": \"skipped\"}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-skip",
+      "name": "Respond 200 skip",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 1200, 100 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions?on_conflict=user_id,provider",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates,return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({user_id:$json.user_id,provider:$json.provider,provider_sub_id:$json.provider_sub_id,status:$json.status,plan_id:$json.plan_id,expires_at:$json.expires_at,raw_event:$json.raw_event}) }}",
+        "options": {}
+      },
+      "id": "upsert-sub",
+      "name": "Upsert subscription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1200, 300 ],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates,return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({plan:$('Parse event').first().json.plan,daily_limit:$('Parse event').first().json.daily_limit,updated_at:new Date().toISOString()}) }}",
+        "options": {}
+      },
+      "id": "update-plan",
+      "name": "Update user plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1400, 300 ],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\": \"ok\"}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-ok",
+      "name": "Respond 200 ok",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [ 1600, 300 ]
+    }
+  ],
+  "connections": {
+    "Webhook Stripe": { "main": [ [ { "node": "Verify signature", "type": "main", "index": 0 } ] ] },
+    "Verify signature": { "main": [ [ { "node": "IF valid", "type": "main", "index": 0 } ] ] },
+    "IF valid": { "main": [ [ { "node": "Parse event", "type": "main", "index": 0 } ], [ { "node": "Respond 401", "type": "main", "index": 0 } ] ] },
+    "Parse event": { "main": [ [ { "node": "IF skip", "type": "main", "index": 0 } ] ] },
+    "IF skip": { "main": [ [ { "node": "Respond 200 skip", "type": "main", "index": 0 } ], [ { "node": "Upsert subscription", "type": "main", "index": 0 } ] ] },
+    "Upsert subscription": { "main": [ [ { "node": "Update user plan", "type": "main", "index": 0 } ] ] },
+    "Update user plan": { "main": [ [ { "node": "Respond 200 ok", "type": "main", "index": 0 } ] ] }
+  }
+}

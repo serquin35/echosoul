@@ -1,0 +1,200 @@
+{
+  "name": "EchoSoul Vapi Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-events",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "vapi-events"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-known-events",
+              "leftValue": "={{ $json.body.message.type }}",
+              "rightValue": "conversation-update",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Filter Noise Events",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Drops conversation-update, status-update, speech-update and other noisy Vapi events"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Respond immediately to Vapi to prevent timeouts\n// Vapi expects a quick 200 OK for server events\nreturn [{ json: { status: 'ok' } }];"
+      },
+      "id": "7",
+      "name": "Quick 200 Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        500
+      ],
+      "notesInFlow": true,
+      "notes": "Respond 200 OK immediately to ALL Vapi events"
+    },
+    {
+      "parameters": {
+        "httpCode": "200",
+        "options": {}
+      },
+      "id": "8",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.message.type }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "end-of-call-report",
+              "output": 0
+            },
+            {
+              "value2": "tool-calls",
+              "output": 1
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "2",
+      "name": "Switch by Event Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Only route end-of-call-report and tool-calls; discard everything else via fallback"
+    },
+    {
+      "parameters": {},
+      "id": "4",
+      "name": "End of Call Summary",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ],
+      "notesInFlow": true,
+      "notes": "TODO: Supabase UPDATE status='completed', save call summary and duration"
+    },
+    {
+      "parameters": {},
+      "id": "5",
+      "name": "Handle Tool Calls",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ],
+      "notesInFlow": true,
+      "notes": "TODO: Switch by tool call name"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter Noise Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Quick 200 Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Noise Events": {
+      "main": [
+        [
+          {
+            "node": "Switch by Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quick 200 Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Event Type": {
+      "main": [
+        [
+          {
+            "node": "End of Call Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Tool Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

@@ -66,4 +66,16 @@ class Env {
     }
     return id;
   }
+
+  /// Stripe Payment Link for the Monthly Premium Plan (Test Mode)
+  static String get stripePaymentLinkMonthly =>
+      const String.fromEnvironment('STRIPE_LINK_MONTHLY').isNotEmpty
+          ? const String.fromEnvironment('STRIPE_LINK_MONTHLY')
+          : dotenv.env['STRIPE_LINK_MONTHLY'] ?? 'https://buy.stripe.com/test_cNidR32tM6Jv8R18RlgYU00';
+
+  /// Stripe Payment Link for the Annual Premium Plan (Test Mode)
+  static String get stripePaymentLinkAnnual =>
+      const String.fromEnvironment('STRIPE_LINK_ANNUAL').isNotEmpty
+          ? const String.fromEnvironment('STRIPE_LINK_ANNUAL')
+          : dotenv.env['STRIPE_LINK_ANNUAL'] ?? 'https://buy.stripe.com/test_28E6oB1pIaZL2sD9VpgYU01';
 }

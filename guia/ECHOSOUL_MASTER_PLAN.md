@@ -37,7 +37,7 @@
 | Voz proactiva | Vapi.ai | ✅ MVP (Bajo demanda) |
 | Web deploy | Vercel via GitHub Actions (`echosoul.dev`) | ✅ Activo |
 | Android deploy | Google Play Console | ✅ Prueba cerrada activa |
-| Pagos | Google Play Billing (Android) · Paddle (Web) | 🔲 Pendiente |
+| Pagos | Google Play Billing (Android) · Stripe (Web) | 🔲 Pendiente |
 
 ### Pipeline de datos
 
@@ -207,7 +207,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 
 ### 💳 FASE 3 — Monetización [PENDIENTE]
 - [ ] Google Play Billing (compra in-app Android)
-- [ ] Paddle (billing web externo)
+- [ ] Stripe (billing web externo)
 - [ ] UI paywall + lógica free/premium en Flutter
 - [ ] Webhook n8n → sincronizar suscripción en `user_plans`
 
@@ -281,7 +281,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
 | ~~**H10**~~ | ~~Voz (Vapi)~~ | ~~✅ COMPLETADO — Integrado Flutter SDK Vapi~~ | ✅ |
-| **H11** | Monetización (Play Billing + Paddle) | Paywall UI + lógica free/premium + webhook Supabase | 🔴 Alto |
+| **H11** | Monetización (Play Billing + Stripe) | Paywall UI + lógica free/premium + webhook Supabase/n8n | 🔴 Alto |
 | ~~**H12**~~ | ~~Exportar datos GDPR~~ | ~~✅ COMPLETADO — Función SQL / RPC + Share nativo~~ | ✅ |
 | **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
 | ~~**H14**~~ | ~~Fuentes Inter en Flutter~~ | ~~✅ COMPLETADO — Descargados TTF de rsms/inter v4.0 y configurados en pubspec.yaml~~ | ✅ |
@@ -346,7 +346,7 @@ EchoSoul opera con **una sola base de código Flutter** y **un único backend (S
 | Notificaciones | FCM Push nativas | Email fallback |
 | Voz proactiva | ✅ Retell / Vapi | ❌ No disponible |
 | Modo offline | ✅ Cache local (Hive) | ❌ No |
-| Pagos | Google Play Billing | Paddle (web) |
+| Pagos | Google Play Billing | Stripe (web) |
 | Navegación | Bottom Navigation Bar | Sidebar |
 
 **Detección de Plataforma en Código:**

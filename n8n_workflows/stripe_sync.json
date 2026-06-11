@@ -1,0 +1,150 @@
+{
+  "name": "EchoSoul — billing: stripe-sync-V2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "0 3 * * *" } ] }
+      },
+      "id": "cron-trigger",
+      "name": "Cron 3AM daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [ 200, 200 ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.stripe.com/v1/subscriptions?status=active&limit=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer sk_test_PON_TU_SECRET_KEY_AQUI" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-stripe",
+      "name": "Fetch Stripe active subs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 400, 200 ]
+    },
+    {
+      "parameters": {
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?plan=eq.premium&select=user_id",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "options": {}
+      },
+      "alwaysOutputData": true,
+      "id": "fetch-supa-users",
+      "name": "Fetch Supabase premium users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 600, 200 ],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } }
+    },
+    {
+      "parameters": {
+        "url": "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/subscriptions?select=user_id,provider_sub_id,status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "options": {}
+      },
+      "alwaysOutputData": true,
+      "id": "fetch-supa-subs",
+      "name": "Fetch Supabase subscriptions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 800, 200 ],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "let stripeSubs = [];\nlet supaUsers = [];\nlet supaSubs = [];\n\ntry { stripeSubs = $('Fetch Stripe active subs').all().map(i => i.json); } catch(e) {}\ntry { supaUsers = $('Fetch Supabase premium users').all().map(i => i.json); } catch(e) {}\ntry { supaSubs = $('Fetch Supabase subscriptions').all().map(i => i.json).filter(s => s.user_id && s.provider_sub_id); } catch(e) {}\n\nconst subIdToUserId = {};\nfor (const sub of supaSubs) {\n  subIdToUserId[sub.provider_sub_id] = sub.user_id;\n}\n\nlet rawData = stripeSubs[0] ?? {};\nconst activeArray = Array.isArray(rawData.data) ? rawData.data : [];\n\nconst stripeUserIds = new Set(\n  activeArray.map(s => {\n    // Stripe no siempre devuelve client_reference_id en la lista, usamos el mapa\n    return subIdToUserId[s.id];\n  }).filter(Boolean)\n);\n\nconst supaUserIds = new Set(supaUsers.map(u => u.user_id).filter(Boolean));\nconst corrections = [];\n\nfor (const userId of supaUserIds) {\n  if (!stripeUserIds.has(userId)) {\n    corrections.push({ user_id: userId, action: 'downgrade', plan: 'free', daily_limit: 20 });\n  }\n}\n\nreturn [{ json: {\n  corrections_count: corrections.length,\n  corrections: corrections,\n  stripe_active_count: activeArray.length,\n  supabase_premium: supaUsers.length,\n  summary: corrections.length === 0 ? '✅ Sin discrepancias' : `⚠️ ${corrections.length} corrección(es)`\n}}];"
+      },
+      "id": "find-discrepancies",
+      "name": "Find discrepancies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1000, 200 ]
+    },
+    {
+      "parameters": {
+        "conditions": { "boolean": [ { "value1": "={{ $json.corrections_count > 0 }}", "value2": true } ] }
+      },
+      "id": "if-corrections",
+      "name": "IF has corrections",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [ 1200, 200 ]
+    },
+    {
+      "parameters": {},
+      "id": "no-op",
+      "name": "No discrepancies",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ 1400, 400 ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nif (!data.corrections || data.corrections.length === 0) return [];\nreturn data.corrections.map(c => ({ json: c }));"
+      },
+      "id": "expand-corrections",
+      "name": "Expand corrections",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [ 1400, 100 ]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "loop-corrections",
+      "name": "Loop corrections",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [ 1600, 100 ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/user_plans?user_id=eq.{{ $json.user_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates,return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({plan:$json.plan,daily_limit:$json.daily_limit,updated_at:new Date().toISOString()}) }}",
+        "options": {}
+      },
+      "id": "apply-correction",
+      "name": "Apply correction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 1800, 100 ],
+      "credentials": { "httpHeaderAuth": { "id": "OJfBPZ3oav1nvDyb", "name": "EchoSoul-supabase" } }
+    }
+  ],
+  "connections": {
+    "Cron 3AM daily": { "main": [ [ { "node": "Fetch Stripe active subs", "type": "main", "index": 0 } ] ] },
+    "Fetch Stripe active subs": { "main": [ [ { "node": "Fetch Supabase premium users", "type": "main", "index": 0 } ] ] },
+    "Fetch Supabase premium users": { "main": [ [ { "node": "Fetch Supabase subscriptions", "type": "main", "index": 0 } ] ] },
+    "Fetch Supabase subscriptions": { "main": [ [ { "node": "Find discrepancies", "type": "main", "index": 0 } ] ] },
+    "Find discrepancies": { "main": [ [ { "node": "IF has corrections", "type": "main", "index": 0 } ] ] },
+    "IF has corrections": { "main": [ [ { "node": "Expand corrections", "type": "main", "index": 0 } ], [ { "node": "No discrepancies", "type": "main", "index": 0 } ] ] },
+    "Expand corrections": { "main": [ [ { "node": "Loop corrections", "type": "main", "index": 0 } ] ] },
+    "Loop corrections": { "main": [ [], [ { "node": "Apply correction", "type": "main", "index": 0 } ] ] },
+    "Apply correction": { "main": [ [ { "node": "Loop corrections", "type": "main", "index": 0 } ] ] }
+  }
+}

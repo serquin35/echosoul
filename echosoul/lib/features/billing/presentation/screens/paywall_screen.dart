@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/config/env.dart';
 import '../../../../core/constants/es_colors.dart';
 import '../../../../core/constants/es_spacing.dart';
 import '../../../../core/constants/es_typography.dart';
@@ -307,14 +308,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
 
-    // Lemon Squeezy product checkout UUID (includes both monthly & yearly variants)
-    const productUuid = '8ea74eeb-8f3b-416a-85ae-5e31561aacf8';
-    const storeSlug = 'echosoul';
+    // Use the appropriate Stripe link based on the selected plan
+    final baseUrl = _isYearly ? Env.stripePaymentLinkAnnual : Env.stripePaymentLinkMonthly;
 
-    final checkoutUrl =
-        'https://$storeSlug.lemonsqueezy.com/checkout/buy/$productUuid'
-        '?checkout[custom][user_id]=${Uri.encodeComponent(userId)}'
-        '&checkout[media]=0';
+    // Append client_reference_id for Stripe webhook mapping
+    final checkoutUrl = '$baseUrl?client_reference_id=${Uri.encodeComponent(userId)}';
+    
     final uri = Uri.parse(checkoutUrl);
 
     if (await canLaunchUrl(uri)) {
