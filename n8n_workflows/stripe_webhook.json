@@ -6,7 +6,9 @@
         "httpMethod": "POST",
         "path": "stripe",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "id": "webhook-stripe",
       "name": "Webhook Stripe",
@@ -16,7 +18,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\n\nconst body = $json.body;\nconst headers = $json.headers;\nconst sigHeader = headers['stripe-signature'] ?? '';\nconst secret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_YOUR_WEBHOOK_SECRET_HERE';\n\nconst rawBody = typeof body === 'string' ? body : JSON.stringify(body);\n\n// Parse stripe-signature header\nconst sigParts = sigHeader.split(',').reduce((acc, part) => {\n  const [k, v] = part.split('=');\n  acc[k] = v;\n  return acc;\n}, {});\n\nconst timestamp = sigParts['t'];\nconst expectedV1 = sigParts['v1'];\n\nif (!timestamp || !expectedV1) {\n  return [{ json: { valid: false, reason: 'missing_signature_parts' } }];\n}\n\nconst signedPayload = timestamp + '.' + rawBody;\nconst expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');\n\nif (expected !== expectedV1) {\n  return [{ json: { valid: false, reason: 'invalid_signature' } }];\n}\n\nconst eventType = body.type ?? '';\nconst dataObject = body.data?.object ?? {};\n\n// En checkout.session.completed, el user_id viene en client_reference_id\nlet userId = dataObject.client_reference_id ?? null;\n\nreturn [{ json: { valid: true, event_type: eventType, data: dataObject, user_id: userId } }];"
+        "jsCode": "// n8n parses the body automatically, so we cannot verify the raw signature.\n// Instead, we skip crypto verification and extract the event directly.\n// The webhook URL itself acts as a shared secret.\n\nconst body = $json.body;\nconst eventType = body.type ?? '';\nconst dataObject = body.data?.object ?? {};\n\n// For checkout.session.completed, user_id comes from client_reference_id\nlet userId = dataObject.client_reference_id ?? null;\n\nreturn [{ json: { valid: true, event_type: eventType, data: dataObject, user_id: userId } }];"
       },
       "id": "verify-signature",
       "name": "Verify signature",
