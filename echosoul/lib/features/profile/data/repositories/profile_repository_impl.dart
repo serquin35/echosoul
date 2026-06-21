@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -21,6 +22,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
         .eq('id', user.id)
         .maybeSingle() as Map<String, dynamic>?;
 
+    final String currentPlatform = kIsWeb
+        ? 'web'
+        : (Platform.isIOS ? 'ios' : 'android');
+
     if (profileData == null) {
       // Crea la fila por defecto (el trigger debería haberlo hecho, esto es un fallback)
       final defaultName = user.userMetadata?['full_name'] as String?
@@ -32,6 +37,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         'email': user.email,
         'onboarding_completed': false,
         'is_paused': false,
+        'platform': currentPlatform,
         'created_at': DateTime.now().toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
@@ -40,6 +46,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
           .select()
           .eq('id', user.id)
           .single() as Map<String, dynamic>;
+    } else if (profileData['platform'] != currentPlatform) {
+      // Sincroniza dinámicamente si la plataforma cambió
+      await _client.from('profiles').update({'platform': currentPlatform}).eq('id', user.id);
+      profileData['platform'] = currentPlatform;
     }
 
     final companion = await _client
