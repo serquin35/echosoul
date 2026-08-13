@@ -9,6 +9,7 @@ import '../../../../core/constants/es_typography.dart';
 import '../../../../core/utils/es_platform.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../billing/presentation/providers/billing_provider.dart';
+import '../../../billing/domain/entities/billing_entity.dart';
 import '../providers/chat_provider.dart';
 import '../providers/companion_data_provider.dart';
 import '../widgets/chat_message_bubble.dart';
