@@ -23,6 +23,13 @@ class Env {
           ? const String.fromEnvironment('N8N_CHAT_WEBHOOK_URL')
           : dotenv.env['N8N_CHAT_WEBHOOK_URL'] ?? '';
 
+  /// Shared secret for protected n8n webhooks (new-user, etc.).
+  /// NEVER expose this in client-visible code or logs.
+  static String get n8nWebhookSecret =>
+      const String.fromEnvironment('N8N_WEBHOOK_SECRET').isNotEmpty
+          ? const String.fromEnvironment('N8N_WEBHOOK_SECRET')
+          : dotenv.env['N8N_WEBHOOK_SECRET'] ?? 'es_wh_prod_2026_safe';
+
   /// Google Web Client ID for native Google Sign-In.
   static String get googleWebClientId =>
       const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID').isNotEmpty
