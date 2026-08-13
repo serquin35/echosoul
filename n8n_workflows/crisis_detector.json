@@ -1,0 +1,802 @@
+﻿{
+    "updatedAt":  "2026-06-02T09:30:45.775Z",
+    "createdAt":  "2026-05-12T21:05:39.482Z",
+    "id":  "KtWJFbU7x2BOzj2Y",
+    "name":  "EchoSoul — crisis-detector",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "crisis-check",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ea4cce07-da07-4299-a2b1-16c580808f9e",
+                      "name":  "Webhook Crisis Check",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -928,
+                                       624
+                                   ],
+                      "webhookId":  "11728f85-79b8-4815-bfd4-ea82412d6ef6"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.openai.com/v1/chat/completions",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "openAiApi",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "raw",
+                                         "rawContentType":  "application/json",
+                                         "body":  "={{ JSON.stringify({model:\u0027gpt-4o-mini\u0027,max_tokens:300,messages:[{role:\u0027user\u0027,content:`Analiza el siguiente mensaje en busca de señales de crisis emocional o riesgo.\\\\n\\\\nClasifica en uno de estos niveles:\\\\n- none: sin señales de riesgo\\\\n- low: expresión de tristeza/estrés, sin riesgo inmediato\\\\n- medium: angustia significativa, posible riesgo, requiere respuesta empática especial\\\\n- high: mención explícita de autolesión, suicidio u otras crisis graves\\\\n\\\\nSi el nivel es medium o high, genera un safeReply apropiado: empático, sin minimizar, que incluya OBLIGATORIAMENTE estos recursos de ayuda en España:\\\\\\\\n- Emergencias: 112\\\\\\\\n- Línea de Prevención del Suicidio: 024\\\\\\\\n- Teléfono de la Esperanza: 717 003 717\\\\\\\\n- En otros países, busca el número local de emergencias.\\\\n\\\\nResponde ÚNICAMENTE con JSON válido, sin markdown:\\\\n{\\\\\\\"level\\\\\\\": \\\\\\\"none|low|medium|high\\\\\\\", \\\\\\\"safeReply\\\\\\\": \\\\\\\"string o null\\\\\\\"}\\\\n\\\\nMensaje a analizar: ${$json.body.message}`}]}) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "7c321d8e-4790-4b17-b518-ac9f03c76e13",
+                      "name":  "Analyze Crisis",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -720,
+                                       624
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "KzFxOuQEjV23LyRC",
+                                                            "name":  "OpenAi account"
+                                                        }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nconst rawReply = $input.first().json.choices?.[0]?.message?.content ?? \u0027{}\u0027;\nlet result = { isCrisis: false, level: \u0027none\u0027, safeReply: null };\n\ntry {\n  const clean = rawReply.replace(/```json|```/gi, \u0027\u0027).trim();\n  const parsed = JSON.parse(clean);\n  const validLevels = [\u0027none\u0027, \u0027low\u0027, \u0027medium\u0027, \u0027high\u0027];\n  result.level    = validLevels.includes(parsed.level) ? parsed.level : \u0027none\u0027;\n  result.isCrisis = [\u0027medium\u0027, \u0027high\u0027].includes(result.level);\n  result.safeReply = result.isCrisis ? (parsed.safeReply ?? null) : null;\n} catch(e) {\n  console.error(\u0027Crisis parse error:\u0027, e.message, \u0027| Raw:\u0027, rawReply.substring(0, 200));\n}\n\nconst webhookData = $(\u0027Webhook Crisis Check\u0027).first().json;\nreturn [{ json: {\n  user_id:    webhookData.body?.user_id ?? webhookData.user_id,\n  message:    webhookData.body?.message ?? webhookData.message,\n  isCrisis:   result.isCrisis,\n  level:      result.level,\n  safeReply:  result.safeReply,\n  msg_hash:   btoa(encodeURIComponent((webhookData.body?.user_id ?? \u0027\u0027) + \u0027:\u0027 + (webhookData.body?.message ?? \u0027\u0027))).substring(0, 64)\n}}];\n"
+                                     },
+                      "id":  "d83a1c14-7d42-4e10-9e5b-c40835983b84",
+                      "name":  "Parse Crisis Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -528,
+                                       624
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond_1",
+                                                                                   "leftValue":  "={{ $json.isCrisis }}",
+                                                                                   "operator":  {
+                                                                                                    "operation":  "false",
+                                                                                                    "type":  "boolean",
+                                                                                                    "singleValue":  true
+                                                                                                },
+                                                                                   "rightValue":  null
+                                                                               }
+                                                                           ],
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        }
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "809bb92b-cd0c-40a9-a9d5-ba17a43ce6c7",
+                      "name":  "IF No Crisis",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -352,
+                                       624
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={\"isCrisis\":false,\"level\":\"none\",\"safeReply\":null}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "id":  "7f54caa9-f3c9-4837-a052-23bdc8463bc3",
+                      "name":  "Respond No Crisis",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       -160,
+                                       528
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/crisis_events",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendBody":  true,
+                                         "contentType":  "raw",
+                                         "rawContentType":  "application/json",
+                                         "body":  "={{ JSON.stringify({user_id:$json.user_id,level:$json.level,msg_hash:$json.msg_hash}) }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "4e22bcf6-ce02-4e61-90b3-f61a1dc97c64",
+                      "name":  "Log Crisis Event",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -160,
+                                       672
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "OJfBPZ3oav1nvDyb",
+                                                                 "name":  "EchoSoul-supabase"
+                                                             }
+                                      },
+                      "onError":  "continueRegularOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "cond_2",
+                                                                                   "leftValue":  "={{ $json.level }}",
+                                                                                   "operator":  {
+                                                                                                    "operation":  "equals",
+                                                                                                    "type":  "string"
+                                                                                                },
+                                                                                   "rightValue":  "high"
+                                                                               }
+                                                                           ],
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        }
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "397f5b01-d2dd-4b9a-8bda-fc524c3e4740",
+                      "name":  "IF High Level",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       0,
+                                       672
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "09dd5c0f-80f3-48a6-b2ed-424602265afc",
+                      "name":  "Level Medium (no alert)",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       192,
+                                       768
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ JSON.stringify({isCrisis:$json.isCrisis,level:$json.level,safeReply:$json.safeReply}) }}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "id":  "2636971e-2d9b-4d5b-b70a-725299c4da80",
+                      "name":  "Respond Crisis",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       400,
+                                       688
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "## Almacenamiento de crisis\nEl mensaje del usuario **nunca** se guarda en `crisis_events`.\n\nSolo se persiste: `user_id`, `level`, `msg_hash` (base64 truncado) y timestamp.\n\nEsto cumple con principio de minimización de datos (GDPR Art. 5).",
+                                         "height":  200,
+                                         "width":  340,
+                                         "color":  6
+                                     },
+                      "id":  "bedbf8e2-b6cb-4b80-a456-14c42776fcbb",
+                      "name":  "🛡️ Diseño de privacidad",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -960,
+                                       384
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "sendTo":  "serquin16@gmail.com",
+                                         "subject":  "⚠️ EchoSoul — Crisis HIGH detectada",
+                                         "message":  "={{ `User: ${$json.user_id}\\nLevel: ${$json.level}\\nTime: ${new Date().toISOString()}` }}",
+                                         "options":  {
+                                                         "senderName":  "EchoSoul"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.gmail",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       192,
+                                       560
+                                   ],
+                      "id":  "8f373940-59e3-4e98-866a-ed649129fdf6",
+                      "name":  "Send a message",
+                      "webhookId":  "ef6286f9-f469-4111-8b18-0e526ca3c9db",
+                      "credentials":  {
+                                          "gmailOAuth2":  {
+                                                              "id":  "XI4mlfkFZGAD9dyL",
+                                                              "name":  "Gmail account"
+                                                          }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Webhook Crisis Check":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Analyze Crisis",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Analyze Crisis":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Parse Crisis Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Parse Crisis Response":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "IF No Crisis",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "IF No Crisis":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Respond No Crisis",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Log Crisis Event",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Log Crisis Event":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "IF High Level",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "IF High Level":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Send a message",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Level Medium (no alert)",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Level Medium (no alert)":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Respond Crisis",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Send a message":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Respond Crisis",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  {
+
+                },
+    "versionId":  "15677957-da13-405b-a6a3-774691777b36",
+    "activeVersionId":  "15677957-da13-405b-a6a3-774691777b36",
+    "versionCounter":  86,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-12T21:05:39.482Z",
+                       "createdAt":  "2026-05-12T21:05:39.482Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "KtWJFbU7x2BOzj2Y",
+                       "projectId":  "qo7vPQhyAzkTS54A",
+                       "project":  {
+                                       "updatedAt":  "2026-01-12T16:49:52.207Z",
+                                       "createdAt":  "2025-11-29T20:35:10.779Z",
+                                       "id":  "qo7vPQhyAzkTS54A",
+                                       "name":  "SERGIO  serquin16@gmail.com \u003cserquin16@gmail.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "45809c68-e7c7-48f2-a548-8de836a401cb"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-06-02T09:30:50.177Z",
+                          "createdAt":  "2026-06-02T09:30:45.781Z",
+                          "versionId":  "15677957-da13-405b-a6a3-774691777b36",
+                          "workflowId":  "KtWJFbU7x2BOzj2Y",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "crisis-check",
+                                                               "responseMode":  "responseNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "ea4cce07-da07-4299-a2b1-16c580808f9e",
+                                            "name":  "Webhook Crisis Check",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  1.1,
+                                            "position":  [
+                                                             -928,
+                                                             624
+                                                         ],
+                                            "webhookId":  "11728f85-79b8-4815-bfd4-ea82412d6ef6"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://api.openai.com/v1/chat/completions",
+                                                               "authentication":  "predefinedCredentialType",
+                                                               "nodeCredentialType":  "openAiApi",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "contentType":  "raw",
+                                                               "rawContentType":  "application/json",
+                                                               "body":  "={{ JSON.stringify({model:\u0027gpt-4o-mini\u0027,max_tokens:300,messages:[{role:\u0027user\u0027,content:`Analiza el siguiente mensaje en busca de señales de crisis emocional o riesgo.\\\\n\\\\nClasifica en uno de estos niveles:\\\\n- none: sin señales de riesgo\\\\n- low: expresión de tristeza/estrés, sin riesgo inmediato\\\\n- medium: angustia significativa, posible riesgo, requiere respuesta empática especial\\\\n- high: mención explícita de autolesión, suicidio u otras crisis graves\\\\n\\\\nSi el nivel es medium o high, genera un safeReply apropiado: empático, sin minimizar, que incluya OBLIGATORIAMENTE estos recursos de ayuda en España:\\\\\\\\n- Emergencias: 112\\\\\\\\n- Línea de Prevención del Suicidio: 024\\\\\\\\n- Teléfono de la Esperanza: 717 003 717\\\\\\\\n- En otros países, busca el número local de emergencias.\\\\n\\\\nResponde ÚNICAMENTE con JSON válido, sin markdown:\\\\n{\\\\\\\"level\\\\\\\": \\\\\\\"none|low|medium|high\\\\\\\", \\\\\\\"safeReply\\\\\\\": \\\\\\\"string o null\\\\\\\"}\\\\n\\\\nMensaje a analizar: ${$json.body.message}`}]}) }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "7c321d8e-4790-4b17-b518-ac9f03c76e13",
+                                            "name":  "Analyze Crisis",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             -720,
+                                                             624
+                                                         ],
+                                            "credentials":  {
+                                                                "openAiApi":  {
+                                                                                  "id":  "KzFxOuQEjV23LyRC",
+                                                                                  "name":  "OpenAi account"
+                                                                              }
+                                                            },
+                                            "onError":  "continueRegularOutput"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "\nconst rawReply = $input.first().json.choices?.[0]?.message?.content ?? \u0027{}\u0027;\nlet result = { isCrisis: false, level: \u0027none\u0027, safeReply: null };\n\ntry {\n  const clean = rawReply.replace(/```json|```/gi, \u0027\u0027).trim();\n  const parsed = JSON.parse(clean);\n  const validLevels = [\u0027none\u0027, \u0027low\u0027, \u0027medium\u0027, \u0027high\u0027];\n  result.level    = validLevels.includes(parsed.level) ? parsed.level : \u0027none\u0027;\n  result.isCrisis = [\u0027medium\u0027, \u0027high\u0027].includes(result.level);\n  result.safeReply = result.isCrisis ? (parsed.safeReply ?? null) : null;\n} catch(e) {\n  console.error(\u0027Crisis parse error:\u0027, e.message, \u0027| Raw:\u0027, rawReply.substring(0, 200));\n}\n\nconst webhookData = $(\u0027Webhook Crisis Check\u0027).first().json;\nreturn [{ json: {\n  user_id:    webhookData.body?.user_id ?? webhookData.user_id,\n  message:    webhookData.body?.message ?? webhookData.message,\n  isCrisis:   result.isCrisis,\n  level:      result.level,\n  safeReply:  result.safeReply,\n  msg_hash:   btoa(encodeURIComponent((webhookData.body?.user_id ?? \u0027\u0027) + \u0027:\u0027 + (webhookData.body?.message ?? \u0027\u0027))).substring(0, 64)\n}}];\n"
+                                                           },
+                                            "id":  "d83a1c14-7d42-4e10-9e5b-c40835983b84",
+                                            "name":  "Parse Crisis Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             -528,
+                                                             624
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "combinator":  "and",
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "cond_1",
+                                                                                                         "leftValue":  "={{ $json.isCrisis }}",
+                                                                                                         "operator":  {
+                                                                                                                          "operation":  "false",
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "singleValue":  true
+                                                                                                                      },
+                                                                                                         "rightValue":  null
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
+                                                                                              }
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "809bb92b-cd0c-40a9-a9d5-ba17a43ce6c7",
+                                            "name":  "IF No Crisis",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             -352,
+                                                             624
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "respondWith":  "json",
+                                                               "responseBody":  "={\"isCrisis\":false,\"level\":\"none\",\"safeReply\":null}",
+                                                               "options":  {
+                                                                               "responseCode":  200
+                                                                           }
+                                                           },
+                                            "id":  "7f54caa9-f3c9-4837-a052-23bdc8463bc3",
+                                            "name":  "Respond No Crisis",
+                                            "type":  "n8n-nodes-base.respondToWebhook",
+                                            "typeVersion":  1.5,
+                                            "position":  [
+                                                             -160,
+                                                             528
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/crisis_events",
+                                                               "authentication":  "genericCredentialType",
+                                                               "genericAuthType":  "httpHeaderAuth",
+                                                               "sendBody":  true,
+                                                               "contentType":  "raw",
+                                                               "rawContentType":  "application/json",
+                                                               "body":  "={{ JSON.stringify({user_id:$json.user_id,level:$json.level,msg_hash:$json.msg_hash}) }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "4e22bcf6-ce02-4e61-90b3-f61a1dc97c64",
+                                            "name":  "Log Crisis Event",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             -160,
+                                                             672
+                                                         ],
+                                            "credentials":  {
+                                                                "httpHeaderAuth":  {
+                                                                                       "id":  "OJfBPZ3oav1nvDyb",
+                                                                                       "name":  "EchoSoul-supabase"
+                                                                                   }
+                                                            },
+                                            "onError":  "continueRegularOutput"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "combinator":  "and",
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "cond_2",
+                                                                                                         "leftValue":  "={{ $json.level }}",
+                                                                                                         "operator":  {
+                                                                                                                          "operation":  "equals",
+                                                                                                                          "type":  "string"
+                                                                                                                      },
+                                                                                                         "rightValue":  "high"
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
+                                                                                              }
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "397f5b01-d2dd-4b9a-8bda-fc524c3e4740",
+                                            "name":  "IF High Level",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             0,
+                                                             672
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+
+                                                           },
+                                            "id":  "09dd5c0f-80f3-48a6-b2ed-424602265afc",
+                                            "name":  "Level Medium (no alert)",
+                                            "type":  "n8n-nodes-base.noOp",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             192,
+                                                             768
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "respondWith":  "json",
+                                                               "responseBody":  "={{ JSON.stringify({isCrisis:$json.isCrisis,level:$json.level,safeReply:$json.safeReply}) }}",
+                                                               "options":  {
+                                                                               "responseCode":  200
+                                                                           }
+                                                           },
+                                            "id":  "2636971e-2d9b-4d5b-b70a-725299c4da80",
+                                            "name":  "Respond Crisis",
+                                            "type":  "n8n-nodes-base.respondToWebhook",
+                                            "typeVersion":  1.5,
+                                            "position":  [
+                                                             400,
+                                                             688
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "content":  "## Almacenamiento de crisis\nEl mensaje del usuario **nunca** se guarda en `crisis_events`.\n\nSolo se persiste: `user_id`, `level`, `msg_hash` (base64 truncado) y timestamp.\n\nEsto cumple con principio de minimización de datos (GDPR Art. 5).",
+                                                               "height":  200,
+                                                               "width":  340,
+                                                               "color":  6
+                                                           },
+                                            "id":  "bedbf8e2-b6cb-4b80-a456-14c42776fcbb",
+                                            "name":  "🛡️ Diseño de privacidad",
+                                            "type":  "n8n-nodes-base.stickyNote",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             -960,
+                                                             384
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "sendTo":  "serquin16@gmail.com",
+                                                               "subject":  "⚠️ EchoSoul — Crisis HIGH detectada",
+                                                               "message":  "={{ `User: ${$json.user_id}\\nLevel: ${$json.level}\\nTime: ${new Date().toISOString()}` }}",
+                                                               "options":  {
+                                                                               "senderName":  "EchoSoul"
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.gmail",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             192,
+                                                             560
+                                                         ],
+                                            "id":  "8f373940-59e3-4e98-866a-ed649129fdf6",
+                                            "name":  "Send a message",
+                                            "webhookId":  "ef6286f9-f469-4111-8b18-0e526ca3c9db",
+                                            "credentials":  {
+                                                                "gmailOAuth2":  {
+                                                                                    "id":  "XI4mlfkFZGAD9dyL",
+                                                                                    "name":  "Gmail account"
+                                                                                }
+                                                            }
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook Crisis Check":  {
+                                                                           "main":  [
+                                                                                        [
+                                                                                            {
+                                                                                                "node":  "Analyze Crisis",
+                                                                                                "type":  "main",
+                                                                                                "index":  0
+                                                                                            }
+                                                                                        ]
+                                                                                    ]
+                                                                       },
+                                              "Analyze Crisis":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Parse Crisis Response",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Parse Crisis Response":  {
+                                                                            "main":  [
+                                                                                         [
+                                                                                             {
+                                                                                                 "node":  "IF No Crisis",
+                                                                                                 "type":  "main",
+                                                                                                 "index":  0
+                                                                                             }
+                                                                                         ]
+                                                                                     ]
+                                                                        },
+                                              "IF No Crisis":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Respond No Crisis",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ],
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Log Crisis Event",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                                              "Log Crisis Event":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "IF High Level",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                                              "IF High Level":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Send a message",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ],
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Level Medium (no alert)",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                                              "Level Medium (no alert)":  {
+                                                                              "main":  [
+                                                                                           [
+                                                                                               {
+                                                                                                   "node":  "Respond Crisis",
+                                                                                                   "type":  "main",
+                                                                                                   "index":  0
+                                                                                               }
+                                                                                           ]
+                                                                                       ]
+                                                                          },
+                                              "Send a message":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Respond Crisis",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 }
+                                          },
+                          "nodeGroups":  [
+
+                                         ],
+                          "authors":  "SERGIO  serquin16@gmail.com",
+                          "name":  "Version 15677957",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-06-02T09:30:50.166Z",
+                                                             "id":  1113,
+                                                             "workflowId":  "KtWJFbU7x2BOzj2Y",
+                                                             "versionId":  "15677957-da13-405b-a6a3-774691777b36",
+                                                             "event":  "activated",
+                                                             "userId":  "45809c68-e7c7-48f2-a548-8de836a401cb"
+                                                         }
+                                                     ]
+                      }
+}

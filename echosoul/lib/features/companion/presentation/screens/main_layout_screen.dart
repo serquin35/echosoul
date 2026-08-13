@@ -86,7 +86,7 @@ class _MobileLayout extends StatelessWidget {
       case 2:
         context.goNamed(RouteNames.profile);
       case 3:
-        context.goNamed(RouteNames.legal);
+        context.go(RouteNames.legal);
     }
   }
 
@@ -222,7 +222,7 @@ class _EsSidebar extends ConsumerWidget {
               activeIcon: Icons.gavel,
               label: S.of(context).navLegal,
               isActive: path.startsWith(RouteNames.legal),
-              onTap: () => context.goNamed(RouteNames.legal),
+              onTap: () => context.go(RouteNames.legal),
             ),
 
             const Spacer(),

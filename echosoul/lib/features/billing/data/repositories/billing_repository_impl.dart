@@ -88,8 +88,34 @@ class BillingRepositoryImpl implements BillingRepository {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    await _client.rpc('increment_messages_used', params: {
-      'p_user_id': user.id,
-    });
+    try {
+      await _client.rpc('increment_messages_used', params: {
+        'p_user_id': user.id,
+      });
+    } catch (_) {
+      try {
+        final current = await _client
+            .from('user_plans')
+            .select('messages_used')
+            .eq('user_id', user.id)
+            .maybeSingle() as Map<String, dynamic>?;
+
+        if (current != null) {
+          final count = (current['messages_used'] as int? ?? 0) + 1;
+          await _client
+              .from('user_plans')
+              .update({'messages_used': count, 'updated_at': DateTime.now().toUtc().toIso8601String()})
+              .eq('user_id', user.id);
+        } else {
+          await _client.from('user_plans').insert({
+            'user_id': user.id,
+            'plan': 'free',
+            'daily_limit': 20,
+            'messages_used': 1,
+            'last_reset_date': DateTime.now().toIso8601String().substring(0, 10),
+          });
+        }
+      } catch (_) {}
+    }
   }
 }

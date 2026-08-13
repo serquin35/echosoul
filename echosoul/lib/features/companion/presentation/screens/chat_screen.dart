@@ -533,33 +533,50 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    final billing = await ref.read(billingProvider.future);
-    if (!billing.canSendMessage) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.of(context).dailyLimitReached),
-            backgroundColor: EsColors.warning,
-            action: SnackBarAction(
-              label: 'Premium',
-              textColor: Colors.white,
-              onPressed: () => context.push(RouteNames.paywall),
+    try {
+      final billing = ref.read(billingProvider).valueOrNull ?? const BillingEntity();
+      if (!billing.canSendMessage) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(S.of(context).dailyLimitReached),
+              backgroundColor: EsColors.warning,
+              action: SnackBarAction(
+                label: 'Premium',
+                textColor: Colors.white,
+                onPressed: () => context.push(RouteNames.paywall),
+              ),
             ),
-          ),
-        );
+          );
+        }
+        return;
       }
-      return;
-    }
 
-    _controller.clear();
-    _focusNode.requestFocus();
-    await ref.read(chatProvider.notifier).sendMessage(text);
-    await ref.read(billingProvider.notifier).incrementMessagesUsed();
+      _controller.clear();
+      _focusNode.requestFocus();
+      await ref.read(chatProvider.notifier).sendMessage(text);
+      
+      try {
+        await ref.read(billingProvider.notifier).incrementMessagesUsed();
+      } catch (_) {
+        // Silently swallow billing increment errors to avoid blocking the chat
+      }
+    } catch (_) {
+      // General safety fallback
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isTyping = ref.watch(chatProvider).isTyping;
+    final billing = ref.watch(billingProvider).valueOrNull ?? const BillingEntity();
+    final canSend = billing.canSendMessage;
+
+    final hintText = isTyping
+        ? S.of(context).waitingForResponse
+        : (!canSend
+            ? S.of(context).dailyLimitReached
+            : S.of(context).typeAMessage);
 
     return Center(
       child: ConstrainedBox(
@@ -584,16 +601,14 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  enabled: !isTyping,
+                  enabled: !isTyping && canSend,
                   style: EsTypography.bodyMedium.copyWith(
                     color: EsColors.textPrimaryDark,
                   ),
                   decoration: InputDecoration(
-                    hintText: isTyping
-                        ? S.of(context).waitingForResponse
-                        : S.of(context).typeAMessage,
+                    hintText: hintText,
                     hintStyle: EsTypography.bodyMedium
-                        .copyWith(color: EsColors.textSecondaryDark),
+                        .copyWith(color: !canSend ? EsColors.warning : EsColors.textSecondaryDark),
                     filled: true,
                     fillColor: EsColors.surfaceDark,
                     contentPadding: const EdgeInsets.symmetric(
@@ -622,11 +637,11 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: isTyping
+                  color: (isTyping || !canSend)
                       ? EsColors.surfaceElevated
                       : EsColors.primaryBlue,
                   shape: BoxShape.circle,
-                  boxShadow: isTyping
+                  boxShadow: (isTyping || !canSend)
                       ? null
                       : [
                           BoxShadow(
@@ -637,11 +652,13 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
                 ),
                 child: IconButton(
                   icon: Icon(
-                    isTyping ? Icons.hourglass_top : Icons.send_rounded,
+                    isTyping
+                        ? Icons.hourglass_top
+                        : (!canSend ? Icons.lock_outline : Icons.send_rounded),
                     color: Colors.white,
                     size: 20,
                   ),
-                  onPressed: isTyping ? null : _handleSend,
+                  onPressed: (isTyping || !canSend) ? null : _handleSend,
                 ),
               ),
             ],

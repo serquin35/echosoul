@@ -222,7 +222,7 @@ class ProfileScreen extends ConsumerWidget {
                             label: S.of(context).legalNoticesLabel,
                             value: S.of(context).legalNoticesSubtitle,
                             iconColor: EsColors.primaryBlue,
-                            onTap: () => context.goNamed(routes.RouteNames.legal),
+                            onTap: () => context.go(routes.RouteNames.legal),
                           ),
                         ],
                       ),

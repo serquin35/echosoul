@@ -78,22 +78,32 @@ class ChatNotifier extends Notifier<ChatState> {
       isTyping: true,
     );
 
-    // 2. Call repository
-    final sessionId = ref.read(chatSessionIdProvider);
-    const nullUuid = '00000000-0000-0000-0000-000000000000';
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? nullUuid;
-    final reply = await ref.read(chatRepositoryProvider).sendMessage(
-          userMessage: text.trim(),
-          sessionId: sessionId,
-          userId: userId,
-        );
+    try {
+      // 2. Call repository
+      final sessionId = ref.read(chatSessionIdProvider);
+      const nullUuid = '00000000-0000-0000-0000-000000000000';
+      final userId = Supabase.instance.client.auth.currentUser?.id ?? nullUuid;
+      final reply = await ref.read(chatRepositoryProvider).sendMessage(
+            userMessage: text.trim(),
+            sessionId: sessionId,
+            userId: userId,
+          );
 
-    // 3. Append companion reply, hide typing indicator
-    state = state.copyWith(
-      messages: [reply, ...state.messages],
-      isTyping: false,
-      isCrisis: reply.isCrisis || state.isCrisis, // Keep it true if it was already true, or if the new message is a crisis.
-    );
+      // 3. Append companion reply, hide typing indicator
+      state = state.copyWith(
+        messages: [reply, ...state.messages],
+        isTyping: false,
+        isCrisis: reply.isCrisis || state.isCrisis, // Keep it true if it was already true, or if the new message is a crisis.
+      );
+    } catch (e) {
+      final errorMsg = ChatMessage.error('Hubo un inconveniente al recibir la respuesta.');
+      state = state.copyWith(
+        messages: [errorMsg, ...state.messages],
+        isTyping: false,
+      );
+    } finally {
+      state = state.copyWith(isTyping: false);
+    }
   }
 }
 

@@ -1,0 +1,908 @@
+﻿{
+    "updatedAt":  "2026-06-11T16:54:29.309Z",
+    "createdAt":  "2026-06-08T12:17:34.672Z",
+    "id":  "cgTKklCaBYVBFNpT",
+    "name":  "EchoSoul Vapi Webhook",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "vapi-events",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "1",
+                      "name":  "Webhook",
+                      "position":  [
+                                       0,
+                                       144
+                                   ],
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "webhookId":  "vapi-events",
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "abc1",
+                                                                                   "leftValue":  "={{ $json.body.message.type }}",
+                                                                                   "operator":  {
+                                                                                                    "operation":  "equals",
+                                                                                                    "type":  "string"
+                                                                                                },
+                                                                                   "rightValue":  "end-of-call-report"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "2",
+                      "name":  "Switch by Event Type",
+                      "position":  [
+                                       224,
+                                       128
+                                   ],
+                      "type":  "n8n-nodes-base.filter",
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "5",
+                      "name":  "Handle Tool Calls",
+                      "position":  [
+                                       400,
+                                       288
+                                   ],
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "notes":  "TODO: Switch by tool call name"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const body = $json.body?.message ?? $json.body ?? {};\n\nconst vapiCallId = body.call?.id ?? null;\nconst summary = body.summary ?? body.analysis?.summary ?? null;\nconst transcript = body.transcript ?? \u0027\u0027;\nconst durationSeconds = Math.round(body.durationSeconds ?? 0);\nconst endedReason = body.endedReason ?? \u0027unknown\u0027;\nconst startedAt = body.startedAt ?? null;\nconst endedAt = body.endedAt ?? null;\nconst cost = body.cost ?? 0;\nconst recordingUrl = body.recordingUrl ?? null;\nconst successEval = body.analysis?.successEvaluation ?? null;\n\nconst metadata = body.call?.assistantOverrides?.metadata ?? body.assistant?.metadata ?? {};\nconst echoSoulUserId = metadata.echosoul_user_id ?? null;\nconst echoSoulCallRecordId = metadata.echosoul_call_record_id ?? null;\n\nreturn [{\n  json: {\n    vapi_call_id: vapiCallId,\n    echosoul_user_id: echoSoulUserId,\n    echosoul_call_record_id: echoSoulCallRecordId,\n    summary,\n    transcript,\n    duration_seconds: durationSeconds,\n    ended_reason: endedReason,\n    started_at: startedAt,\n    ended_at: endedAt,\n    cost,\n    recording_url: recordingUrl,\n    success_evaluation: successEval,\n    has_meaningful_transcript: transcript.length \u003e 50\n  }\n}];"
+                                     },
+                      "id":  "10",
+                      "name":  "Extract Call Data",
+                      "position":  [
+                                       400,
+                                       112
+                                   ],
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "PATCH",
+                                         "url":  "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/voice_calls?or=(vapi_call_id.eq.{{ $json.vapi_call_id }},id.eq.{{ $json.echosoul_call_record_id }})",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "status",
+                                                                                       "value":  "completed"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "vapi_call_id",
+                                                                                       "value":  "={{ $json.vapi_call_id }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "call_summary",
+                                                                                       "value":  "={{ $json.summary }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "duration_seconds",
+                                                                                       "value":  "={{ $json.duration_seconds }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "ended_at",
+                                                                                       "value":  "={{ $json.ended_at }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "recording_url",
+                                                                                       "value":  "={{ $json.recording_url }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "transcript",
+                                                                                       "value":  "={{ $json.transcript }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "cost",
+                                                                                       "value":  "={{ $json.cost }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "ended_reason",
+                                                                                       "value":  "={{ $json.ended_reason }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "11",
+                      "name":  "Update Voice Call in Supabase",
+                      "position":  [
+                                       608,
+                                       112
+                                   ],
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "credentials":  {
+                                          "supabaseApi":  {
+                                                              "id":  "XbXwHhM2Z7iVwI4C",
+                                                              "name":  "EchoSoul-supabase"
+                                                          },
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "OJfBPZ3oav1nvDyb",
+                                                                 "name":  "EchoSoul-supabase"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "combinator":  "and",
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "123",
+                                                                                   "leftValue":  "={{ $(\u0027Extract Call Data\u0027).item.json.has_meaningful_transcript }}",
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true,
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  ""
+                                                                               }
+                                                                           ],
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        }
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "12",
+                      "name":  "IF Has Meaningful Transcript",
+                      "position":  [
+                                       800,
+                                       112
+                                   ],
+                      "type":  "n8n-nodes-base.filter",
+                      "typeVersion":  2
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "PATCH",
+                                         "url":  "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/voice_calls?or=(vapi_call_id.eq.{{ $(\u0027Extract Call Data\u0027).item.json.vapi_call_id }},id.eq.{{ $(\u0027Extract Call Data\u0027).item.json.echosoul_call_record_id }})",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "crisis_detected",
+                                                                                       "value":  true
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "15",
+                      "name":  "Flag Crisis on Call",
+                      "position":  [
+                                       1392,
+                                       32
+                                   ],
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "credentials":  {
+                                          "supabaseApi":  {
+                                                              "id":  "XbXwHhM2Z7iVwI4C",
+                                                              "name":  "EchoSoul-supabase"
+                                                          },
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "OJfBPZ3oav1nvDyb",
+                                                                 "name":  "EchoSoul-supabase"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://n8n.cheosdesign.info/webhook/crisis-check",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "user_id",
+                                                                                       "value":  "={{ $(\u0027Extract Call Data\u0027).item.json.echosoul_user_id }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "message",
+                                                                                       "value":  "={{ $(\u0027Extract Call Data\u0027).item.json.transcript }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "63b6caf6-d20d-4668-8c28-7a6955814f0c",
+                      "name":  "Crisis Check",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       1008,
+                                       112
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "eb475012-75d8-479f-8599-f98dafc5d6be",
+                                                                                   "leftValue":  "={{ $(\u0027Crisis Check\u0027).item.json.isCrisis }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1200,
+                                       112
+                                   ],
+                      "id":  "7354fb3f-619e-4b61-9f8b-3487f8bb220d",
+                      "name":  "If"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       1408,
+                                       208
+                                   ],
+                      "id":  "91bd03b7-74dd-4fbc-aab4-04cb51195235",
+                      "name":  "No Operation, do nothing"
+                  }
+              ],
+    "connections":  {
+                        "Extract Call Data":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "index":  0,
+                                                                       "node":  "Update Voice Call in Supabase",
+                                                                       "type":  "main"
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "IF Has Meaningful Transcript":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Crisis Check",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Switch by Event Type":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "index":  0,
+                                                                          "node":  "Extract Call Data",
+                                                                          "type":  "main"
+                                                                      }
+                                                                  ],
+                                                                  [
+                                                                      {
+                                                                          "index":  0,
+                                                                          "node":  "Handle Tool Calls",
+                                                                          "type":  "main"
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Update Voice Call in Supabase":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "index":  0,
+                                                                                   "node":  "IF Has Meaningful Transcript",
+                                                                                   "type":  "main"
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "index":  0,
+                                                             "node":  "Switch by Event Type",
+                                                             "type":  "main"
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Crisis Check":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "If",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Flag Crisis on Call",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "No Operation, do nothing",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  {
+
+                },
+    "versionId":  "d0cc8745-bc6d-42b6-bf81-461850952d58",
+    "activeVersionId":  "d0cc8745-bc6d-42b6-bf81-461850952d58",
+    "versionCounter":  89,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-06-08T12:17:34.672Z",
+                       "createdAt":  "2026-06-08T12:17:34.672Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "cgTKklCaBYVBFNpT",
+                       "projectId":  "qo7vPQhyAzkTS54A",
+                       "project":  {
+                                       "updatedAt":  "2026-01-12T16:49:52.207Z",
+                                       "createdAt":  "2025-11-29T20:35:10.779Z",
+                                       "id":  "qo7vPQhyAzkTS54A",
+                                       "name":  "SERGIO  serquin16@gmail.com \u003cserquin16@gmail.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "45809c68-e7c7-48f2-a548-8de836a401cb"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-06-11T16:54:35.791Z",
+                          "createdAt":  "2026-06-11T16:54:29.320Z",
+                          "versionId":  "d0cc8745-bc6d-42b6-bf81-461850952d58",
+                          "workflowId":  "cgTKklCaBYVBFNpT",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "vapi-events",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "1",
+                                            "name":  "Webhook",
+                                            "position":  [
+                                                             0,
+                                                             144
+                                                         ],
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "webhookId":  "vapi-events",
+                                            "onError":  "continueErrorOutput"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  1
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "abc1",
+                                                                                                         "leftValue":  "={{ $json.body.message.type }}",
+                                                                                                         "operator":  {
+                                                                                                                          "operation":  "equals",
+                                                                                                                          "type":  "string"
+                                                                                                                      },
+                                                                                                         "rightValue":  "end-of-call-report"
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "2",
+                                            "name":  "Switch by Event Type",
+                                            "position":  [
+                                                             224,
+                                                             128
+                                                         ],
+                                            "type":  "n8n-nodes-base.filter",
+                                            "typeVersion":  2
+                                        },
+                                        {
+                                            "parameters":  {
+
+                                                           },
+                                            "id":  "5",
+                                            "name":  "Handle Tool Calls",
+                                            "position":  [
+                                                             400,
+                                                             288
+                                                         ],
+                                            "type":  "n8n-nodes-base.noOp",
+                                            "typeVersion":  1,
+                                            "notes":  "TODO: Switch by tool call name"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "const body = $json.body?.message ?? $json.body ?? {};\n\nconst vapiCallId = body.call?.id ?? null;\nconst summary = body.summary ?? body.analysis?.summary ?? null;\nconst transcript = body.transcript ?? \u0027\u0027;\nconst durationSeconds = Math.round(body.durationSeconds ?? 0);\nconst endedReason = body.endedReason ?? \u0027unknown\u0027;\nconst startedAt = body.startedAt ?? null;\nconst endedAt = body.endedAt ?? null;\nconst cost = body.cost ?? 0;\nconst recordingUrl = body.recordingUrl ?? null;\nconst successEval = body.analysis?.successEvaluation ?? null;\n\nconst metadata = body.call?.assistantOverrides?.metadata ?? body.assistant?.metadata ?? {};\nconst echoSoulUserId = metadata.echosoul_user_id ?? null;\nconst echoSoulCallRecordId = metadata.echosoul_call_record_id ?? null;\n\nreturn [{\n  json: {\n    vapi_call_id: vapiCallId,\n    echosoul_user_id: echoSoulUserId,\n    echosoul_call_record_id: echoSoulCallRecordId,\n    summary,\n    transcript,\n    duration_seconds: durationSeconds,\n    ended_reason: endedReason,\n    started_at: startedAt,\n    ended_at: endedAt,\n    cost,\n    recording_url: recordingUrl,\n    success_evaluation: successEval,\n    has_meaningful_transcript: transcript.length \u003e 50\n  }\n}];"
+                                                           },
+                                            "id":  "10",
+                                            "name":  "Extract Call Data",
+                                            "position":  [
+                                                             400,
+                                                             112
+                                                         ],
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "PATCH",
+                                                               "url":  "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/voice_calls?or=(vapi_call_id.eq.{{ $json.vapi_call_id }},id.eq.{{ $json.echosoul_call_record_id }})",
+                                                               "authentication":  "genericCredentialType",
+                                                               "genericAuthType":  "httpHeaderAuth",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+                                                                                                             "name":  "status",
+                                                                                                             "value":  "completed"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "vapi_call_id",
+                                                                                                             "value":  "={{ $json.vapi_call_id }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "call_summary",
+                                                                                                             "value":  "={{ $json.summary }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "duration_seconds",
+                                                                                                             "value":  "={{ $json.duration_seconds }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "ended_at",
+                                                                                                             "value":  "={{ $json.ended_at }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "recording_url",
+                                                                                                             "value":  "={{ $json.recording_url }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "transcript",
+                                                                                                             "value":  "={{ $json.transcript }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "cost",
+                                                                                                             "value":  "={{ $json.cost }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "ended_reason",
+                                                                                                             "value":  "={{ $json.ended_reason }}"
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "11",
+                                            "name":  "Update Voice Call in Supabase",
+                                            "position":  [
+                                                             608,
+                                                             112
+                                                         ],
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "credentials":  {
+                                                                "supabaseApi":  {
+                                                                                    "id":  "XbXwHhM2Z7iVwI4C",
+                                                                                    "name":  "EchoSoul-supabase"
+                                                                                },
+                                                                "httpHeaderAuth":  {
+                                                                                       "id":  "OJfBPZ3oav1nvDyb",
+                                                                                       "name":  "EchoSoul-supabase"
+                                                                                   }
+                                                            }
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "combinator":  "and",
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "123",
+                                                                                                         "leftValue":  "={{ $(\u0027Extract Call Data\u0027).item.json.has_meaningful_transcript }}",
+                                                                                                         "operator":  {
+                                                                                                                          "operation":  "true",
+                                                                                                                          "singleValue":  true,
+                                                                                                                          "type":  "boolean"
+                                                                                                                      },
+                                                                                                         "rightValue":  ""
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
+                                                                                              }
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "12",
+                                            "name":  "IF Has Meaningful Transcript",
+                                            "position":  [
+                                                             800,
+                                                             112
+                                                         ],
+                                            "type":  "n8n-nodes-base.filter",
+                                            "typeVersion":  2
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "PATCH",
+                                                               "url":  "=https://pleeiqlldiwipaxqoumu.supabase.co/rest/v1/voice_calls?or=(vapi_call_id.eq.{{ $(\u0027Extract Call Data\u0027).item.json.vapi_call_id }},id.eq.{{ $(\u0027Extract Call Data\u0027).item.json.echosoul_call_record_id }})",
+                                                               "authentication":  "genericCredentialType",
+                                                               "genericAuthType":  "httpHeaderAuth",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+                                                                                                             "name":  "crisis_detected",
+                                                                                                             "value":  true
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "15",
+                                            "name":  "Flag Crisis on Call",
+                                            "position":  [
+                                                             1392,
+                                                             32
+                                                         ],
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "credentials":  {
+                                                                "supabaseApi":  {
+                                                                                    "id":  "XbXwHhM2Z7iVwI4C",
+                                                                                    "name":  "EchoSoul-supabase"
+                                                                                },
+                                                                "httpHeaderAuth":  {
+                                                                                       "id":  "OJfBPZ3oav1nvDyb",
+                                                                                       "name":  "EchoSoul-supabase"
+                                                                                   }
+                                                            }
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://n8n.cheosdesign.info/webhook/crisis-check",
+                                                               "sendBody":  true,
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+                                                                                                             "name":  "user_id",
+                                                                                                             "value":  "={{ $(\u0027Extract Call Data\u0027).item.json.echosoul_user_id }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "message",
+                                                                                                             "value":  "={{ $(\u0027Extract Call Data\u0027).item.json.transcript }}"
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "63b6caf6-d20d-4668-8c28-7a6955814f0c",
+                                            "name":  "Crisis Check",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "position":  [
+                                                             1008,
+                                                             112
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  3
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "eb475012-75d8-479f-8599-f98dafc5d6be",
+                                                                                                         "leftValue":  "={{ $(\u0027Crisis Check\u0027).item.json.isCrisis }}",
+                                                                                                         "rightValue":  "",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "true",
+                                                                                                                          "singleValue":  true
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.3,
+                                            "position":  [
+                                                             1200,
+                                                             112
+                                                         ],
+                                            "id":  "7354fb3f-619e-4b61-9f8b-3487f8bb220d",
+                                            "name":  "If"
+                                        },
+                                        {
+                                            "parameters":  {
+
+                                                           },
+                                            "type":  "n8n-nodes-base.noOp",
+                                            "typeVersion":  1,
+                                            "position":  [
+                                                             1408,
+                                                             208
+                                                         ],
+                                            "id":  "91bd03b7-74dd-4fbc-aab4-04cb51195235",
+                                            "name":  "No Operation, do nothing"
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Extract Call Data":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "index":  0,
+                                                                                             "node":  "Update Voice Call in Supabase",
+                                                                                             "type":  "main"
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "IF Has Meaningful Transcript":  {
+                                                                                   "main":  [
+                                                                                                [
+                                                                                                    {
+                                                                                                        "node":  "Crisis Check",
+                                                                                                        "type":  "main",
+                                                                                                        "index":  0
+                                                                                                    }
+                                                                                                ]
+                                                                                            ]
+                                                                               },
+                                              "Switch by Event Type":  {
+                                                                           "main":  [
+                                                                                        [
+                                                                                            {
+                                                                                                "index":  0,
+                                                                                                "node":  "Extract Call Data",
+                                                                                                "type":  "main"
+                                                                                            }
+                                                                                        ],
+                                                                                        [
+                                                                                            {
+                                                                                                "index":  0,
+                                                                                                "node":  "Handle Tool Calls",
+                                                                                                "type":  "main"
+                                                                                            }
+                                                                                        ]
+                                                                                    ]
+                                                                       },
+                                              "Update Voice Call in Supabase":  {
+                                                                                    "main":  [
+                                                                                                 [
+                                                                                                     {
+                                                                                                         "index":  0,
+                                                                                                         "node":  "IF Has Meaningful Transcript",
+                                                                                                         "type":  "main"
+                                                                                                     }
+                                                                                                 ]
+                                                                                             ]
+                                                                                },
+                                              "Webhook":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "index":  0,
+                                                                                   "node":  "Switch by Event Type",
+                                                                                   "type":  "main"
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                                              "Crisis Check":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "If",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                                              "If":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Flag Crisis on Call",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ],
+                                                                      [
+                                                                          {
+                                                                              "node":  "No Operation, do nothing",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     }
+                                          },
+                          "nodeGroups":  [
+
+                                         ],
+                          "authors":  "SERGIO  serquin16@gmail.com",
+                          "name":  "Version d0cc8745",
+                          "description":  "",
+                          "autosaved":  true,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-06-11T16:54:35.661Z",
+                                                             "id":  1214,
+                                                             "workflowId":  "cgTKklCaBYVBFNpT",
+                                                             "versionId":  "d0cc8745-bc6d-42b6-bf81-461850952d58",
+                                                             "event":  "activated",
+                                                             "userId":  "45809c68-e7c7-48f2-a548-8de836a401cb"
+                                                         }
+                                                     ]
+                      }
+}

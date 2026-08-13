@@ -19,8 +19,15 @@ class BillingNotifier extends AsyncNotifier<BillingEntity> {
   }
 
   Future<void> refresh() async {
-    state = AsyncLoading();
-    state = AsyncData(await ref.read(billingRepositoryProvider).getPlan());
+    try {
+      final plan = await ref.read(billingRepositoryProvider).getPlan();
+      state = AsyncData(plan);
+    } catch (_) {
+      // Keep previous data if refresh fails instead of leaving state in AsyncError
+      if (!state.hasValue) {
+        state = const AsyncData(BillingEntity());
+      }
+    }
   }
 
   Future<bool> trySendMessage() async {
@@ -37,7 +44,11 @@ class BillingNotifier extends AsyncNotifier<BillingEntity> {
   }
 
   Future<void> incrementMessagesUsed() async {
-    await ref.read(billingRepositoryProvider).incrementMessagesUsed();
-    await refresh();
+    try {
+      await ref.read(billingRepositoryProvider).incrementMessagesUsed();
+      await refresh();
+    } catch (_) {
+      // Avoid letting billing increment errors crash provider state
+    }
   }
 }

@@ -114,6 +114,14 @@ git push → GitHub Actions → flutter build web → Vercel (CDN)
 | `smart-nudge` | Cron `0 */6 * * *` | FCM + Email | ✅ (sin test FCM real) |
 | `mood-insights` | `POST /webhook/mood-entry` | FCM + Email | ✅ (sin test FCM real) |
 
+### Facturación y Llamadas (`/n8n_workflows/` y `/`)
+
+| Workflow | Trigger | Canal / Destino | Estado |
+|----------|---------|-----------------|--------|
+| `stripe_webhook` | `POST /webhook/stripe` | Supabase (Planes y Suscripciones) | ✅ Validado E2E |
+| `stripe_sync` | Cron `0 3 * * *` | Conciliación de suscripciones activas | ✅ Activo |
+| `vapi_webhook` | `POST /webhook/vapi-events` | Registro de llamadas, crisis y resúmenes | ✅ Completado |
+
 ### Variables de entorno — n8n/Dokploy
 
 | Variable | Valor |
@@ -205,11 +213,11 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 - [x] Build AAB firmado → Google Play Console
 - [x] Test flujo completo E2E en dispositivo físico (onboarding → chat → push → mood)
 
-### 💳 FASE 3 — Monetización [PENDIENTE]
-- [ ] Google Play Billing (compra in-app Android)
-- [ ] Stripe (billing web externo)
-- [ ] UI paywall + lógica free/premium en Flutter
-- [ ] Webhook n8n → sincronizar suscripción en `user_plans`
+### 💳 FASE 3 — Monetización [COMPLETADA 100%]
+- [x] Stripe (billing web externo)
+- [x] UI paywall + lógica free/premium en Flutter
+- [x] Webhook n8n → sincronizar suscripción en `user_plans`
+- [x] Validación E2E del Webhook de Stripe en Staging/Producción
 
 ### 🛡️ FASE 4 — Ética y Cumplimiento [EN PROGRESO ~40%]
 - [x] Disclaimers éticos en onboarding y chat
@@ -281,7 +289,7 @@ N8N_CHAT_WEBHOOK_URL=https://n8n.cheosdesign.info/webhook/chat
 | # | Hito | Descripción | Esfuerzo |
 |---|------|-------------|---------|
 | ~~**H10**~~ | ~~Voz (Vapi)~~ | ~~✅ COMPLETADO — Integrado Flutter SDK Vapi~~ | ✅ |
-| **H11** | Monetización (Play Billing + Stripe) | Paywall UI + lógica free/premium + webhook Supabase/n8n | 🔴 Alto |
+| ~~**H11**~~ | ~~Monetización (Stripe)~~ | ~~✅ COMPLETADO — Paywall UI + lógica + webhook + validación E2E~~ | ✅ |
 | ~~**H12**~~ | ~~Exportar datos GDPR~~ | ~~✅ COMPLETADO — Función SQL / RPC + Share nativo~~ | ✅ |
 | **H13** | Dominio custom Vercel | Apuntar DNS al dominio definitivo | 🟢 Bajo |
 | ~~**H14**~~ | ~~Fuentes Inter en Flutter~~ | ~~✅ COMPLETADO — Descargados TTF de rsms/inter v4.0 y configurados en pubspec.yaml~~ | ✅ |
