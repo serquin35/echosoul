@@ -534,48 +534,52 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    try {
-      final billing = ref.read(billingProvider).valueOrNull ?? const BillingEntity();
-      if (!billing.canSendMessage) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(S.of(context).dailyLimitReached),
-              backgroundColor: EsColors.warning,
-              action: SnackBarAction(
-                label: 'Premium',
-                textColor: Colors.white,
-                onPressed: () => context.push(RouteNames.paywall),
-              ),
+    // Check billing limit — only use resolved value, never block on AsyncLoading
+    final billing = ref.read(billingProvider).valueOrNull ?? const BillingEntity();
+    if (!billing.canSendMessage) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(S.of(context).dailyLimitReached),
+            backgroundColor: EsColors.warning,
+            action: SnackBarAction(
+              label: 'Premium',
+              textColor: Colors.white,
+              onPressed: () => context.push(RouteNames.paywall),
             ),
-          );
-        }
-        return;
+          ),
+        );
       }
+      return;
+    }
 
-      _controller.clear();
-      _focusNode.requestFocus();
-      await ref.read(chatProvider.notifier).sendMessage(text);
-      
-      try {
-        await ref.read(billingProvider.notifier).incrementMessagesUsed();
-      } catch (_) {
-        // Silently swallow billing increment errors to avoid blocking the chat
-      }
-    } catch (_) {
-      // General safety fallback
+    // Clear input immediately so the user sees it was accepted
+    _controller.clear();
+
+    // Send message — the notifier manages isTyping via try/finally
+    await ref.read(chatProvider.notifier).sendMessage(text);
+
+    // Increment billing counter in background — never block the UI
+    ref.read(billingProvider.notifier).incrementMessagesUsed().ignore();
+
+    // Re-focus the input after response arrives (important on web)
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusNode.requestFocus();
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isTyping = ref.watch(chatProvider).isTyping;
+    // Use valueOrNull so that AsyncLoading / AsyncError never disables the field
     final billing = ref.watch(billingProvider).valueOrNull ?? const BillingEntity();
-    final canSend = billing.canSendMessage;
+    final limitReached = !billing.canSendMessage;
 
     final hintText = isTyping
         ? S.of(context).waitingForResponse
-        : (!canSend
+        : (limitReached
             ? S.of(context).dailyLimitReached
             : S.of(context).typeAMessage);
 
@@ -602,14 +606,16 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  enabled: !isTyping && canSend,
+                  // Disabled ONLY while companion is typing or limit reached.
+                  // Never disabled due to billingProvider loading state.
+                  enabled: !isTyping && !limitReached,
                   style: EsTypography.bodyMedium.copyWith(
                     color: EsColors.textPrimaryDark,
                   ),
                   decoration: InputDecoration(
                     hintText: hintText,
                     hintStyle: EsTypography.bodyMedium
-                        .copyWith(color: !canSend ? EsColors.warning : EsColors.textSecondaryDark),
+                        .copyWith(color: limitReached ? EsColors.warning : EsColors.textSecondaryDark),
                     filled: true,
                     fillColor: EsColors.surfaceDark,
                     contentPadding: const EdgeInsets.symmetric(
@@ -638,11 +644,11 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: (isTyping || !canSend)
+                  color: (isTyping || limitReached)
                       ? EsColors.surfaceElevated
                       : EsColors.primaryBlue,
                   shape: BoxShape.circle,
-                  boxShadow: (isTyping || !canSend)
+                  boxShadow: (isTyping || limitReached)
                       ? null
                       : [
                           BoxShadow(
@@ -655,11 +661,11 @@ class _ChatInputBarState extends ConsumerState<_ChatInputBar> {
                   icon: Icon(
                     isTyping
                         ? Icons.hourglass_top
-                        : (!canSend ? Icons.lock_outline : Icons.send_rounded),
+                        : (limitReached ? Icons.lock_outline : Icons.send_rounded),
                     color: Colors.white,
                     size: 20,
                   ),
-                  onPressed: (isTyping || !canSend) ? null : _handleSend,
+                  onPressed: (isTyping || limitReached) ? null : _handleSend,
                 ),
               ),
             ],
